@@ -93,33 +93,20 @@ fun LoginScreen(modifier: Modifier = Modifier){
                 modifier = Modifier
                     .padding(horizontal = 8.dp, vertical = 16.dp)
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
+                IconWithBackground(
+                    icon = R.drawable.potted_plant,
+                    size = 48.dp,
+                    backgroundColor = darkenColor(
+                        originalColor = MaterialTheme.colorScheme.surface,
+                        factor = 0.1f
+                    ),
+                    backgroundShape = RoundedCornerShape(8.dp),
+                    tintColor = MaterialTheme.colorScheme.primary,
+                    iconScale = 0.6f,
                     modifier = Modifier
                         .weight(0.2f)
                         .padding(12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                color = darkenColor(
-                                    originalColor = MaterialTheme.colorScheme.surface,
-                                    factor = 0.1f
-                                ),
-                                shape = RoundedCornerShape(8.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.potted_plant),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .fillMaxSize(0.6f)
-                        )
-                    }
-                }
+                )
 
                 Column(
                     modifier = Modifier
