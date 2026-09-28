@@ -1,10 +1,17 @@
 package plat.plantcare.app
 
+import android.R.attr.text
+import android.R.attr.textStyle
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -14,9 +21,13 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -85,5 +96,42 @@ fun TextFieldWithTitle(
             modifier = Modifier
                 .fillMaxWidth()
         )
+    }
+}
+
+@Composable
+fun IconWithBackground(
+    icon: Int,
+    size: Dp,
+    backgroundColor: Color,
+    backgroundShape: Shape,
+    tintColor: Color?,
+    modifier: Modifier = Modifier,
+    iconScale: Float = 0.5f,
+    content: @Composable BoxScope.() -> Unit
+){
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+    ) {
+        Box(
+            modifier = Modifier
+                .size(size)
+                .background(
+                    color = backgroundColor,
+                    shape = backgroundShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                tint = tintColor ?: Color.Unspecified,
+                modifier = Modifier
+                    .fillMaxSize(iconScale)
+            )
+
+            content()
+        }
     }
 }

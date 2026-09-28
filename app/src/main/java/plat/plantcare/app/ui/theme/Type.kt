@@ -111,6 +111,7 @@ val MainTypography = Typography(
         lineHeight = 20.sp,
         letterSpacing = 0.25.sp
     ),
+
     bodySmall = TextStyle(
         fontFamily = PlusJakartaSansFamily,
         fontWeight = FontWeight.Normal,
