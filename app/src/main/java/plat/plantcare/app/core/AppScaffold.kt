@@ -147,6 +147,7 @@ fun EmptyAppScaffold(
     title: String,
     modifier: Modifier = Modifier,
     onBackClick: (() -> Unit)? = null,
+    showBottomBar: Boolean = true,
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -168,7 +169,11 @@ fun EmptyAppScaffold(
                 actions = actions
             )
         },
-        bottomBar = { AppBottomBar() }
+        bottomBar = {
+            if (showBottomBar) {
+                AppBottomBar()
+            }
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
