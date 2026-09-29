@@ -9,6 +9,10 @@ fun darkenColor(originalColor: Color, factor: Float = 0.1f): Color {
     return Color.Black.copy(alpha = factor).compositeOver(background = originalColor)
 }
 
+fun lightenColor(originalColor: Color, factor: Float = 0.1f): Color {
+    return Color.White.copy(alpha = factor).compositeOver(background = originalColor)
+}
+
 fun BoxWithConstraintsScope.relativePadding(
     factor: Float,
     minimum: Dp,

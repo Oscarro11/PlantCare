@@ -48,7 +48,7 @@ enum class AppScreens (
 ){
     INICIO(
         label = "Inicio",
-        icon = R.drawable.eco_24dp_000000_fill0_wght400_grad0_opsz24
+        icon = R.drawable.leaf
     ),
     COLECCION(
         label = "Colección",
@@ -56,15 +56,15 @@ enum class AppScreens (
     ),
     CALENDARIO(
         label = "Calendario",
-        icon = R.drawable.calendar_today_24dp_000000_fill0_wght400_grad0_opsz24
+        icon = R.drawable.calendar
     ),
     DESCUBRIR(
         label = "Descubrir",
-        icon = R.drawable.explore_24dp_000000_fill0_wght400_grad0_opsz24
+        icon = R.drawable.explore
     ),
     FAVORITOS(
         label = "Favoritos",
-        icon = R.drawable.favorite_24dp_000000_fill0_wght400_grad0_opsz24
+        icon = R.drawable.favorites
     )
 }
 
@@ -124,12 +124,12 @@ fun FullAppScaffold(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painterResource(id = R.drawable.notifications_24dp_000000_fill0_wght400_grad0_opsz24),
+                        painterResource(id = R.drawable.notification),
                         contentDescription = null
                     )
 
                     Image(
-                        painterResource(id = R.drawable.account_circle_24dp_000000_fill0_wght400_grad0_opsz24),
+                        painterResource(id = R.drawable.account_placeholder),
                         contentDescription = null,
                         modifier = Modifier.clip(shape = CircleShape)
                     )
@@ -159,7 +159,7 @@ fun EmptyAppScaffold(
                     if (onBackClick != null) {
                         IconButton(onClick = onBackClick) {
                             Icon(
-                                painterResource(id = R.drawable.arrow_back_24dp_000000_fill0_wght400_grad0_opsz24),
+                                painterResource(id = R.drawable.arrow_back),
                                 contentDescription = "Back"
                             )
                         }
