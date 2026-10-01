@@ -1,4 +1,4 @@
-package plat.plantcare.app
+package plat.plantcare.app.core
 
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.ui.graphics.Color
@@ -10,7 +10,7 @@ fun darkenColor(originalColor: Color, factor: Float = 0.1f): Color {
 }
 
 fun lightenColor(originalColor: Color, factor: Float = 0.1f): Color {
-    return Color.White.copy(alpha = factor).compositeOver(background = originalColor)
+    return originalColor.copy(alpha = 1 - factor).compositeOver(background = Color.White)
 }
 
 fun BoxWithConstraintsScope.relativePadding(

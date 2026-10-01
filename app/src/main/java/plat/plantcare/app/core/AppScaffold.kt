@@ -32,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import plat.plantcare.app.R
-import plat.plantcare.app.darkenColor
 
 @Preview(showBackground = true)
 @Composable
@@ -186,7 +185,7 @@ fun AppBottomBar(){
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
-        AppScreens.entries.forEachIndexed { index, screen ->
+        AppScreens.entries.forEach{ screen ->
             NavigationBarItem(
                 selected = false,
                 onClick = {},
