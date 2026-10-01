@@ -1,4 +1,4 @@
-package plat.plantcare.app
+package plat.plantcare.app.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -42,6 +41,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import plat.plantcare.app.R
+import plat.plantcare.app.core.IconWithBackground
+import plat.plantcare.app.core.TextFieldWithTitle
+import plat.plantcare.app.core.darkenColor
+import plat.plantcare.app.core.relativePadding
 
 
 @Preview(
@@ -49,34 +53,31 @@ import androidx.compose.ui.unit.sp
     showBackground = true,
     widthDp = 360,
     heightDp = 640)
-@Composable
-fun SmallLoginScreenPreview(){
-    LoginScreen()
-}
-
 @Preview(
     name = "Preview Medium Phone",
     showBackground = true,
     widthDp = 412,
     heightDp = 915)
-@Composable
-fun MediumLoginScreenPreview(){
-    LoginScreen()
-}
-
 @Preview(
     name = "Preview Large Phone",
     showBackground = true,
     widthDp = 448,
     heightDp = 998)
 @Composable
-fun LargeLoginScreenPreview(){
+fun LoginScreenPreview(){
     LoginScreen()
 }
 
 //TODO: adapt colors and fonts for night mode
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier){
+fun LoginRoute(
+    modifier: Modifier = Modifier
+) {
+    LoginScreen(modifier)
+}
+
+@Composable
+private fun LoginScreen(modifier: Modifier = Modifier){
     BoxWithConstraints(
         modifier = modifier
             .background(color = MaterialTheme.colorScheme.surface)

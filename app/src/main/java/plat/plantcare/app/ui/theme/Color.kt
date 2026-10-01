@@ -2,13 +2,13 @@ package plat.plantcare.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val BackgroundLight = Color(0xFFF5FBF7)
+val BackgroundLight = Color(0xFFECFEF2)
 val PrimaryLight = Color(0xFF1E3A2F)
 val SecondaryLight = Color(0xFF88A788)
 val TertiaryLight = Color(0xFFE07A5F)
 val NeutralLight = Color(0xFF192821)
-val SurfaceLight = Color(0xFFECFEF2)
-val OnBackgroundLight = Color(0xFFF5FBF7)
+val SurfaceLight = Color(0xFFFFFFFF)
+val OnBackgroundLight = Color(0xFF000000)
 val OnPrimaryLight = Color.White
 val OnSecondaryLight = Color(0xFF062117)
 val OnTertiaryLight = Color.White
