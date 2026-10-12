@@ -12,6 +12,8 @@ kotlin = "2.4.20"
 composeBom = "2026.08.00"
 foundationLayout = "1.12.1"
 annotation = "1.10.0"
+navigationCompose = "2.10.1"
+kotlinSerialization = "1.11.0"
 firebase = "4.5.0"
 
 [libraries]
@@ -36,6 +38,8 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 
 androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
+androidx-compose-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
@@ -45,4 +49,5 @@ firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 firebase-service = { id = "com.google.gms.google-services", version.ref = "firebase" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"}
 

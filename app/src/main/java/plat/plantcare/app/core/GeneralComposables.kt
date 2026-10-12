@@ -70,8 +70,8 @@ fun TextFieldWithTitle(
             value = fieldValue,
             onValueChange = onValueChange,
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.onBackground,
-                unfocusedContainerColor = MaterialTheme.colorScheme.onBackground
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             ),
             leadingIcon = {
                 if (fieldLeadingIcon != null) {
