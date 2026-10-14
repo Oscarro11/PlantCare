@@ -1,6 +1,5 @@
 package plat.plantcare.app.core
 
-import android.net.http.SslCertificate.saveState
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.RowScope
@@ -22,12 +21,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navOptions
 import plat.plantcare.app.R
 import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
