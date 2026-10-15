@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import plat.plantcare.app.core.FullAppScaffold
 
 
 data class Plant(
@@ -521,31 +520,27 @@ fun CollectionScreen(
         }
     }
 
-    FullAppScaffold(
-        section = "Colección"
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-        ) {
 
-            CollectionSummary(
-                query = query,
-                onQueryChange = {
-                    query = it
-                },
-                onFilterClick = onFilterClick,
-                onAddPlantClick = onAddPlantClick
-            )
+        CollectionSummary(
+            query = query,
+            onQueryChange = {
+                query = it
+            },
+            onFilterClick = onFilterClick,
+            onAddPlantClick = onAddPlantClick
+        )
 
-            PlantList(
-                plants = filteredPlants,
-                onPlantClick = onPlantClick,
-                onPlantMoreClick = onPlantMoreClick,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        PlantList(
+            plants = filteredPlants,
+            onPlantClick = onPlantClick,
+            onPlantMoreClick = onPlantMoreClick,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 

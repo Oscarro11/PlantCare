@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import plat.plantcare.app.core.FullAppScaffold
 import plat.plantcare.app.ui.theme.PlantcareTheme
 
 
@@ -533,97 +532,93 @@ fun CalendarMonthScreen(
         mutableStateOf(18)
     }
 
-    FullAppScaffold(
-        section = "Calendario"
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
+        Text(
+            text = "PLANIFICADOR BOTÁNICO",
+            fontSize = 10.sp,
+            color = darkGreen
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "PLANIFICADOR BOTÁNICO",
-                fontSize = 10.sp,
+                text = "‹",
+                fontSize = 30.sp,
+                color = darkGreen,
+                modifier = Modifier
+                    .clickable(onClick = onPreviousMonthClick)
+                    .padding(4.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = "Octubre\n2026",
+                fontSize = 25.sp,
+                lineHeight = 25.sp,
+                fontWeight = FontWeight.Medium,
                 color = darkGreen
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "‹",
-                    fontSize = 30.sp,
-                    color = darkGreen,
-                    modifier = Modifier
-                        .clickable(onClick = onPreviousMonthClick)
-                        .padding(4.dp)
-                )
+            Text(
+                text = "›",
+                fontSize = 30.sp,
+                color = darkGreen,
+                modifier = Modifier
+                    .clickable(onClick = onNextMonthClick)
+                    .padding(4.dp)
+            )
 
-                Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-                Text(
-                    text = "Octubre\n2026",
-                    fontSize = 25.sp,
-                    lineHeight = 25.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = darkGreen
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Text(
-                    text = "›",
-                    fontSize = 30.sp,
-                    color = darkGreen,
-                    modifier = Modifier
-                        .clickable(onClick = onNextMonthClick)
-                        .padding(4.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                CalendarViewSelector(
-                    selectedView = CalendarView.MONTH,
-                    onViewChange = { view ->
-                        if (view == CalendarView.WEEK) {
-                            onWeekViewClick()
-                        }
+            CalendarViewSelector(
+                selectedView = CalendarView.MONTH,
+                onViewChange = { view ->
+                    if (view == CalendarView.WEEK) {
+                        onWeekViewClick()
                     }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            CalendarFilters(
-                selectedFilter = selectedFilter,
-                onFilterChange = {
-                    selectedFilter = it
                 }
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            MonthCalendar(
-                selectedDay = selectedDay,
-                onDaySelected = {
-                    selectedDay = it
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            DailyTasksSection(
-                onAddTaskClick = onAddTaskClick,
-                onTaskClick = onTaskClick
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        CalendarFilters(
+            selectedFilter = selectedFilter,
+            onFilterChange = {
+                selectedFilter = it
+            }
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        MonthCalendar(
+            selectedDay = selectedDay,
+            onDaySelected = {
+                selectedDay = it
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        DailyTasksSection(
+            onAddTaskClick = onAddTaskClick,
+            onTaskClick = onTaskClick
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
     }
 }
 

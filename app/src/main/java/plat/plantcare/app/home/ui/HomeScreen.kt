@@ -1,6 +1,5 @@
 package plat.plantcare.app.home.ui
 
-import android.R.attr.text
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,9 +49,11 @@ import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.core.data.models.backgroundColor
 import plat.plantcare.app.core.data.models.contentColor
 import plat.plantcare.app.core.lightenColor
+import plat.plantcare.app.home.data.HomeEvent
 import plat.plantcare.app.home.data.HomeState
 import plat.plantcare.app.home.data.HomeTaskCardUiState
 import plat.plantcare.app.home.data.HomeViewModel
+import kotlin.math.round
 
 @Serializable data object HomeDestination
 
@@ -86,6 +87,7 @@ fun HomeRoute(
 
     HomeScreen(
         onSeeAll = onSeeAll,
+        onTaskCompletion = { id -> viewModel.onEvent(HomeEvent.CompleteTask(id)) },
         onDiagnosis = onDiagnosis,
         onAddPlant = onAddPlant,
         state = state,
@@ -96,6 +98,7 @@ fun HomeRoute(
 @Composable
 private fun HomeScreen(
     onSeeAll: () -> Unit,
+    onTaskCompletion: (String) -> Unit,
     onDiagnosis: () -> Unit,
     onAddPlant: () -> Unit,
     state: HomeState,
@@ -157,6 +160,7 @@ private fun HomeScreen(
         ) { item ->
             TaskCard(
                 state = item,
+                onCompletion = onTaskCompletion,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -235,7 +239,7 @@ private fun DailyProgressCard(
                     fontWeight = FontWeight.SemiBold
                 )
 
-                val progressPercentage = if (totalTasks > 0) (1 - (pendingTasks.toFloat() / totalTasks)) * 100 else 100
+                val progressPercentage = if (totalTasks > 0) round((1 - pendingTasks.toFloat() / totalTasks) * 100) else 100
                 Text(
                     text = "$pendingTasks de $totalTasks completadas ($progressPercentage%)",
                     style = MaterialTheme.typography.labelMedium,
@@ -296,6 +300,7 @@ private fun TasksHeader(
 @Composable
 fun TaskCard(
     state: HomeTaskCardUiState,
+    onCompletion: (String) -> Unit,
     modifier: Modifier = Modifier,
     size: Int? = 2
 ) {
@@ -312,7 +317,7 @@ fun TaskCard(
         ) {
             //TODO: change image loading from local to Coil
             Image(
-                painter = painterResource(0),
+                painter = painterResource(R.drawable.plant_img_example),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -367,7 +372,7 @@ fun TaskCard(
                 )
 
                 Text(
-                    text = "${state.action} - ${state.description}",
+                    text = "${state.action.displayName ?: ""} - ${state.description}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = size ?: Int.MAX_VALUE
@@ -384,7 +389,9 @@ fun TaskCard(
                     factor = 0.2f
                 ),
                 backgroundShape = CircleShape,
-                tintColor = MaterialTheme.colorScheme.onBackground
+                tintColor = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .clickable( onClick = { onCompletion(state.id) } )
             )
         }
     }
@@ -490,6 +497,7 @@ fun ActionCard(
 private fun HomeScreenPreview() {
     HomeScreen(
         onSeeAll = {},
+        onTaskCompletion = {},
         onDiagnosis = {},
         onAddPlant = {},
         state = HomeState()

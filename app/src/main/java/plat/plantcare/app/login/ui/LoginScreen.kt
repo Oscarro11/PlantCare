@@ -250,7 +250,6 @@ private fun LoginScreen(
                 fieldLeadingIcon = R.drawable.lock_opened,
                 fieldTrailingIcon = R.drawable.visibility_eye,
                 onTrailingIconClick = { hidePassword = !hidePassword },
-                placeholder = "contraseña",
                 visualTransformation = if (hidePassword) PasswordVisualTransformation(mask = '⬤') else null,
                 modifier = Modifier
                     .fillMaxWidth()

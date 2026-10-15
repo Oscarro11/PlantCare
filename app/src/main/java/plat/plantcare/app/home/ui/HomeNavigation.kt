@@ -5,7 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.navigation
 import kotlinx.serialization.Serializable
-import plat.plantcare.app.core.TopLevelRoute
+import plat.plantcare.app.core.navigation.TopLevelRoute
 
 @Serializable data object HomeGraph: TopLevelRoute
 

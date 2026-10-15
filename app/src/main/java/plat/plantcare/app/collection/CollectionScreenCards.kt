@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import plat.plantcare.app.R
-import plat.plantcare.app.core.FullAppScaffold
 import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.core.lightenColor
 
@@ -60,41 +59,39 @@ private fun CollectionScreen(
     collection: List<CollectionCardInfo>,
     modifier: Modifier = Modifier
 ) {
-    FullAppScaffold(section = "Colección") {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = modifier
-                .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            fullWidthItem { CollectionHeader(collection.size) }
-            fullWidthItem { SearchBar() }
-            fullWidthItem {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp, bottom = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "MOSTRANDO ${collection.size} REGISTRADAS",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    CollectionLayoutSelector(
-                        selectedLayout = CollectionLayout.Grid,
-                        onLayoutSelected = {}
-                    )
-                }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        fullWidthItem { CollectionHeader(collection.size) }
+        fullWidthItem { SearchBar() }
+        fullWidthItem {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "MOSTRANDO ${collection.size} REGISTRADAS",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                CollectionLayoutSelector(
+                    selectedLayout = CollectionLayout.Grid,
+                    onLayoutSelected = {}
+                )
             }
-            items(collection) { CollectionCard(it) }
-            fullWidthItem { Spacer(Modifier.height(24.dp)) }
         }
+        items(collection) { CollectionCard(it) }
+        fullWidthItem { Spacer(Modifier.height(24.dp)) }
     }
 }
 

@@ -14,14 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
-import plat.plantcare.app.core.AppTopBar
+import plat.plantcare.app.core.navigation.AppTopBar
+import plat.plantcare.app.home.data.AllTasksEvent
 import plat.plantcare.app.home.data.AllTasksViewModel
+import plat.plantcare.app.home.data.HomeEvent
 import plat.plantcare.app.home.data.HomeTaskCardUiState
 
 @Serializable data object AllTasksDestination
@@ -50,6 +51,7 @@ fun AllTasksRoute(
 
     AllTasksScreen(
         onBackClick = onBackClick,
+        onTaskCompletion = { id -> viewModel.onEvent(AllTasksEvent.CompleteTask(id)) },
         tasks = state.value.tasks,
         modifier = modifier
     )
@@ -58,6 +60,7 @@ fun AllTasksRoute(
 @Composable
 private fun AllTasksScreen(
     onBackClick: () -> Unit,
+    onTaskCompletion: (String) -> Unit,
     tasks: List<HomeTaskCardUiState>,
     modifier: Modifier = Modifier
 ){
@@ -88,6 +91,7 @@ private fun AllTasksScreen(
             ) { task ->
                 TaskCard(
                     state = task,
+                    onCompletion = onTaskCompletion,
                     size = null
                 )
             }

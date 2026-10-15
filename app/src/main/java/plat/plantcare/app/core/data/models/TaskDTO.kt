@@ -105,20 +105,57 @@ fun LocalDate.toUrgency(today: LocalDate = LocalDate.now()): TaskUrgency =
 
 //TODO: update icons for each task action
 enum class TaskAction(
-    @DrawableRes val iconId: Int
+    @DrawableRes val iconId: Int,
+    val displayName: String?
 ) {
-    WATER(iconId = R.drawable.water_drop),
-    MIST(iconId = R.drawable.water_drop),
-    CLEAN_LEAVES(iconId = R.drawable.water_drop),
-    PRUNE(iconId = R.drawable.water_drop),
-    FERTILIZE(iconId = R.drawable.water_drop),
-    ROTATE(iconId = R.drawable.water_drop),
-    REPOT(iconId = R.drawable.water_drop),
-    CHECK_SOIL_MOISTURE(iconId = R.drawable.water_drop),
-    CHECK_FOR_PESTS(iconId = R.drawable.water_drop),
-    TREAT_FOR_PESTS(iconId = R.drawable.water_drop),
-    PROPAGATE(iconId = R.drawable.water_drop),
-    OTHER(iconId = R.drawable.water_drop);
+    WATER(
+        iconId = R.drawable.water_drop,
+        displayName = "Regar"
+    ),
+    MIST(
+        iconId = R.drawable.water_drop,
+        displayName = "Atomizar"
+    ),
+    CLEAN_LEAVES(
+        iconId = R.drawable.water_drop,
+        displayName = "Limpiar hojas"
+    ),
+    PRUNE(
+        iconId = R.drawable.water_drop,
+        displayName = "Quitar excedentes"
+    ),
+    FERTILIZE(
+        iconId = R.drawable.water_drop,
+        displayName = "Fertilizar"
+    ),
+    ROTATE(
+        iconId = R.drawable.water_drop,
+        displayName = "Rotar"
+    ),
+    REPOT(
+        iconId = R.drawable.water_drop,
+        displayName = "Cambiar de maceta"
+    ),
+    CHECK_SOIL_MOISTURE(
+        iconId = R.drawable.water_drop,
+        displayName = "Revisar sustrato"
+    ),
+    CHECK_FOR_PESTS(
+        iconId = R.drawable.water_drop,
+        displayName = "Revisar pestes"
+    ),
+    TREAT_FOR_PESTS(
+        iconId = R.drawable.water_drop,
+        displayName = "Tratar pestes"
+    ),
+    PROPAGATE(
+        iconId = R.drawable.water_drop,
+        displayName = "Propagar"
+    ),
+    OTHER(
+        iconId = R.drawable.water_drop,
+        displayName = "Otro"
+    );
 
     companion object {
         /** Safe lookup: unknown or missing values fall back to [OTHER]. */

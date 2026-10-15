@@ -1,4 +1,4 @@
-package plat.plantcare.app.core
+package plat.plantcare.app.core.navigation
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -43,6 +43,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import plat.plantcare.app.R
+import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.home.ui.HomeDestination
 import plat.plantcare.app.home.ui.HomeGraph
 import plat.plantcare.app.home.ui.homeGraph

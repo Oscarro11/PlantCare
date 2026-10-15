@@ -11,5 +11,5 @@ interface UserRepository {
 
 @Singleton
 class FakeUserRepository @Inject constructor() : UserRepository {
-    override fun observeUserName(): Flow<String> = flowOf("")
+    override fun observeUserName(): Flow<String> = flowOf("Oscar :)")
 }
