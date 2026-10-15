@@ -2,6 +2,7 @@ package plat.plantcare.app.home.data
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -12,12 +13,14 @@ import plat.plantcare.app.core.data.models.toUrgency
 import plat.plantcare.app.core.data.repositories.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import plat.plantcare.app.core.data.repositories.UserRepository
+import javax.inject.Inject
 
 sealed interface HomeEvent{
     data class CompleteTask( val id: String ): HomeEvent
 }
 
-class HomeViewModel(
+@HiltViewModel
+class HomeViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val plantRepository: PlantRepository,
     private val userRepository: UserRepository
@@ -65,10 +68,8 @@ class HomeViewModel(
     }
 
     private suspend fun completeTask(id: String) {
-        val current = state.value.tasks.firstOrNull { it.id == id }
-            ?: throw IllegalStateException("Id of task $id doesn't exist")
+        val current = state.value.tasks.firstOrNull { it.id == id } ?: return
 
         taskRepository.setTaskCompleted(id, !current.completed)
     }
 }
-

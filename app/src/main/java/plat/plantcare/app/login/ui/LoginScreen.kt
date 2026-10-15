@@ -236,6 +236,7 @@ private fun LoginScreen(
                 fieldLeadingIcon = R.drawable.arroba,
                 fieldTrailingIcon = null,
                 onTrailingIconClick = {},
+                placeholder = "ej. elena_botanica o elena@oasis.es",
                 visualTransformation = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -249,6 +250,7 @@ private fun LoginScreen(
                 fieldLeadingIcon = R.drawable.lock_opened,
                 fieldTrailingIcon = R.drawable.visibility_eye,
                 onTrailingIconClick = { hidePassword = !hidePassword },
+                placeholder = "contraseña",
                 visualTransformation = if (hidePassword) PasswordVisualTransformation(mask = '⬤') else null,
                 modifier = Modifier
                     .fillMaxWidth()

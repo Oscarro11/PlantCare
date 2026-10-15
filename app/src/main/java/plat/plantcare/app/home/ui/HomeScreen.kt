@@ -1,5 +1,6 @@
 package plat.plantcare.app.home.ui
 
+import android.R.attr.text
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,15 +37,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
-import plat.plantcare.app.core.FullAppScaffold
 import plat.plantcare.app.core.IconWithBackground
 import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.core.data.models.backgroundColor
@@ -80,7 +80,7 @@ fun HomeRoute(
     onDiagnosis: () -> Unit,
     onAddPlant: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -101,73 +101,71 @@ private fun HomeScreen(
     state: HomeState,
     modifier: Modifier = Modifier
 ) {
-    FullAppScaffold(section = "Inicio") {
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(
-                start = 18.dp,
-                top = 18.dp,
-                end = 18.dp,
-                bottom = 32.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                HeaderSummary( state = state )
-            }
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(
+            start = 18.dp,
+            top = 18.dp,
+            end = 18.dp,
+            bottom = 32.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            HeaderSummary( state = state )
+        }
 
-            item {
-                Column(
+        item {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "¡Buenos días, ${state.userName}!",
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "¡Buenos días, ${state.userName}!",
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
 
-                    Text(
-                        text = "Hoy tienes ${state.remainingPlants} plantas esperando tu toque verde",
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            item {
-                DailyProgressCard(
-                    pendingTasks = state.pendingTasks,
-                    totalTasks = state.tasks.size
+                Text(
+                    text = "Hoy tienes ${state.remainingPlants} plantas esperando tu toque verde",
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
 
-            item {
-                TasksHeader(
-                    onSeeAll = onSeeAll
-                )
-            }
+        item {
+            DailyProgressCard(
+                pendingTasks = state.pendingTasks,
+                totalTasks = state.tasks.size
+            )
+        }
 
-            items(
-                items = state.tasks
-            ) { item ->
-                TaskCard(
-                    state = item,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+        item {
+            TasksHeader(
+                onSeeAll = onSeeAll
+            )
+        }
 
-            item {
-                QuickActions(
-                    onDiagnosis = onDiagnosis,
-                    onAddPlant = onAddPlant
-                )
-            }
+        items(
+            items = state.tasks
+        ) { item ->
+            TaskCard(
+                state = item,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        item {
+            QuickActions(
+                onDiagnosis = onDiagnosis,
+                onAddPlant = onAddPlant
+            )
         }
     }
 }
@@ -237,8 +235,9 @@ private fun DailyProgressCard(
                     fontWeight = FontWeight.SemiBold
                 )
 
+                val progressPercentage = if (totalTasks > 0) (1 - (pendingTasks.toFloat() / totalTasks)) * 100 else 100
                 Text(
-                    text = "$pendingTasks de $totalTasks completadas (25%)",
+                    text = "$pendingTasks de $totalTasks completadas ($progressPercentage%)",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -297,8 +296,8 @@ private fun TasksHeader(
 @Composable
 fun TaskCard(
     state: HomeTaskCardUiState,
-    size: Int? = 2,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    size: Int? = 2
 ) {
     Card(
         modifier = modifier,

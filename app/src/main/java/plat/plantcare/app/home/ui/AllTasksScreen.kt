@@ -4,23 +4,47 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import plat.plantcare.app.core.EmptyAppScaffold
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptions
+import androidx.navigation.compose.composable
+import kotlinx.serialization.Serializable
+import plat.plantcare.app.core.AppTopBar
 import plat.plantcare.app.home.data.AllTasksViewModel
 import plat.plantcare.app.home.data.HomeTaskCardUiState
+
+@Serializable data object AllTasksDestination
+
+fun NavController.navigateToAllTasksDestination(navOptions: NavOptions? = null) {
+    navigate(AllTasksDestination, navOptions)
+}
+
+fun NavGraphBuilder.allTasksScreen(
+    onBackClick: () -> Unit
+) {
+    composable<AllTasksDestination> {
+        AllTasksRoute(
+            onBackClick = onBackClick
+        )
+    }
+}
 
 @Composable
 fun AllTasksRoute(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: AllTasksViewModel = viewModel()
+    viewModel: AllTasksViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle()
 
@@ -37,14 +61,19 @@ private fun AllTasksScreen(
     tasks: List<HomeTaskCardUiState>,
     modifier: Modifier = Modifier
 ){
-    EmptyAppScaffold(
-        title = "Tareas pendientes",
-        onBackClick = onBackClick,
-        showBottomBar = true
-    ) {
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            AppTopBar(
+                title = "Lista de tareas",
+                onBackClick = onBackClick
+            )
+        }
+    ) { innerPadding ->
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
+                .padding(innerPadding)
                 .background(color = MaterialTheme.colorScheme.background),
             contentPadding = PaddingValues(
                 start = 18.dp,
@@ -64,4 +93,6 @@ private fun AllTasksScreen(
             }
         }
     }
+
+
 }

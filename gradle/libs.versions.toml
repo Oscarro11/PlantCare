@@ -15,6 +15,9 @@ annotation = "1.10.0"
 navigationCompose = "2.10.1"
 kotlinSerialization = "1.11.0"
 firebase = "4.5.0"
+hilt = "2.60.1"
+androidxHilt = "1.4.0"
+ksp = "2.3.10"
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -45,9 +48,15 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+androidx-hilt-lifecycle-viewmodel-compose = { group = "androidx.hilt", name = "hilt-lifecycle-viewmodel-compose", version.ref = "androidxHilt" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 firebase-service = { id = "com.google.gms.google-services", version.ref = "firebase" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"}
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 

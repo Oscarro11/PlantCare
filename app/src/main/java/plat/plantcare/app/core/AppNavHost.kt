@@ -2,10 +2,21 @@ package plat.plantcare.app.core
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,30 +29,44 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
 import plat.plantcare.app.R
+import plat.plantcare.app.home.ui.HomeDestination
+import plat.plantcare.app.home.ui.HomeGraph
+import plat.plantcare.app.home.ui.homeGraph
+import plat.plantcare.app.home.ui.navigateToHomeGraph
 import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
+
 
 interface TopLevelRoute
 
 //TODO: add routes of TopLevelDestinations
 enum class TopLevelDestination(
-    val route: TopLevelRoute?,
+    val route: TopLevelRoute,
+    val startRoute: Any,
     @DrawableRes val icon: Int,
     @StringRes val label: Int
 ) {
     HOME(
-        route = null,
+        route = HomeGraph,
+        startRoute = HomeDestination,
         icon = R.drawable.leaf,
         label = R.string.navigation_start
     ),
-
+    /*
     COLLECTION(
         route = null,
         icon = R.drawable.potted_plant,
@@ -64,7 +89,7 @@ enum class TopLevelDestination(
         route = null,
         icon = R.drawable.favorites,
         label = R.string.navigation_favorites
-    )
+    )*/
 }
 
 @Composable
@@ -73,27 +98,43 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
 
-    /*
     val selectedDestination = TopLevelDestination.entries.firstOrNull() { destination ->
-        currentDestination?.hierarchy?.any { it.hasRoute(destination.route!!::class) } == true
-    }*/
+        currentDestination?.hierarchy?.any { it.hasRoute(destination.route::class) } == true
+    }
+
+    val usesTopAppBar = TopLevelDestination.entries.firstOrNull() { destination ->
+        currentDestination?.hierarchy?.any { it.hasRoute(destination.startRoute::class) } == true
+    }
 
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0),
-        /*
+        topBar = {
+            if (usesTopAppBar != null) {
+                AppSectionTopBar(
+                    section = stringResource(usesTopAppBar.label),
+                    //TODO: add account screen to navigate to
+                    onProfileClick = {}
+                )
+            }
+        },
         bottomBar = {
             if (selectedDestination != null) {
                 AppBottomBar(
                     selectedDestination = selectedDestination,
                     onDestinationClick = { destination ->
                         navController.navigate(
-                            destination.route!!
+                            destination.route,
+                            navOptions {
+                                popUpTo(HomeGraph) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         )
                     }
                 )
             }
-        }*/
+        }
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -102,11 +143,22 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
         ){
-            //TODO: add graphs and screens of navigation
             loginScreen(
-                onLogin = {},
+                onLogin = {
+                    navController.navigateToHomeGraph(
+                        navOptions { popUpTo(LoginDestination) {inclusive = true} }
+                    )
+                },
                 onRegister = {},
                 onLoginWithGoogle = {}
+            )
+
+            homeGraph(
+                navController = navController,
+
+                //TODO: update with diagnosis camera screen and add plant screen
+                onDiagnosisClick = {},
+                onAddPlantClick = {}
             )
         }
     }
@@ -134,6 +186,81 @@ fun AppTopBar(
             }
         },
         actions = actions
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppSectionTopBar(
+    section: String,
+    onProfileClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AppTopBar(
+        title = "",
+        modifier = modifier,
+        actions = {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(color = darkenColor(originalColor = MaterialTheme.colorScheme.surface))
+                    ){
+                        Image(
+                            painter = painterResource(id = R.drawable.botanika_logo),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
+                        )
+                    }
+
+                    Column {
+                        Text(
+                            text = "Botanika",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = section,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painterResource(id = R.drawable.notification),
+                        contentDescription = null
+                    )
+
+                    Image(
+                        painterResource(id = R.drawable.account_placeholder),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .clip(shape = CircleShape)
+                            .clickable(
+                                onClick = onProfileClick
+                            )
+                    )
+                }
+            }
+        }
     )
 }
 

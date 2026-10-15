@@ -42,7 +42,8 @@ fun TextFieldWithTitle(
     fieldTrailingIcon: Int?,
     onTrailingIconClick: () -> Unit,
     visualTransformation: VisualTransformation?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    placeholder: String = ""
 ){
     Column(
         modifier = modifier
@@ -93,6 +94,7 @@ fun TextFieldWithTitle(
                     }
                 }
             },
+            placeholder = { Text(placeholder) },
             visualTransformation = visualTransformation ?: VisualTransformation.None,
             singleLine = true,
             modifier = Modifier
