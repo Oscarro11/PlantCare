@@ -22,6 +22,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.getValue
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptions
+import androidx.navigation.compose.composable
+import kotlinx.serialization.Serializable
+import plat.plantcare.app.discover.data.DescubrirEvent
+import plat.plantcare.app.discover.data.DescubrirState
+import plat.plantcare.app.discover.data.DescubrirViewModel
+import plat.plantcare.app.discover.data.PlantaRecomendada
 
 data class PlantaRecomendada(
     @DrawableRes val imagen: Int,
@@ -31,73 +43,116 @@ data class PlantaRecomendada(
     val match: Int
 )
 
-@Preview(showBackground = true)
-@Composable
-fun DescubrirScreen() {
-    val plantasRecomendadas = remember {
-        mutableListOf(
-            PlantaRecomendada(
-                imagen = R.drawable.ic_launcher_background,
-                nombre = "Zamioculcas Zamiifolia",
-                nombreAlternativo = "ZZ Plant",
-                caracteristica = "RESISTENCIA EXTREMA",
-                match = 98
-            ),
-            PlantaRecomendada(
-                imagen = R.drawable.ic_launcher_background,
-                nombre = "Maranta Leuconeura",
-                nombreAlternativo = "Planta de la oración",
-                caracteristica = "MOVIMIENTO FOLIAR",
-                match = 94
-            ),
-            PlantaRecomendada(
-                imagen = R.drawable.ic_launcher_background,
-                nombre = "Monstera Adansonii",
-                nombreAlternativo = "Monkey Mask",
-                caracteristica = "TREPAdORA / COLGANTE".uppercase(),
-                match = 91
-            )
+@Serializable
+data object DescubrirDestination
+
+fun NavController.navigateToDescubrirDestination(
+    navOptions: NavOptions? = null
+) {
+    navigate(DescubrirDestination, navOptions)
+}
+
+fun NavGraphBuilder.descubrirScreen(
+    onVerCuidados: (PlantaRecomendada) -> Unit,
+    onFiltrosClick: () -> Unit
+) {
+    composable<DescubrirDestination> {
+        DescubrirRoute(
+            onVerCuidados = onVerCuidados,
+            onFiltrosClick = onFiltrosClick
         )
     }
+}
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(
-                start = 20.dp,
-                end = 20.dp,
-                top = 44.dp,
-                bottom = 40.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                HeaderDescubrir(
-                    cantidad = plantasRecomendadas.size
-                )
-            }
+@Composable
+fun DescubrirRoute(
+    onVerCuidados: (PlantaRecomendada) -> Unit,
+    onFiltrosClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: DescubrirViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-            item {
+    DescubrirScreen(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onVerCuidados = onVerCuidados,
+        onFiltrosClick = onFiltrosClick,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun DescubrirScreen(
+    state: DescubrirState,
+    onEvent: (DescubrirEvent) -> Unit,
+    onVerCuidados: (PlantaRecomendada) -> Unit,
+    onFiltrosClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 20.dp,
+            end = 20.dp,
+            top = 44.dp,
+            bottom = 40.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            HeaderDescubrir(
+                cantidad = state.plantasRecomendadas.size
+            )
+        }
+
+        item {
+            Column {
                 Spacer(Modifier.height(14.dp))
 
-                RecomendacionesHeader()
+                RecomendacionesHeader(
+                    onFiltrosClick = onFiltrosClick
+                )
 
                 Spacer(Modifier.height(4.dp))
             }
-
-            items(
-                items = plantasRecomendadas,
-                key = { planta -> planta.nombre }
-            ) { planta ->
-                PlantaRecomendadaCard(
-                    planta = planta
-                )
-            }
         }
+
+        items(
+            items = state.plantasRecomendadas,
+            key = { planta -> planta.id }
+        ) { planta ->
+            PlantaRecomendadaCard(
+                planta = planta,
+                onToggleListaDeseos = {
+                    onEvent(
+                        DescubrirEvent.ToggleListaDeseos(
+                            plantaId = planta.id
+                        )
+                    )
+                },
+                onVerCuidados = {
+                    onVerCuidados(planta)
+                }
+            )
+        }
+    }
+}
+
+@Preview(
+    showBackground = true,
+    widthDp = 412,
+    heightDp = 915
+)
+@Composable
+private fun DescubrirScreenPreview() {
+    MaterialTheme {
+        DescubrirScreen(
+            state = DescubrirState(),
+            onEvent = {},
+            onVerCuidados = {},
+            onFiltrosClick = {}
+        )
     }
 }
 
@@ -146,7 +201,9 @@ private fun HeaderDescubrir(
 }
 
 @Composable
-private fun RecomendacionesHeader() {
+private fun RecomendacionesHeader(
+    onFiltrosClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -171,7 +228,7 @@ private fun RecomendacionesHeader() {
         }
 
         IconButton(
-            onClick = {}
+            onClick = onFiltrosClick
         ) {
             Icon(
                 imageVector = Icons.Outlined.Tune,
@@ -185,7 +242,9 @@ private fun RecomendacionesHeader() {
 
 @Composable
 private fun PlantaRecomendadaCard(
-    planta: PlantaRecomendada
+    planta: PlantaRecomendada,
+    onToggleListaDeseos: () -> Unit,
+    onVerCuidados: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -222,7 +281,11 @@ private fun PlantaRecomendadaCard(
 
             Spacer(Modifier.height(18.dp))
 
-            PlantActions()
+            PlantActions(
+                enListaDeseos = planta.enListaDeseos,
+                onToggleListaDeseos = onToggleListaDeseos,
+                onVerCuidados = onVerCuidados
+            )
         }
     }
 }
@@ -306,13 +369,17 @@ private fun PlantaInformation(
 }
 
 @Composable
-private fun PlantActions() {
+private fun PlantActions(
+    enListaDeseos: Boolean,
+    onToggleListaDeseos: () -> Unit,
+    onVerCuidados: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         FilledTonalButton(
-            onClick = {},
+            onClick = onToggleListaDeseos,
             modifier = Modifier
                 .weight(1f)
                 .height(45.dp),
@@ -332,14 +399,18 @@ private fun PlantActions() {
             Spacer(Modifier.width(6.dp))
 
             Text(
-                text = "+ A deseos",
+                text = if (enListaDeseos) {
+                    "En deseos"
+                } else {
+                    "+ A deseos"
+                },
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
         }
 
         Button(
-            onClick = {},
+            onClick = onVerCuidados,
             modifier = Modifier
                 .weight(1f)
                 .height(45.dp),
