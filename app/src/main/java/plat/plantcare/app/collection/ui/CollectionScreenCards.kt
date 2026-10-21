@@ -1,8 +1,9 @@
-package plat.plantcare.app.collection
+package plat.plantcare.app.collection.ui
 
 //TODO: change material3.* to specific imports
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.selection.selectable
@@ -11,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,43 +22,70 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptions
+import androidx.navigation.compose.composable
+import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
+import plat.plantcare.app.collection.data.CollectionCardInfo
+import plat.plantcare.app.collection.data.CollectionEvent
+import plat.plantcare.app.collection.data.CollectionLayout
+import plat.plantcare.app.collection.data.CollectionState
+import plat.plantcare.app.collection.data.CollectionViewModel
 import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.core.lightenColor
+import kotlin.to
 
-enum class Tasks(val icon: Int) {
-    WATERING(R.drawable.water_drop),
-    SUNLIGHT(R.drawable.sunny),
-    CLEANING(R.drawable.brush)
+@Serializable data object CollectionDestination
+
+fun NavController.navigateToCollectionDestination(navOptions: NavOptions? = null) {
+    navigate(CollectionDestination, navOptions)
 }
 
-data class CollectionCardInfo(
-    val name: String,
-    val image: Int,
-    val location: String,
-    val tasks: List<Pair<Tasks, Boolean>> = emptyList()
-)
-
-private fun sampleTasks(active: Int) =
-    Tasks.entries.mapIndexed { index, task -> task to (index == active) }
-
-private val mockCollectionInfo = listOf(
-    CollectionCardInfo("Monty", R.drawable.plant_img_example, "Salón", sampleTasks(0)),
-    CollectionCardInfo("Espada", R.drawable.plant_img_example, "Dormitorio", sampleTasks(1)),
-    CollectionCardInfo("Diva", R.drawable.plant_img_example, "Estudio", sampleTasks(2)),
-    CollectionCardInfo("Cascada", R.drawable.plant_img_example, "Cocina", sampleTasks(0)),
-    CollectionCardInfo("Rubí", R.drawable.plant_img_example, "Salón", sampleTasks(1)),
-    CollectionCardInfo("Monedita", R.drawable.plant_img_example, "Balcón", sampleTasks(2))
-)
+fun NavGraphBuilder.collectionScreen(
+    onAddPlant: () -> Unit,
+    onExaminePlant: (String) -> Unit,
+) {
+    composable<CollectionDestination> {
+        CollectionRoute(
+            onAddPlant = onAddPlant,
+            onExaminePlant = onExaminePlant,
+        )
+    }
+}
 
 @Composable
-fun CollectionRoute() = CollectionScreen(mockCollectionInfo)
+fun CollectionRoute(
+    onAddPlant: () -> Unit,
+    onExaminePlant: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: CollectionViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    CollectionScreen(
+        onAddPlant = onAddPlant,
+        onExaminePlant = onExaminePlant,
+        onFilterClick = {},
+        onSearchQueryChange = { query -> viewModel.onEvent(CollectionEvent.ChangeSearchbar(query)) },
+        onLayoutChange = { viewModel.onEvent(CollectionEvent.ToggleDisplay) },
+        state = state,
+        modifier = modifier
+    )
+}
 
 @Composable
 private fun CollectionScreen(
-    collection: List<CollectionCardInfo>,
+    onAddPlant: () -> Unit,
+    onExaminePlant: (String) -> Unit,
+    onFilterClick: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onLayoutChange: () -> Unit,
+    state: CollectionState,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
@@ -68,8 +97,25 @@ private fun CollectionScreen(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        fullWidthItem { CollectionHeader(collection.size) }
-        fullWidthItem { SearchBar() }
+        fullWidthItem {
+            CollectionHeader(
+                plantCount = state.plantList.size,
+                pendingOfWatering = state.pendingWatering,
+                climate = state.todayClimate,
+                healthPercentage = state.healthPercentage
+            )
+        }
+
+        fullWidthItem {
+            SearchBar(
+                queryValue = state.searchQuery,
+                onSearchQueryChange = onSearchQueryChange,
+                //TODO: add filter to query searchbar
+                onFilterClick = onFilterClick,
+                onAddPlant = onAddPlant
+            )
+        }
+
         fullWidthItem {
             Row(
                 modifier = Modifier
@@ -79,18 +125,23 @@ private fun CollectionScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "MOSTRANDO ${collection.size} REGISTRADAS",
+                    text = "MOSTRANDO ${state.plantList.size} REGISTRADAS",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 CollectionLayoutSelector(
-                    selectedLayout = CollectionLayout.Grid,
-                    onLayoutSelected = {}
+                    selectedLayout = state.selectedLayout,
+                    onLayoutSelected = onLayoutChange
                 )
             }
         }
-        items(collection) { CollectionCard(it) }
+        items(state.plantList) {
+            CollectionCard(
+                data = it,
+                onClick = { onExaminePlant(it.id) }
+            )
+        }
         fullWidthItem { Spacer(Modifier.height(24.dp)) }
     }
 }
@@ -100,7 +151,12 @@ private fun LazyGridScope.fullWidthItem(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun CollectionHeader(plantCount: Int) {
+private fun CollectionHeader(
+    plantCount: Int,
+    pendingOfWatering: Int,
+    climate: String,
+    healthPercentage: Float
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -163,15 +219,15 @@ private fun CollectionHeader(plantCount: Int) {
         ) {
             StatisticCard(
                 icon = R.drawable.water_drop,
-                label = "Hoy", "2 por\nregar", Modifier.weight(1f)
+                label = "Hoy", "$pendingOfWatering por\nregar", Modifier.weight(1f)
             )
             StatisticCard(
                 icon = R.drawable.sunny,
-                label = "Clima", "22°C\nÓptimo", Modifier.weight(1f)
+                label = "Clima", "$climate\nÓptimo", Modifier.weight(1f)
             )
             StatisticCard(
                 icon = R.drawable.lotus,
-                label = "Salud", "98%\nFeliz", Modifier.weight(1f)
+                label = "Salud", "${healthPercentage*100}%\nFeliz", Modifier.weight(1f)
             )
         }
     }
@@ -217,17 +273,23 @@ private fun StatisticCard(
 }
 
 @Composable
-private fun SearchBar() {
+private fun SearchBar(
+    queryValue: String,
+    onSearchQueryChange: (String) -> Unit,
+    onFilterClick: () -> Unit,
+    onAddPlant: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         TextField(
-            value = "",
-            onValueChange = {},
+            value = queryValue,
+            onValueChange = onSearchQueryChange,
             modifier = Modifier
                 .weight(1f)
                 .height(58.dp),
@@ -254,11 +316,13 @@ private fun SearchBar() {
         )
         SmallActionButton(
             icon = R.drawable.filters,
+            onClick = onFilterClick,
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         )
         SmallActionButton(
             icon = R.drawable.add,
+            onClick = onAddPlant,
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
         )
@@ -266,9 +330,14 @@ private fun SearchBar() {
 }
 
 @Composable
-private fun SmallActionButton(icon: Int, containerColor: Color, contentColor: Color) {
+private fun SmallActionButton(
+    icon: Int,
+    onClick: () -> Unit,
+    containerColor: Color,
+    contentColor: Color
+) {
     IconButton(
-        onClick = {},
+        onClick = onClick,
         modifier = Modifier.size(44.dp),
         shape = RoundedCornerShape(8.dp),
         colors = IconButtonDefaults.iconButtonColors(
@@ -287,6 +356,7 @@ private fun SmallActionButton(icon: Int, containerColor: Color, contentColor: Co
 @Composable
 fun CollectionCard(
     data: CollectionCardInfo,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -306,7 +376,9 @@ fun CollectionCard(
                 Image(
                     painterResource(id = data.image),
                     contentDescription = null,
-                    Modifier.fillMaxSize(),
+                    Modifier
+                        .fillMaxSize()
+                        .clickable(onClick = onClick),
                     contentScale = ContentScale.Crop
                 )
                 LocationChip(
@@ -324,7 +396,8 @@ fun CollectionCard(
                         .size(28.dp)
                         .background(
                             color = MaterialTheme.colorScheme.surface.copy(alpha = .85f),
-                            shape = CircleShape)
+                            shape = CircleShape
+                        )
                         .padding(8.dp)
                 )
             }
@@ -344,24 +417,25 @@ fun CollectionCard(
                     maxLines = 1
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    data.tasks.forEach { (task, active) ->
+                    data.tasks.forEach { task ->
                         Icon(
-                            painterResource(id = task.icon),
+                            painterResource(id = task.action.iconId),
                             contentDescription = null,
                             Modifier
                                 .size(28.dp)
                                 .background(
-                                    color = if (active) {
+                                    color = if (!task.completed) {
                                         MaterialTheme.colorScheme.background
                                     } else {
                                         lightenColor(
                                             originalColor = MaterialTheme.colorScheme.background,
-                                            factor = .2f)
+                                            factor = .2f
+                                        )
                                     },
                                     shape = CircleShape
                                 )
                                 .padding(7.dp),
-                            tint = if (active) {
+                            tint = if (!task.completed) {
                                 MaterialTheme.colorScheme.onBackground
                             } else {
                                 lightenColor(originalColor = MaterialTheme.colorScheme.onBackground, factor = .5f)
@@ -390,7 +464,8 @@ private fun LocationChip(location: String, modifier: Modifier = Modifier) {
             Modifier
                 .size(6.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primary, CircleShape)
+                    color = MaterialTheme.colorScheme.primary, CircleShape
+                )
         )
         Text(
             location,
@@ -400,30 +475,25 @@ private fun LocationChip(location: String, modifier: Modifier = Modifier) {
     }
 }
 
-enum class CollectionLayout { Grid, List }
-
 @Composable
 fun CollectionLayoutSelector(
     selectedLayout: CollectionLayout,
-    onLayoutSelected: (CollectionLayout) -> Unit,
+    onLayoutSelected: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val options = listOf(
-        CollectionLayout.Grid to R.drawable.grid_view,
-        CollectionLayout.List to R.drawable.list_view
-    )
-
     Row(
         modifier = modifier
             .size(width = 60.dp, height = 32.dp)
             .background(
                 color = darkenColor(originalColor = MaterialTheme.colorScheme.background),
-                shape = RoundedCornerShape(8.dp))
+                shape = RoundedCornerShape(8.dp)
+            )
             .padding(2.dp)
             .selectableGroup()
     ) {
-        options.forEach { (layout, icon) ->
+        CollectionLayout.entries.forEach { layout ->
             val selected = selectedLayout == layout
+
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -436,23 +506,15 @@ fun CollectionLayoutSelector(
                     .selectable(
                         selected = selected,
                         role = Role.RadioButton,
-                        onClick = { onLayoutSelected(layout) }
+                        onClick = onLayoutSelected
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(icon),
+                    painter = painterResource(layout.icon),
                     contentDescription = null,
                     modifier = Modifier.size(14.dp))
             }
         }
     }
 }
-
-@Preview(showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewCollectionScreen() = CollectionScreen(mockCollectionInfo)
-
-@Preview(showBackground = true)
-@Composable
-private fun PreviewCollectionCard() = CollectionCard(mockCollectionInfo.first())

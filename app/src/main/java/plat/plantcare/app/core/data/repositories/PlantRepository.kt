@@ -1,57 +1,92 @@
 package plat.plantcare.app.core.data.repositories
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import plat.plantcare.app.core.data.models.Plant
+import plat.plantcare.app.core.data.models.PlantCharacteristics
 import java.time.LocalDate
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Contains both Plant and PlantCharacteristics
 interface PlantRepository {
     fun observePlants(): Flow<List<Plant>>
+    fun observePlant(id: String): Flow<Plant?>
+    fun observeCharacteristics(plantId: String): Flow<PlantCharacteristics?>
+    suspend fun addPlant(plant: Plant)
 }
 
 @Singleton
 class FakePlantRepository @Inject constructor() : PlantRepository {
 
-    val fakePlants = listOf(
-        Plant(
-            id = "plant-1",
-            name = "Monstera",
-            imageUrl = "https://placehold.co/600x600?text=Monstera",
-            location = "Living room",
-            birthDate = LocalDate.now().minusYears(2),
-            ownerId = "user-1",
-            referenceId = "ref-monstera"
-        ),
-        Plant(
-            id = "plant-2",
-            name = "Snake plant",
-            imageUrl = "https://placehold.co/600x600?text=Snake+plant",
-            location = "Bedroom",
-            birthDate = LocalDate.now().minusMonths(8),
-            ownerId = "user-1",
-            referenceId = "ref-snake-plant"
-        ),
-        Plant(
-            id = "plant-3",
-            name = "Golden pothos",
-            imageUrl = "https://placehold.co/600x600?text=Pothos",
-            location = "Kitchen",
-            birthDate = null, // Entry date wasn't recorded
-            ownerId = "user-1",
-            referenceId = "ref-golden-pothos"
-        ),
-        Plant(
-            id = "plant-4",
-            name = "Fiddle-leaf fig",
-            imageUrl = "https://placehold.co/600x600?text=Fiddle-leaf+fig",
-            location = "Near the window",
-            birthDate = LocalDate.now().minusDays(45),
-            ownerId = "user-1",
-            referenceId = "ref-fiddle-leaf-fig"
+    val fakePlants = MutableStateFlow(
+        listOf(
+            Plant(
+                id = "plant-1",
+                name = "Monstera",
+                imageUrl = "https://placehold.co/600x600?text=Monstera",
+                location = "Living room",
+                birthDate = LocalDate.now().minusYears(2),
+                ownerId = "user-1",
+                referenceId = "ref-monstera"
+            ),
+            Plant(
+                id = "plant-2",
+                name = "Snake plant",
+                imageUrl = "https://placehold.co/600x600?text=Snake+plant",
+                location = "Bedroom",
+                birthDate = LocalDate.now().minusMonths(8),
+                ownerId = "user-1",
+                referenceId = "ref-snake-plant"
+            ),
+            Plant(
+                id = "plant-3",
+                name = "Golden pothos",
+                imageUrl = "https://placehold.co/600x600?text=Pothos",
+                location = "Kitchen",
+                birthDate = null, // Entry date wasn't recorded
+                ownerId = "user-1",
+                referenceId = "ref-golden-pothos"
+            ),
+            Plant(
+                id = "plant-4",
+                name = "Fiddle-leaf fig",
+                imageUrl = "https://placehold.co/600x600?text=Fiddle-leaf+fig",
+                location = "Near the window",
+                birthDate = LocalDate.now().minusDays(45),
+                ownerId = "user-1",
+                referenceId = "ref-fiddle-leaf-fig"
+            )
         )
     )
 
-    override fun observePlants(): Flow<List<Plant>> = flowOf(fakePlants)
+    private val fakeCharacteristics = MutableStateFlow<Map<String, PlantCharacteristics>>(
+        emptyMap() // or sample data keyed by plantId
+    )
+
+    override fun observePlants(): Flow<List<Plant>> = fakePlants
+
+    override fun observePlant(id: String): Flow<Plant?> =
+        fakePlants
+            .map { plants -> plants.firstOrNull { it.id == id } }
+            .distinctUntilChanged()
+
+    override fun observeCharacteristics(plantId: String): Flow<PlantCharacteristics?> =
+        fakeCharacteristics
+            .map { it[plantId] }
+            .distinctUntilChanged()
+
+    override suspend fun addPlant(plant: Plant) {
+        val newPlant = if (plant.id.isBlank()) {
+            plant.copy(id = UUID.randomUUID().toString())
+        } else plant
+
+        fakePlants.update { current -> current + newPlant }
+    }
 }

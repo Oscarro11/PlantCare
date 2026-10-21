@@ -1,4 +1,4 @@
-package plat.plantcare.app
+package plat.plantcare.app.collection.ui
 
 
 import androidx.annotation.DrawableRes
@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import plat.plantcare.app.R
 
 
 data class Plant(

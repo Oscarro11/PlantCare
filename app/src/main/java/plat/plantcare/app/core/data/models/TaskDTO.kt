@@ -24,6 +24,7 @@ import java.time.temporal.ChronoUnit
  * Only the data layer (repositories) should know about this class.
  * Every property needs a default value so Firestore can deserialize it.
  */
+//TODO: change DTO name to Entity
 data class TaskDto(
     @DocumentId val id: String = "",
     val plantId: String = "",

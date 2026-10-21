@@ -17,4 +17,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindUserRepository(impl: FakeUserRepository): UserRepository
+
+    @Binds
+    abstract fun bindWeatherRepository(impl: FakeWeatherRepository): WeatherRepository
 }

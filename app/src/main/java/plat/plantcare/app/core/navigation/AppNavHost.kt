@@ -43,6 +43,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import plat.plantcare.app.R
+import plat.plantcare.app.collection.ui.CollectionDestination
+import plat.plantcare.app.collection.ui.CollectionGraph
+import plat.plantcare.app.collection.ui.collectionGraph
 import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.home.ui.HomeDestination
 import plat.plantcare.app.home.ui.HomeGraph
@@ -67,13 +70,15 @@ enum class TopLevelDestination(
         icon = R.drawable.leaf,
         label = R.string.navigation_start
     ),
-    /*
+
     COLLECTION(
-        route = null,
+        route = CollectionGraph,
+        startRoute = CollectionDestination,
         icon = R.drawable.potted_plant,
         label = R.string.navigation_collection
     ),
 
+    /*
     CALENDAR(
         route = null,
         icon = R.drawable.calendar,
@@ -159,6 +164,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
                 //TODO: update with diagnosis camera screen and add plant screen
                 onDiagnosisClick = {},
+                onAddPlantClick = {}
+            )
+
+            collectionGraph(
+                navController = navController,
                 onAddPlantClick = {}
             )
         }
@@ -285,10 +295,11 @@ fun AppBottomBar(
                 icon = { Icon(painterResource(destination.icon), contentDescription = null) },
                 label = { Text(stringResource(destination.label)) },
                 colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = darkenColor(originalColor = MaterialTheme.colorScheme.primary),
                     selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedTextColor = MaterialTheme.colorScheme.onPrimary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                    unselectedTextColor = MaterialTheme.colorScheme.onPrimary
+                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }

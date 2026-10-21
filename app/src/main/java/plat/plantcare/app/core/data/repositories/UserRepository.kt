@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//TODO: add Google Login with FireBase
 interface UserRepository {
     fun observeUserName(): Flow<String>
 }

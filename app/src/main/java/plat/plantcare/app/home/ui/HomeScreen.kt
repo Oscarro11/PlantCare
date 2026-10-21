@@ -222,6 +222,8 @@ private fun DailyProgressCard(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
+        val progressPercentage: Float = if (totalTasks > 0) round((1 - (pendingTasks.toFloat() / totalTasks)) * 100) else 100f
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -239,16 +241,15 @@ private fun DailyProgressCard(
                     fontWeight = FontWeight.SemiBold
                 )
 
-                val progressPercentage = if (totalTasks > 0) round((1 - pendingTasks.toFloat() / totalTasks) * 100) else 100
                 Text(
-                    text = "$pendingTasks de $totalTasks completadas ($progressPercentage%)",
+                    text = "${totalTasks - pendingTasks} de $totalTasks completadas ($progressPercentage%)",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             LinearProgressIndicator(
-                progress = { pendingTasks.toFloat() / totalTasks },
+                progress = { progressPercentage },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
