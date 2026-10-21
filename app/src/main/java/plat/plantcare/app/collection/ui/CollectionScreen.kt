@@ -5,7 +5,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
@@ -38,7 +41,6 @@ import plat.plantcare.app.collection.data.CollectionState
 import plat.plantcare.app.collection.data.CollectionViewModel
 import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.core.lightenColor
-import kotlin.to
 
 @Serializable data object CollectionDestination
 
@@ -136,12 +138,36 @@ private fun CollectionScreen(
                 )
             }
         }
-        items(state.plantList) {
-            CollectionCard(
-                data = it,
-                onClick = { onExaminePlant(it.id) }
-            )
+
+        when (state.selectedLayout) {
+            CollectionLayout.GRID -> {
+                items(
+                    items = state.plantList,
+                    key = { it.id }
+                ) { plant ->
+                    CollectionCard(
+                        data = plant,
+                        onClick = { onExaminePlant(plant.id) }
+                    )
+                }
+            }
+
+            CollectionLayout.LIST -> {
+                items(
+                    items = state.plantList,
+                    key = { it.id },
+                    span = { GridItemSpan(maxLineSpan) }
+                ) { plant ->
+                    CollectionRow(
+                        data = plant,
+                        onClick = { onExaminePlant(plant.id) },
+                        //TODO: check if more options are needed
+                        onOptionsClick = {}
+                    )
+                }
+            }
         }
+
         fullWidthItem { Spacer(Modifier.height(24.dp)) }
     }
 }
@@ -416,8 +442,12 @@ fun CollectionCard(
                     fontWeight = FontWeight.ExtraBold,
                     maxLines = 1
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    data.tasks.forEach { task ->
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(
+                        items = data.tasks
+                    ) { task ->
                         Icon(
                             painterResource(id = task.action.iconId),
                             contentDescription = null,
@@ -445,6 +475,127 @@ fun CollectionCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun CollectionRow(
+    data: CollectionCardInfo,
+    onClick: () -> Unit,
+    onOptionsClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White)
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(10.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            //TODO: change Image to Coil Image
+            Image(
+                painterResource(id = data.image),
+                contentDescription = null,
+                Modifier
+                    .fillMaxSize()
+                    .clickable(onClick = onClick),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = CircleShape
+                        )
+                )
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Text(
+                    text = data.location,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Text(
+                text = data.name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(
+                    items = data.tasks
+                ) { task ->
+                    Icon(
+                        painterResource(id = task.action.iconId),
+                        contentDescription = null,
+                        Modifier
+                            .size(28.dp)
+                            .background(
+                                color = if (!task.completed) {
+                                    MaterialTheme.colorScheme.background
+                                } else {
+                                    lightenColor(
+                                        originalColor = MaterialTheme.colorScheme.background,
+                                        factor = .2f
+                                    )
+                                },
+                                shape = CircleShape
+                            )
+                            .padding(7.dp),
+                        tint = if (!task.completed) {
+                            MaterialTheme.colorScheme.onBackground
+                        } else {
+                            lightenColor(originalColor = MaterialTheme.colorScheme.onBackground, factor = .5f)
+                        }
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = "⋮",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .clickable(onClick = onOptionsClick)
+                .padding(8.dp)
+        )
+
+        Text(
+            text = "›",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimary
+        )
     }
 }
 

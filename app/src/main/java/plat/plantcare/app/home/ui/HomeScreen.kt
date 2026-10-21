@@ -222,7 +222,7 @@ private fun DailyProgressCard(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        val progressPercentage: Float = if (totalTasks > 0) round((1 - (pendingTasks.toFloat() / totalTasks)) * 100) else 100f
+        val progressPercentage: Float = if (totalTasks > 0) 1f - (pendingTasks.toFloat() / totalTasks) else 1f
 
         Column(
             modifier = Modifier
@@ -242,7 +242,7 @@ private fun DailyProgressCard(
                 )
 
                 Text(
-                    text = "${totalTasks - pendingTasks} de $totalTasks completadas ($progressPercentage%)",
+                    text = "${totalTasks - pendingTasks} de $totalTasks completadas (${round(progressPercentage * 100)}%)",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
