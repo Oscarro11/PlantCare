@@ -10,14 +10,15 @@ import java.time.ZoneId
 // ---------------------------------------------------------------------------
 
 /** Colección: plantas/{id} */
-data class PlantDto(
+data class PlantEntity(
     @DocumentId val id: String = "",
     val name: String = "",            // Nombre personal
     val image: String = "",           // URL de la imagen
     val location: String = "",
     val birthDate: Timestamp? = null, // Fecha de ingreso
     val ownerId: String = "",         // FK -> Usuario.id (Dueño)
-    val referenceId: String = ""      // FK -> ReferenciaPlanta.id
+    val referenceId: String = "",      // FK -> ReferenciaPlanta.id
+    val favorite: Boolean = false
 )
 
 // ---------------------------------------------------------------------------
@@ -31,15 +32,16 @@ data class Plant(
     val location: String,
     val birthDate: LocalDate?,        // Null when the entry date was never recorded
     val ownerId: String,
-    val referenceId: String
+    val referenceId: String,
+    val favorite: Boolean = false
 )
 
 // ---------------------------------------------------------------------------
-// Conversions (DTO <-> domain)
-// Timestamp <-> LocalDate helpers live in TaskDTO.kt (same package)
+// Conversions (Entity <-> domain)
+// Timestamp <-> LocalDate helpers live in TaskEntity.kt (same package)
 // ---------------------------------------------------------------------------
 
-fun PlantDto.toDomain(zone: ZoneId = ZoneId.systemDefault()): Plant =
+fun PlantEntity.toDomain(zone: ZoneId = ZoneId.systemDefault()): Plant =
     Plant(
         id = id,
         name = name,
@@ -47,16 +49,18 @@ fun PlantDto.toDomain(zone: ZoneId = ZoneId.systemDefault()): Plant =
         location = location,
         birthDate = birthDate?.toLocalDate(zone),
         ownerId = ownerId,
-        referenceId = referenceId
+        referenceId = referenceId,
+        favorite = favorite
     )
 
-fun Plant.toDto(zone: ZoneId = ZoneId.systemDefault()): PlantDto =
-    PlantDto(
+fun Plant.toEntity(zone: ZoneId = ZoneId.systemDefault()): PlantEntity =
+    PlantEntity(
         id = id,
         name = name,
         image = imageUrl,
         location = location,
         birthDate = birthDate?.toTimestamp(zone),
         ownerId = ownerId,
-        referenceId = referenceId
+        referenceId = referenceId,
+        favorite = favorite
     )

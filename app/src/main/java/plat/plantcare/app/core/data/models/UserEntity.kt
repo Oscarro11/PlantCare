@@ -11,7 +11,7 @@ import com.google.firebase.firestore.DocumentId
  * El ID es el uid de Firebase Authentication.
  * La contraseña NO se guarda aquí: la gestiona Firebase Auth.
  */
-data class UserDto(
+data class UserEntity(
     @DocumentId val id: String = "",
     val name: String = "",
     val location: String = "",
@@ -32,10 +32,10 @@ data class User(
 )
 
 // ---------------------------------------------------------------------------
-// Conversions (DTO <-> domain)
+// Conversions (Entity <-> domain)
 // ---------------------------------------------------------------------------
 
-fun UserDto.toDomain(): User =
+fun UserEntity.toDomain(): User =
     User(
         id = id,
         name = name,
@@ -44,8 +44,8 @@ fun UserDto.toDomain(): User =
         streakDays = streakDays
     )
 
-fun User.toDto(): UserDto =
-    UserDto(
+fun User.toEntity(): UserEntity =
+    UserEntity(
         id = id,
         name = name,
         location = location,

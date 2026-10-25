@@ -24,14 +24,14 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
             Task(
                 id = "task-1",
                 plantId = "plant-1",
-                dueDate = LocalDate.now().minusDays(2),
+                dueDate = LocalDate.now().plusDays(2),
                 action = TaskAction.WATER, // Replace with your enum value
                 description = "Water the monstera",
                 completed = false
                 ),
                 Task(
                 id = "task-2",
-                plantId = "plant-1",
+                plantId = "plant-2",
                 dueDate = LocalDate.now(),
                 action = TaskAction.CHECK_SOIL_MOISTURE,
                 description = "Check whether the soil is dry",
@@ -39,15 +39,15 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
             ),
             Task(
                 id = "task-3",
-                plantId = "plant-2",
+                plantId = "plant-3",
                 dueDate = LocalDate.now().plusDays(1),
                 action = TaskAction.FERTILIZE,
                 description = "Add a small amount of fertilizer",
                 completed = false
             ),
             Task(
-                id = "task-4",
-                plantId = "plant-2",
+                id = "task-2",
+                plantId = "plant-4",
                 dueDate = LocalDate.now().plusDays(5),
                 action = TaskAction.PRUNE,
                 description = "Trim dry leaves",
@@ -56,10 +56,10 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
             Task(
                 id = "task-5",
                 plantId = "plant-1",
-                dueDate = LocalDate.now().minusDays(1),
+                dueDate = LocalDate.now().plusDays(1),
                 action = TaskAction.WATER,
                 description = "Water the monstera",
-                completed = true
+                completed = false
             )
         )
     )

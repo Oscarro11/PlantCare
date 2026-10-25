@@ -6,37 +6,37 @@ import com.google.firebase.firestore.DocumentId
 // Data layer: what is stored in Firestore
 // ---------------------------------------------------------------------------
 
-/** Colección: plantasDeseadas/{id} */
-data class WishPlantDto(
+/** Colección: referencias/{id} */
+data class PlantReferenceEntity(
     @DocumentId val id: String = "",
-    val userId: String = "",       // FK -> Usuario.id
-    val referenceId: String = ""   // FK -> ReferenciaPlanta.id (Referencia de planta)
+    val scientificName: String = "",  // Nombre científico
+    val description: String = ""      // Descripción
 )
 
 // ---------------------------------------------------------------------------
 // Domain layer: what the rest of the app uses
 // ---------------------------------------------------------------------------
 
-data class WishPlant(
+data class PlantReference(
     val id: String,
-    val userId: String,
-    val referenceId: String
+    val scientificName: String,
+    val description: String
 )
 
 // ---------------------------------------------------------------------------
-// Conversions (DTO <-> domain)
+// Conversions (Entity <-> domain)
 // ---------------------------------------------------------------------------
 
-fun WishPlantDto.toDomain(): WishPlant =
-    WishPlant(
+fun PlantReferenceEntity.toDomain(): PlantReference =
+    PlantReference(
         id = id,
-        userId = userId,
-        referenceId = referenceId
+        scientificName = scientificName,
+        description = description
     )
 
-fun WishPlant.toDto(): WishPlantDto =
-    WishPlantDto(
+fun PlantReference.toEntity(): PlantReferenceEntity =
+    PlantReferenceEntity(
         id = id,
-        userId = userId,
-        referenceId = referenceId
+        scientificName = scientificName,
+        description = description
     )

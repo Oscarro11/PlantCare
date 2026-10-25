@@ -10,7 +10,7 @@ import com.google.firebase.firestore.DocumentId
  * Documento: pautasCuidado/{referenceId} (mismo ID que la ReferenciaPlanta)
  * Según el diagrama, se relaciona con ReferenciaPlanta.
  */
-data class PlantReferenceConsiderationsDto(
+data class PlantReferenceConsiderationsEntity(
     @DocumentId val referenceId: String = "",      // PK y FK -> ReferenciaPlanta.id
     val wateringGuide: String = "",                // Cómo hacer riego
     val recommendedLocationAndLight: String = "",  // Ubicación y luz recomendadas
@@ -31,10 +31,10 @@ data class PlantReferenceConsiderations(
 )
 
 // ---------------------------------------------------------------------------
-// Conversions (DTO <-> domain)
+// Conversions (Entity <-> domain)
 // ---------------------------------------------------------------------------
 
-fun PlantReferenceConsiderationsDto.toDomain(): PlantReferenceConsiderations =
+fun PlantReferenceConsiderationsEntity.toDomain(): PlantReferenceConsiderations =
     PlantReferenceConsiderations(
         referenceId = referenceId,
         wateringGuide = wateringGuide,
@@ -43,8 +43,8 @@ fun PlantReferenceConsiderationsDto.toDomain(): PlantReferenceConsiderations =
         sprayingAndCleaning = sprayingAndCleaning
     )
 
-fun PlantReferenceConsiderations.toDto(): PlantReferenceConsiderationsDto =
-    PlantReferenceConsiderationsDto(
+fun PlantReferenceConsiderations.toEntity(): PlantReferenceConsiderationsEntity =
+    PlantReferenceConsiderationsEntity(
         referenceId = referenceId,
         wateringGuide = wateringGuide,
         recommendedLocationAndLight = recommendedLocationAndLight,

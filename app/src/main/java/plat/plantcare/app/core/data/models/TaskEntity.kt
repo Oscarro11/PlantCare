@@ -1,5 +1,6 @@
 package plat.plantcare.app.core.data.models
 
+import android.R.attr.entries
 import androidx.annotation.DrawableRes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -24,8 +25,8 @@ import java.time.temporal.ChronoUnit
  * Only the data layer (repositories) should know about this class.
  * Every property needs a default value so Firestore can deserialize it.
  */
-//TODO: change DTO name to Entity
-data class TaskDto(
+//TODO: change Entity name to Entity
+data class TaskEntity(
     @DocumentId val id: String = "",
     val plantId: String = "",
     val dueDate: Timestamp? = null,      // Fecha límite (an instant in time)
@@ -52,14 +53,14 @@ data class Task(
 }
 
 // ---------------------------------------------------------------------------
-// Conversions (DTO <-> domain)
+// Conversions (Entity <-> domain)
 // ---------------------------------------------------------------------------
 
 /**
  * Returns null when the document has no due date, so callers can use `mapNotNull`.
  * Pass [zone] explicitly in tests; it defaults to the device zone.
  */
-fun TaskDto.toDomain(zone: ZoneId = ZoneId.systemDefault()): Task? {
+fun TaskEntity.toDomain(zone: ZoneId = ZoneId.systemDefault()): Task? {
     val date = dueDate?.toLocalDate(zone) ?: return null
     return Task(
         id = id,
@@ -71,8 +72,8 @@ fun TaskDto.toDomain(zone: ZoneId = ZoneId.systemDefault()): Task? {
     )
 }
 
-fun Task.toDto(zone: ZoneId = ZoneId.systemDefault()): TaskDto =
-    TaskDto(
+fun Task.toEntity(zone: ZoneId = ZoneId.systemDefault()): TaskEntity =
+    TaskEntity(
         id = id,
         plantId = plantId,
         dueDate = dueDate.toTimestamp(zone),
@@ -92,14 +93,6 @@ enum class TaskUrgency {
     HOY
 }
 
-fun LocalDate.toUrgency(today: LocalDate = LocalDate.now()): TaskUrgency =
-    when (ChronoUnit.DAYS.between(today, this)) {
-        in Long.MIN_VALUE..-1L -> TaskUrgency.ATRASADO
-        0L -> TaskUrgency.HOY
-        in 1L..3L -> TaskUrgency.PRIORITARIO
-        else -> TaskUrgency.PROXIMO
-    }
-
 // ---------------------------------------------------------------------------
 // Actions
 // ---------------------------------------------------------------------------
@@ -107,7 +100,7 @@ fun LocalDate.toUrgency(today: LocalDate = LocalDate.now()): TaskUrgency =
 //TODO: update icons for each task action
 enum class TaskAction(
     @DrawableRes val iconId: Int,
-    val displayName: String?
+    val displayName: String
 ) {
     WATER(
         iconId = R.drawable.water_drop,
