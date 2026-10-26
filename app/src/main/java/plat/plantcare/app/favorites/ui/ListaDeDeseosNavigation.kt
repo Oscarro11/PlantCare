@@ -6,7 +6,6 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.ListaDeseosRoute
-import plat.plantcare.app.favorites.data.PlantaDeseada
 
 @Serializable
 data object ListaDeseosDestination
@@ -19,14 +18,12 @@ fun NavController.navigateToListaDeseosDestination(
 
 fun NavGraphBuilder.listaDeseosScreen(
     onAgregarClick: () -> Unit,
-    onFiltrosClick: () -> Unit,
-    onMoverAColeccion: (PlantaDeseada) -> Unit
+    onFiltrosClick: () -> Unit
 ) {
     composable<ListaDeseosDestination> {
         ListaDeseosRoute(
             onAgregarClick = onAgregarClick,
-            onFiltrosClick = onFiltrosClick,
-            onMoverAColeccion = onMoverAColeccion
+            onFiltrosClick = onFiltrosClick
         )
     }
 }

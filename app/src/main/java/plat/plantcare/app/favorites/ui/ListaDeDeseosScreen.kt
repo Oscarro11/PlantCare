@@ -59,7 +59,6 @@ import plat.plantcare.app.favorites.data.PlantaDeseada
 fun ListaDeseosRoute(
     onAgregarClick: () -> Unit,
     onFiltrosClick: () -> Unit,
-    onMoverAColeccion: (PlantaDeseada) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ListaDeseosViewModel = hiltViewModel()
 ) {
@@ -70,7 +69,6 @@ fun ListaDeseosRoute(
         onEvent = viewModel::onEvent,
         onAgregarClick = onAgregarClick,
         onFiltrosClick = onFiltrosClick,
-        onMoverAColeccion = onMoverAColeccion,
         modifier = modifier
     )
 }
@@ -81,7 +79,6 @@ private fun ListaDeseosScreen(
     onEvent: (ListaDeseosEvent) -> Unit,
     onAgregarClick: () -> Unit,
     onFiltrosClick: () -> Unit,
-    onMoverAColeccion: (PlantaDeseada) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -141,7 +138,11 @@ private fun ListaDeseosScreen(
                     )
                 },
                 onMoverAColeccion = {
-                    onMoverAColeccion(planta)
+                    onEvent(
+                        ListaDeseosEvent.MoverAColeccion(
+                            plantaId = planta.id
+                        )
+                    )
                 }
             )
         }
@@ -156,8 +157,7 @@ private fun ListaDeseosScreenPreview() {
             state = ListaDeseosState(),
             onEvent = {},
             onAgregarClick = {},
-            onFiltrosClick = {},
-            onMoverAColeccion = {}
+            onFiltrosClick = {}
         )
     }
 }

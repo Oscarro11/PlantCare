@@ -179,8 +179,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             favoritesGraph(
                 onAgregarClick = {},
-                onFiltrosClick = {},
-                onMoverAColeccion = {}
+                onFiltrosClick = {}
             )
         }
     }
