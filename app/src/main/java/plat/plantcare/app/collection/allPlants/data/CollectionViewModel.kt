@@ -1,6 +1,5 @@
-package plat.plantcare.app.collection.data
+package plat.plantcare.app.collection.allPlants.data
 
-import android.R.attr.name
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,7 +59,7 @@ class CollectionViewModel @Inject constructor (
                 .filter { it.action == TaskAction.WATER }
                 .size,
             todayClimate = weather,
-            healthPercentage = if (plants.isEmpty()) 100f else 1 - (plantsWithPending / plants.size.toFloat()),
+            healthPercentage = if (plants.isEmpty()) 1f else 1 - (plantsWithPending / plants.size.toFloat()),
             plantList = visiblePlants.map { plant ->
                 CollectionCardInfo(
                     id = plant.id,

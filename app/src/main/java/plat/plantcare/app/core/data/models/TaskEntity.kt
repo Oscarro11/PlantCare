@@ -164,10 +164,10 @@ enum class TaskAction(
 
 @Composable
 fun TaskUrgency.backgroundColor(): Color = when (this) {
-    TaskUrgency.ATRASADO -> Color.Red
-    TaskUrgency.PRIORITARIO -> darkenColor(MaterialTheme.colorScheme.primary)
-    TaskUrgency.HOY -> MaterialTheme.colorScheme.primary
-    TaskUrgency.PROXIMO -> lightenColor(MaterialTheme.colorScheme.primary)
+    TaskUrgency.ATRASADO -> darkenColor(Color.Red, 0.4f)
+    TaskUrgency.PRIORITARIO -> MaterialTheme.colorScheme.secondary
+    TaskUrgency.HOY -> Color.Red
+    TaskUrgency.PROXIMO -> MaterialTheme.colorScheme.tertiary
 }
 
 @Composable

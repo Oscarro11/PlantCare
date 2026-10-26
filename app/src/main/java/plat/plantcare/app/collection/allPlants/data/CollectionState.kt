@@ -1,4 +1,4 @@
-package plat.plantcare.app.collection.data
+package plat.plantcare.app.collection.allPlants.data
 import androidx.annotation.DrawableRes
 import plat.plantcare.app.R
 import plat.plantcare.app.core.data.models.Task

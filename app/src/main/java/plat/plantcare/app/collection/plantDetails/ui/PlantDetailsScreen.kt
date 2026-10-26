@@ -1,4 +1,4 @@
-package plat.plantcare.app.plantDetails
+package plat.plantcare.app.collection.plantDetails.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -18,225 +18,255 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptions
+import androidx.navigation.compose.composable
+import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
 import plat.plantcare.app.core.darkenColor
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.rotate
+import plat.plantcare.app.core.data.models.Diagnostic
+import plat.plantcare.app.core.data.models.HealthStatus
+import plat.plantcare.app.core.data.models.PlantCharacteristics
+import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
+import plat.plantcare.app.core.data.models.Task
+import plat.plantcare.app.core.data.models.color
+import plat.plantcare.app.core.data.models.getAge
+import plat.plantcare.app.core.data.models.getHealthStatus
+import plat.plantcare.app.core.data.models.getRemainingDays
+import plat.plantcare.app.core.data.models.icon
+import plat.plantcare.app.core.data.models.label
+import plat.plantcare.app.core.navigation.AppTopBar
+import plat.plantcare.app.collection.plantDetails.data.PlantDetailsEvent
+import plat.plantcare.app.collection.plantDetails.data.PlantDetailsState
+import plat.plantcare.app.collection.plantDetails.data.PlantDetailsViewModel
 
-enum class HealthStatus {
-    SALUDABLE,
-    NECESITA_CUIDADO,
-    EN_PELIGRO,
-    MUERTA
+@Serializable
+data class PlantDetailsDestination(
+    val id: String
+)
+
+fun NavController.navigateToPlantDetailsDestination(
+    id: String,
+    navOptions: NavOptions? = null
+) {
+    navigate(PlantDetailsDestination(id), navOptions)
 }
 
-private fun HealthStatus.icon(): Int = when (this) {
-    HealthStatus.SALUDABLE -> R.drawable.verified_24dp_000000_fill0_wght400_grad0_opsz24
-    HealthStatus.NECESITA_CUIDADO -> R.drawable.waving_hand
-    HealthStatus.EN_PELIGRO -> R.drawable.danger
-    HealthStatus.MUERTA -> R.drawable.blocked
-}
-
-private fun HealthStatus.label(): String = when (this) {
-    HealthStatus.SALUDABLE -> "Saludable"
-    HealthStatus.NECESITA_CUIDADO -> "Necesita cuidado"
-    HealthStatus.EN_PELIGRO -> "En peligro"
-    HealthStatus.MUERTA -> "Muerta"
+fun NavGraphBuilder.plantDetailsScreen(
+    onBackClick: () -> Unit,
+    onMakeDiagnostic: () -> Unit
+) {
+    composable<PlantDetailsDestination> {
+        PlantDetailsRoute(
+            onBackClick = onBackClick,
+            onMakeDiagnostic = onMakeDiagnostic
+        )
+    }
 }
 
 @Composable
-private fun HealthStatus.color(): Color = when (this) {
-    HealthStatus.SALUDABLE -> MaterialTheme.colorScheme.primary
-    HealthStatus.NECESITA_CUIDADO -> Color(0xFFFFA000)
-    HealthStatus.EN_PELIGRO -> MaterialTheme.colorScheme.error
-    HealthStatus.MUERTA -> Color.Gray
-}
+fun PlantDetailsRoute(
+    onBackClick: () -> Unit,
+    onMakeDiagnostic: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: PlantDetailsViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-@Composable
-fun DetailsRoute(id: Int) {
-    DetailsScreen(
-        name = "Monty",
-        status = HealthStatus.SALUDABLE,
-        scientificName = "Monstera Deliciosa · Costilla de Adán",
-        image = R.drawable.plant_img_example,
-        location = "Salón",
-        age = "1 año y 4 meses",
-        nextWatering = "En 2 días (Sábado)"
+    PlantDetailsScreen(
+        onBackClick = onBackClick,
+        onMakeDiagnostic = onMakeDiagnostic,
+        onEvent = viewModel::onEvent,
+        state = state,
+        modifier = modifier
     )
 }
 
+//TODO: change ?: use for new state, in case something didn't load
+//TODO: split states into their own files
 @Composable
-private fun DetailsScreen(
-    name: String,
-    status: HealthStatus,
-    scientificName: String,
-    image: Int,
-    location: String,
-    age: String,
-    nextWatering: String,
+private fun PlantDetailsScreen(
+    onBackClick: () -> Unit,
+    onMakeDiagnostic: () -> Unit,
+    onEvent: (PlantDetailsEvent) -> Unit,
+    state: PlantDetailsState,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(
-            start = 20.dp,
-            end = 20.dp,
-            bottom = 32.dp
-        )
-    ) {
-        item { DetailsToolbar() }
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            AppTopBar(
+                title = "Detalles",
+                onBackClick = onBackClick,
+                actions = {
+                    IconButton(
+                        onClick = { onEvent(PlantDetailsEvent.ToggleFavorite) }
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (state.plant!!.favorite) R.drawable.favorites_full else R.drawable.favorites),
+                            contentDescription = null
+                        )
+                    }
 
-        item {
-            Column(
-                modifier = Modifier.padding(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    StatusChip(status)
+                    IconButton(
+                        onClick = { onEvent(PlantDetailsEvent.ToggleEditionMode) }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.edit),
+                            contentDescription = null
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { onEvent(PlantDetailsEvent.ClickMoreOptions)}
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.vertical_dots),
+                            contentDescription = null
+                        )
+                    }
                 }
+            )
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(
+                start = 20.dp,
+                end = 20.dp,
+                bottom = 32.dp
+            )
+        ) {
+            item {
+                Column(
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = state.plant?.name ?: "Indefinido",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        StatusChip(state.diagnostic?.getHealthStatus() ?: HealthStatus.MUERTA)
+                    }
 
-                Text(
-                    text = scientificName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontStyle = FontStyle.Italic
+                    Text(
+                        text = state.reference?.scientificName ?: "Indefinido",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontStyle = FontStyle.Italic
+                    )
+                }
+            }
+
+            item {
+                PlantHero(
+                    //TODO: change image from local to Coil
+                    //image = state.plant?.imageUrl,
+                    image = R.drawable.plant_img_example,
+                    location = state.plant?.location ?: "",
+                    age = state.plant?.birthDate?.getAge() ?: "",
+                    nextTask = state.nextTask,
+                    onTaskCompletion = { onEvent(PlantDetailsEvent.CompleteTask(state.nextTask?.id ?: "")) }
                 )
             }
-        }
 
-        item {
-            PlantHero(
-                image = image,
-                location = location,
-                age = age,
-                nextWatering = nextWatering
-            )
-        }
 
-        item {
-            AccordionSection(
-                icon = R.drawable.filters,
-                title = "Características y requisitos",
-                description = "6 parámetros óptimos"
-            ) {
-                CharacteristicsContent()
+            item {
+                AccordionSection(
+                    icon = R.drawable.filters,
+                    title = "Características y requisitos",
+                    //TODO: add how parameters are considered optimal
+                    description = "6 parámetros óptimos"
+                ) {
+                    CharacteristicsContent(
+                        characteristics = state.characteristics!!
+                    )
+                }
             }
-        }
 
-        item {
-            AccordionSection(
-                icon = R.drawable.monitor,
-                title = "Diagnóstico",
-                description = "Hace 3 días - Botanika IA"
-            ) {
-                DiagnosisContent()
+            item {
+                AccordionSection(
+                    icon = R.drawable.monitor,
+                    title = "Diagnóstico",
+                    description = "Hace ${state.diagnostic?.date?.getRemainingDays() ?: 0} días"
+                ) {
+                    DiagnosisContent(
+                        diagnosis = state.diagnostic!!,
+                        onCreate = onMakeDiagnostic
+                    )
+                }
             }
-        }
 
-        item {
-            AccordionSection(
-                icon = R.drawable.checklist,
-                title = "Pautas de cuidado",
-                description = "Adaptadas al microclima del $location"
-            ) {
-                CareGuidelinesContent()
+            item {
+                AccordionSection(
+                    icon = R.drawable.checklist,
+                    title = "Pautas de cuidado",
+                    //TODO: update
+                    description = ""
+                ) {
+                    CareGuidelinesContent(
+                        guidelines = state.considerations!!
+                    )
+                }
             }
-        }
 
-        item {
-            AccordionSection(
-                icon = R.drawable.history,
-                title = "Historial de cuidados",
-                description = "5 eventos completados este mes"
-            ) {
-                CareHistoryContent()
+            item {
+                AccordionSection(
+                    icon = R.drawable.history,
+                    title = "Historial de cuidados",
+                    //TODO: update
+                    description = "5 eventos completados este mes"
+                ) {
+                    CareHistoryContent(
+                        historyList = state.history!!
+                    )
+                }
             }
         }
     }
-}
 
-@Composable
-private fun DetailsToolbar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.arrow_back),
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "Colección",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CircleAction(R.drawable.favorites_full)
-            CircleAction(R.drawable.edit)
-            CircleAction(R.drawable.vertical_dots)
-        }
-    }
-}
-
-@Composable
-private fun CircleAction(icon: Int) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .background(color = darkenColor(originalColor = MaterialTheme.colorScheme.background), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            modifier = Modifier.size(17.dp),
-            tint = MaterialTheme.colorScheme.onBackground
-        )
-    }
 }
 
 @Composable
@@ -270,7 +300,8 @@ private fun PlantHero(
     image: Int,
     location: String,
     age: String,
-    nextWatering: String
+    nextTask: Task?,
+    onTaskCompletion: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -302,75 +333,76 @@ private fun PlantHero(
             )
         }
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(12.dp)
-                .fillMaxWidth()
-                .background(
-                    MaterialTheme.colorScheme.surface.copy(alpha = .92f),
-                    RoundedCornerShape(8.dp)
-                )
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(darkenColor(MaterialTheme.colorScheme.background, .05f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            R.drawable.water_drop
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-
-                Spacer(Modifier.width(8.dp))
-
-                Column {
-                    Text(
-                        text = "Próximo Riego",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = nextWatering,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
+        if(nextTask != null) {
             Row(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    .align(Alignment.BottomCenter)
+                    .padding(12.dp)
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surface.copy(alpha = .92f),
+                        RoundedCornerShape(8.dp)
+                    )
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    painter = painterResource(
-                        R.drawable.water_drop
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-                Text(
-                    text = "Regar",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(darkenColor(MaterialTheme.colorScheme.background, .05f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                R.drawable.water_drop
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Column {
+                        Text(
+                            text = "Próximo ${nextTask.action.displayName}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "En ${nextTask.dueDate.getRemainingDays()} días",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .clickable(onClick = onTaskCompletion),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(nextTask.action.iconId),
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Text(
+                        text = nextTask.action.displayName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
             }
         }
     }
@@ -474,37 +506,29 @@ private fun AccordionSection(
     }
 }
 
-
-@Preview(showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
-private fun PreviewDetailsScreen() {
-    DetailsScreen(
-        name = "Monty",
-        status = HealthStatus.SALUDABLE,
-        scientificName = "Monstera Deliciosa · Costilla de Adán",
-        image = R.drawable.plant_img_example,
-        location = "Salón",
-        age = "1 año y 4 meses",
-        nextWatering = "En 2 días (Sábado)"
-    )
-}
-
-@Composable
-private fun CharacteristicsContent() {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+private fun CharacteristicsContent(
+    characteristics: PlantCharacteristics,
+    modifier: Modifier = Modifier
+) {
+    //TODO: change this to Grid
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ParameterCard(
                 label = "Luz requerida",
-                value = "Brillante indirecta",
-                level = 3,
+                value = characteristics.requiredLight.displayName,
+                level = characteristics.requiredLight.level,
                 icon = R.drawable.sunny,
                 modifier = Modifier.weight(1f)
             )
             ParameterCard(
                 label = "Riego",
-                value = "Moderado (6–8d)",
-                detail = "2/4",
-                level = 2,
+                value = characteristics.wateringFrequencyDays.displayName,
+                detail = "${characteristics.wateringFrequencyDays.level}/4",
+                level = characteristics.wateringFrequencyDays.level,
                 icon = 0,
                 modifier = Modifier.weight(1f)
             )
@@ -513,15 +537,16 @@ private fun CharacteristicsContent() {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ParameterCard(
                 label = "Humedad",
-                value = "Alta (60–70%)",
-                detail = "3/4",
-                level = 3,
+                value = characteristics.humidityLevel.displayName,
+                detail = "${characteristics.humidityLevel.level}/4",
+                level = characteristics.humidityLevel.level,
                 icon = 0,
                 modifier = Modifier.weight(1f)
             )
             ParameterCard(
                 label = "Clima",
-                value = "18°C – 27°C",
+                value = characteristics.preferredClimate,
+                //TODO: update
                 supportingText = "Templado cálido",
                 icon = R.drawable.thermostat,
                 modifier = Modifier.weight(1f)
@@ -531,12 +556,13 @@ private fun CharacteristicsContent() {
         RequirementRow(
             icon = R.drawable.landscape,
             label = "Sustrato:",
-            value = "Aireado con perlita y fibra"
+            value = characteristics.substrate
         )
         RequirementRow(
             icon = R.drawable.potted_plant,
             label = "Maceta y tamaño:",
-            value = "Barro terracota con drenaje",
+            value = characteristics.pot,
+            //TODO: update
             trailingText = "Grande · 26cm"
         )
     }
@@ -632,8 +658,15 @@ private fun RequirementRow(
 }
 
 @Composable
-private fun DiagnosisContent() {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+private fun DiagnosisContent(
+    diagnosis: Diagnostic,
+    onCreate: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = modifier
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -645,30 +678,66 @@ private fun DiagnosisContent() {
                 PlaceholderIcon(icon = R.drawable.check_circle, size = 16.dp)
                 Spacer(Modifier.width(5.dp))
                 Text("Estado del follaje", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                //TODO: update
                 StatusPill("Excelente")
             }
-            Text(
-                "Hojas limpias y sin manchas, color verde intenso con fenestraciones definidas. " +
-                        "Transpiración y desarrollo foliar óptimos.",
+            Text(diagnosis.foliageState,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            DiagnosisStat(R.drawable.bug, "Control plagas", "Sin signos ni ácaros", Modifier.weight(1f))
-            DiagnosisStat(R.drawable.power_leaf, "Análisis de vigor", "2 brotes nuevos", Modifier.weight(1f))
+        DiagnosisStat(
+            R.drawable.bug,
+            "Control plagas",
+            diagnosis.pestControl,
+            Modifier.weight(1f)
+        )
+
+        DiagnosisStat(
+            R.drawable.power_leaf,
+            "Análisis de vigor",
+            diagnosis.growthVigor,
+            Modifier.weight(1f)
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row{
+                PlaceholderIcon(icon = R.drawable.star, size = 16.dp)
+                Spacer(Modifier.width(6.dp))
+                Text("Último escaneo IA:", style = MaterialTheme.typography.labelSmall)
+            }
+
+            Text(
+                text = "Hace ${diagnosis.date.getRemainingDays()} días",
+                style = MaterialTheme.typography.labelSmall
+            )
         }
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            PlaceholderIcon(icon = R.drawable.star, size = 16.dp)
-            Spacer(Modifier.width(6.dp))
-            Text("Último escaneo IA:", style = MaterialTheme.typography.labelSmall)
-            Spacer(Modifier.width(6.dp))
-            Text("Hace 3 días · Puntaje 9.8/10", style = MaterialTheme.typography.labelSmall)
-        }
+        Button(
+            onClick = onCreate,
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            modifier = Modifier
+                .height(40.dp)
+                .fillMaxWidth()
+        ) {
+            Icon(
+                painterResource(id = R.drawable.camera),
+                contentDescription = null
+            )
 
-        DarkAction(text = "Escanear nueva foto con IA", icon = R.drawable.camera)
+            Spacer(modifier = Modifier.width(20.dp))
+
+            Text("Escanear nueva foto con IA")
+        }
     }
 }
 
@@ -690,12 +759,34 @@ private fun DiagnosisStat(icon: Int, label: String, value: String, modifier: Mod
 }
 
 @Composable
-private fun CareGuidelinesContent() {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        CareRow(R.drawable.water_drop, "Riego", "Espera a que los primeros 3–5 cm de sustrato estén secos. Usa agua templada declorada.")
-        CareRow(R.drawable.sunny, "Ubicación y luz", "Mantener a 1.5 metros de la ventana del salón, evitando sol directo en horas centrales.")
-        CareRow(R.drawable.landscape, "Nutrición", "Abonar con fertilizante equilibrado de hojas verdes una vez al mes durante primavera y verano.")
-        CareRow(R.drawable.brush, "Pulverización y limpieza", "Pulverizar el follaje 2 veces por semana para emular humedad tropical y limpiar polvo de las hojas con paño húmedo.")
+private fun CareGuidelinesContent(
+    guidelines: PlantReferenceConsiderations,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+    ) {
+        CareRow(
+            R.drawable.water_drop,
+            "Riego",
+            guidelines.wateringGuide
+        )
+        CareRow(
+            R.drawable.sunny,
+            "Ubicación y luz",
+            guidelines.recommendedLocationAndLight
+        )
+        CareRow(
+            R.drawable.landscape,
+            "Nutrición",
+            guidelines.nutrition
+        )
+        CareRow(
+            R.drawable.brush,
+            "Pulverización y limpieza",
+            guidelines.sprayingAndCleaning
+        )
     }
 }
 
@@ -718,14 +809,25 @@ private fun CareRow(icon: Int, title: String, text: String) {
 }
 
 @Composable
-private fun CareHistoryContent() {
-    Column(verticalArrangement = Arrangement.spacedBy(11.dp)) {
-        HistoryRow(R.drawable.water_drop, "Riego abundante y drenaje", "Completado con 750ml", "Ayer, 10:30 AM")
-        HistoryRow(R.drawable.brush, "Limpieza de follaje y abrillantado", "Con paño húmedo y aceite de neem", "Hace 5 días")
-        HistoryRow(R.drawable.interchange, "Rotación de maceta 90°", "Para crecimiento homogéneo hacia la luz", "Hace 8 días")
-        HistoryRow(R.drawable.leaf, "Fertilización líquida suave", "Dosis recomendada", "Hace 16 días")
-        Spacer(Modifier.height(2.dp))
-        DarkAction(text = "Registrar nuevo evento", icon = R.drawable.add)
+private fun CareHistoryContent(
+    historyList: List<Task>,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(11.dp),
+        modifier = modifier
+    ) {
+        historyList
+            .takeLast(5)
+            .reversed()
+            .forEach { task ->
+                HistoryRow(
+                    icon = task.action.iconId,
+                    title = task.action.displayName,
+                    description = task.description,
+                    date = "Hace ${task.dueDate.getRemainingDays()} días"
+                )
+            }
     }
 }
 
@@ -755,31 +857,15 @@ private fun StatusPill(text: String) {
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+            .background(darkenColor(MaterialTheme.colorScheme.primary), CircleShape)
             .padding(horizontal = 8.dp, vertical = 2.dp)
     )
 }
 
 @Composable
-private fun DarkAction(text: String, icon: Int) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        PlaceholderIcon(icon = icon, size = 15.dp, tint = MaterialTheme.colorScheme.onPrimary)
-        Spacer(Modifier.width(7.dp))
-        Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimary)
-    }
-}
-
-@Composable
 private fun PlaceholderIcon(
     icon: Int,
-    size: androidx.compose.ui.unit.Dp,
+    size: Dp,
     tint: Color = MaterialTheme.colorScheme.onBackground
 ) {
     if (icon != 0) {

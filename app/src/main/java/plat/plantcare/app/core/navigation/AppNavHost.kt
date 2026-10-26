@@ -43,14 +43,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import plat.plantcare.app.R
-import plat.plantcare.app.collection.ui.CollectionDestination
-import plat.plantcare.app.collection.ui.CollectionGraph
-import plat.plantcare.app.collection.ui.collectionGraph
+import plat.plantcare.app.collection.allPlants.ui.CollectionDestination
+import plat.plantcare.app.collection.CollectionGraph
+import plat.plantcare.app.collection.collectionGraph
 import plat.plantcare.app.core.darkenColor
-import plat.plantcare.app.home.ui.HomeDestination
-import plat.plantcare.app.home.ui.HomeGraph
-import plat.plantcare.app.home.ui.homeGraph
-import plat.plantcare.app.home.ui.navigateToHomeGraph
+import plat.plantcare.app.home.home.ui.HomeDestination
+import plat.plantcare.app.home.HomeGraph
+import plat.plantcare.app.home.homeGraph
+import plat.plantcare.app.home.navigateToHomeGraph
 import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
 
@@ -169,7 +169,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             collectionGraph(
                 navController = navController,
-                onAddPlantClick = {}
+                //TODO: update
+                onAddPlantClick = {},
+                onMakeDiagnostic = {}
             )
         }
     }

@@ -1,11 +1,10 @@
-package plat.plantcare.app.collection.ui
+package plat.plantcare.app.collection.allPlants.ui
 
 //TODO: change material3.* to specific imports
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.items
@@ -34,13 +33,14 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
-import plat.plantcare.app.collection.data.CollectionCardInfo
-import plat.plantcare.app.collection.data.CollectionEvent
-import plat.plantcare.app.collection.data.CollectionLayout
-import plat.plantcare.app.collection.data.CollectionState
-import plat.plantcare.app.collection.data.CollectionViewModel
+import plat.plantcare.app.collection.allPlants.data.CollectionCardInfo
+import plat.plantcare.app.collection.allPlants.data.CollectionEvent
+import plat.plantcare.app.collection.allPlants.data.CollectionLayout
+import plat.plantcare.app.collection.allPlants.data.CollectionState
+import plat.plantcare.app.collection.allPlants.data.CollectionViewModel
 import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.core.lightenColor
+import kotlin.math.round
 
 @Serializable data object CollectionDestination
 
@@ -253,7 +253,7 @@ private fun CollectionHeader(
             )
             StatisticCard(
                 icon = R.drawable.lotus,
-                label = "Salud", "${healthPercentage*100}%\nFeliz", Modifier.weight(1f)
+                label = "Salud", "${round(healthPercentage*100)}%\nFeliz", Modifier.weight(1f)
             )
         }
     }
