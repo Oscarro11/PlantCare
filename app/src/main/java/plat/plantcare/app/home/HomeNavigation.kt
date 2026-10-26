@@ -1,4 +1,4 @@
-package plat.plantcare.app.home.ui
+package plat.plantcare.app.home
 
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -6,6 +6,10 @@ import androidx.navigation.NavOptions
 import androidx.navigation.navigation
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.core.navigation.TopLevelRoute
+import plat.plantcare.app.home.allTasks.ui.allTasksScreen
+import plat.plantcare.app.home.allTasks.ui.navigateToAllTasksDestination
+import plat.plantcare.app.home.home.ui.HomeDestination
+import plat.plantcare.app.home.home.ui.homeScreen
 
 @Serializable data object HomeGraph: TopLevelRoute
 

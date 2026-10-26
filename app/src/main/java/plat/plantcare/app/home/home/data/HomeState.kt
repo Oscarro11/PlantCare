@@ -1,4 +1,4 @@
-package plat.plantcare.app.home.data
+package plat.plantcare.app.home.home.data
 
 import plat.plantcare.app.core.data.models.TaskAction
 import plat.plantcare.app.core.data.models.TaskUrgency

@@ -1,4 +1,4 @@
-package plat.plantcare.app.home.ui
+package plat.plantcare.app.home.home.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -42,6 +42,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import coil3.compose.AsyncImage
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
 import plat.plantcare.app.core.IconWithBackground
@@ -49,10 +50,10 @@ import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.core.data.models.backgroundColor
 import plat.plantcare.app.core.data.models.contentColor
 import plat.plantcare.app.core.lightenColor
-import plat.plantcare.app.home.data.HomeEvent
-import plat.plantcare.app.home.data.HomeState
-import plat.plantcare.app.home.data.HomeTaskCardUiState
-import plat.plantcare.app.home.data.HomeViewModel
+import plat.plantcare.app.home.home.data.HomeEvent
+import plat.plantcare.app.home.home.data.HomeState
+import plat.plantcare.app.home.home.data.HomeTaskCardUiState
+import plat.plantcare.app.home.home.data.HomeViewModel
 import kotlin.math.round
 
 @Serializable data object HomeDestination
@@ -242,7 +243,7 @@ private fun DailyProgressCard(
                 )
 
                 Text(
-                    text = "${totalTasks - pendingTasks} de $totalTasks completadas (${round(progressPercentage * 100)}%)",
+                    text = "$pendingTasks de $totalTasks completadas (${round(progressPercentage * 100)}%)",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -316,11 +317,10 @@ fun TaskCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //TODO: change image loading from local to Coil
-            Image(
-                painter = painterResource(R.drawable.plant_img_example),
+            AsyncImage(
+                model = state.plantImageUrl,
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(12.dp))

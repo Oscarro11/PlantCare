@@ -1,4 +1,4 @@
-package plat.plantcare.app.home.data
+package plat.plantcare.app.home.allTasks.data
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import plat.plantcare.app.core.data.models.toUrgency
 import plat.plantcare.app.core.data.repositories.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
+import plat.plantcare.app.home.home.data.HomeTaskCardUiState
 import javax.inject.Inject
 
 sealed interface AllTasksEvent{

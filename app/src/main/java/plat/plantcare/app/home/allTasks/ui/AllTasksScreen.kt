@@ -1,4 +1,4 @@
-package plat.plantcare.app.home.ui
+package plat.plantcare.app.home.allTasks.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,10 +20,10 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.core.navigation.AppTopBar
-import plat.plantcare.app.home.data.AllTasksEvent
-import plat.plantcare.app.home.data.AllTasksViewModel
-import plat.plantcare.app.home.data.HomeEvent
-import plat.plantcare.app.home.data.HomeTaskCardUiState
+import plat.plantcare.app.home.allTasks.data.AllTasksEvent
+import plat.plantcare.app.home.allTasks.data.AllTasksViewModel
+import plat.plantcare.app.home.home.data.HomeTaskCardUiState
+import plat.plantcare.app.home.home.ui.TaskCard
 
 @Serializable data object AllTasksDestination
 

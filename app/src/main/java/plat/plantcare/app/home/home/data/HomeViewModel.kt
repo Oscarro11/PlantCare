@@ -1,4 +1,4 @@
-package plat.plantcare.app.home.data
+package plat.plantcare.app.home.home.data
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,7 +38,7 @@ class HomeViewModel @Inject constructor(
             userName = userName,
             plantTotal = plants.size,
             remainingPlants = pending.map { it.plantId }.distinct().size,
-            pendingTasks = pending.size,
+            pendingTasks = tasks.filter { !it.completed }.size,
             tasks = tasks.mapNotNull { task ->
                 val plant = plantsById[task.plantId] ?: return@mapNotNull null
                 HomeTaskCardUiState(
