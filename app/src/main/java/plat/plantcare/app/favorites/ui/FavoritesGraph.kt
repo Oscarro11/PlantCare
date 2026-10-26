@@ -19,16 +19,14 @@ fun NavController.navigateToFavoritesGraph(
 
 fun NavGraphBuilder.favoritesGraph(
     onAgregarClick: () -> Unit,
-    onFiltrosClick: () -> Unit,
-    onMoverAColeccion: (PlantaDeseada) -> Unit
+    onFiltrosClick: () -> Unit
 ) {
     navigation<FavoritesGraph>(
         startDestination = ListaDeseosDestination
     ) {
         listaDeseosScreen(
             onAgregarClick = onAgregarClick,
-            onFiltrosClick = onFiltrosClick,
-            onMoverAColeccion = onMoverAColeccion
+            onFiltrosClick = onFiltrosClick
         )
     }
 }
