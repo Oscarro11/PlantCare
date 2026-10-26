@@ -24,13 +24,11 @@ import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.LocalFlorist
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.WifiTethering
@@ -58,10 +56,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import plat.plantcare.app.collection.data.CollectionLayout
-import plat.plantcare.app.core.AppTopBar
 import plat.plantcare.app.settings.data.AjustesEvent
-import plat.plantcare.app.settings.data.AjustesState
+import plat.plantcare.app.ajustes.data.AjustesState
+import plat.plantcare.app.collection.allPlants.data.CollectionLayout
+import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.settings.data.AjustesViewModel
 
 @Composable

@@ -5,7 +5,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
-import plat.plantcare.app.ListaDeseosRoute
 import plat.plantcare.app.favorites.data.PlantaDeseada
 
 @Serializable

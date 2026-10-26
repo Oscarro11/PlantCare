@@ -1,4 +1,4 @@
-package plat.plantcare.app.settings.ui
+package plat.plantcare.app.ajustes.ui
 
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder

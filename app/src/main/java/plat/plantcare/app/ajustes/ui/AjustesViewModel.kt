@@ -5,7 +5,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import plat.plantcare.app.collection.data.CollectionLayout
+import plat.plantcare.app.ajustes.data.AjustesState
+import plat.plantcare.app.collection.allPlants.data.CollectionLayout
 import javax.inject.Inject
 
 sealed interface AjustesEvent {

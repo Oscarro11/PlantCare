@@ -1,7 +1,7 @@
-package plat.plantcare.app
+package plat.plantcare.app.favorites.ui
 
 
-import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,7 +35,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -305,7 +304,7 @@ private fun PlantaDeseadaCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                androidx.compose.foundation.Image(
+                Image(
                     painter = painterResource(planta.imagen),
                     contentDescription = "Imagen de ${planta.nombre}",
                     modifier = Modifier

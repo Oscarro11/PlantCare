@@ -1,6 +1,6 @@
-package plat.plantcare.app.settings.data
+package plat.plantcare.app.ajustes.data
 
-import plat.plantcare.app.collection.data.CollectionLayout
+import plat.plantcare.app.collection.allPlants.data.CollectionLayout
 
 data class AjustesState(
     val fotoUrl: String? = null,

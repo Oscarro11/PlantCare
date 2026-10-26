@@ -56,14 +56,13 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
-import plat.plantcare.app.core.AppTopBar
 import plat.plantcare.app.discover.data.CaracteristicaPlanta
 import plat.plantcare.app.discover.data.FichaBotanicaEvent
 import plat.plantcare.app.discover.data.FichaBotanicaState
 import plat.plantcare.app.discover.data.FichaBotanicaViewModel
 import plat.plantcare.app.discover.data.PasoCuidado
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import plat.plantcare.app.core.navigation.AppTopBar
 
 
 @Serializable
