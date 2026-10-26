@@ -39,7 +39,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,75 +47,118 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import plat.plantcare.app.favorites.data.ListaDeseosEvent
+import plat.plantcare.app.favorites.data.ListaDeseosState
+import plat.plantcare.app.favorites.data.ListaDeseosViewModel
+import plat.plantcare.app.favorites.data.PlantaDeseada
 
-data class PlantaDeseada(
-    @DrawableRes val imagen: Int,
-    val nombre: String,
-    val match: Int
-)
-
-@Preview(showBackground = true)
 @Composable
-fun ListaDeseosScreen() {
-    val plantasDeseadas = remember {
-        mutableListOf(
-            PlantaDeseada(
-                imagen = R.drawable.ic_launcher_background,
-                nombre = "Zamioculcas Zamiifolia",
-                match = 95
-            ),
-            PlantaDeseada(
-                imagen = R.drawable.ic_launcher_background,
-                nombre = "Ficus Lyrata",
-                match = 88
-            ),
-            PlantaDeseada(
-                imagen = R.drawable.ic_launcher_background,
-                nombre = "Calathea Orbifolia",
-                match = 91
-            ),
-            PlantaDeseada(
-                imagen = R.drawable.ic_launcher_background,
-                nombre = "Pilea Peperomioides",
-                match = 97
+fun ListaDeseosRoute(
+    onAgregarClick: () -> Unit,
+    onFiltrosClick: () -> Unit,
+    onMoverAColeccion: (PlantaDeseada) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: ListaDeseosViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    ListaDeseosScreen(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onAgregarClick = onAgregarClick,
+        onFiltrosClick = onFiltrosClick,
+        onMoverAColeccion = onMoverAColeccion,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun ListaDeseosScreen(
+    state: ListaDeseosState,
+    onEvent: (ListaDeseosEvent) -> Unit,
+    onAgregarClick: () -> Unit,
+    onFiltrosClick: () -> Unit,
+    onMoverAColeccion: (PlantaDeseada) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 20.dp,
+            end = 20.dp,
+            top = 40.dp,
+            bottom = 40.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            HeaderDeseos(
+                cantidad = state.plantasDeseadas.size
             )
-        )
-    }
+        }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(
-                start = 20.dp,
-                end = 20.dp,
-                top = 40.dp,
-                bottom = 40.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        item {
+            SearchSection(
+                busqueda = state.busqueda,
+                onBusquedaChange = { texto ->
+                    onEvent(
+                        ListaDeseosEvent.ChangeBusqueda(texto)
+                    )
+                },
+                onFiltrosClick = onFiltrosClick,
+                onAgregarClick = onAgregarClick
+            )
+        }
+
+        if (state.plantasFiltradas.isEmpty()) {
             item {
-                HeaderDeseos(
-                    cantidad = plantasDeseadas.size
-                )
-            }
-
-            item {
-                SearchSection()
-            }
-
-            items(
-                items = plantasDeseadas,
-                key = { planta -> planta.nombre }
-            ) { planta ->
-                PlantaDeseadaCard(
-                    planta = planta
+                Text(
+                    text = if (state.plantasDeseadas.isEmpty()) {
+                        "Tu lista de deseos está vacía."
+                    } else {
+                        "No se encontraron plantas."
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
+
+        items(
+            items = state.plantasFiltradas,
+            key = { planta -> planta.id }
+        ) { planta ->
+            PlantaDeseadaCard(
+                planta = planta,
+                onEliminarClick = {
+                    onEvent(
+                        ListaDeseosEvent.EliminarPlanta(
+                            plantaId = planta.id
+                        )
+                    )
+                },
+                onMoverAColeccion = {
+                    onMoverAColeccion(planta)
+                }
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ListaDeseosScreenPreview() {
+    MaterialTheme {
+        ListaDeseosScreen(
+            state = ListaDeseosState(),
+            onEvent = {},
+            onAgregarClick = {},
+            onFiltrosClick = {},
+            onMoverAColeccion = {}
+        )
     }
 }
 
@@ -166,15 +208,20 @@ private fun HeaderDeseos(
 }
 
 @Composable
-private fun SearchSection() {
+private fun SearchSection(
+    busqueda: String,
+    onBusquedaChange: (String) -> Unit,
+    onFiltrosClick: () -> Unit,
+    onAgregarClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = busqueda,
+            onValueChange = onBusquedaChange,
             modifier = Modifier
                 .weight(1f)
                 .height(62.dp)
@@ -203,7 +250,7 @@ private fun SearchSection() {
         )
 
         FilledTonalIconButton(
-            onClick = {},
+            onClick = onFiltrosClick,
             modifier = Modifier.size(62.dp),
             shape = RoundedCornerShape(20.dp),
             colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -218,7 +265,7 @@ private fun SearchSection() {
         }
 
         FilledIconButton(
-            onClick = {},
+            onClick = onAgregarClick,
             modifier = Modifier.size(62.dp),
             shape = RoundedCornerShape(20.dp),
             colors = IconButtonDefaults.filledIconButtonColors(
@@ -237,7 +284,9 @@ private fun SearchSection() {
 
 @Composable
 private fun PlantaDeseadaCard(
-    planta: PlantaDeseada
+    planta: PlantaDeseada,
+    onEliminarClick: () -> Unit,
+    onMoverAColeccion: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -293,7 +342,7 @@ private fun PlantaDeseadaCard(
                 horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Button(
-                    onClick = {},
+                    onClick = onMoverAColeccion,
                     modifier = Modifier
                         .weight(4f)
                         .height(45.dp),
@@ -323,7 +372,7 @@ private fun PlantaDeseadaCard(
                 }
 
                 FilledTonalIconButton(
-                    onClick = {},
+                    onClick = onEliminarClick,
                     modifier = Modifier.size(45.dp)
                         .weight(1f),
                     shape = RoundedCornerShape(
