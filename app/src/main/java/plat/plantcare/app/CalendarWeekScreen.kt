@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import plat.plantcare.app.core.FullAppScaffold
 import plat.plantcare.app.ui.theme.PlantcareTheme
 
 
@@ -472,50 +471,45 @@ fun CalendarWeekScreen(
         mutableStateOf("18")
     }
 
-    FullAppScaffold(
-        section = "Calendario"
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp)
     ) {
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-        ) {
+        WeekHeader(
+            onMonthViewClick = onMonthViewClick,
+            onPreviousWeekClick = onPreviousWeekClick,
+            onNextWeekClick = onNextWeekClick
+        )
 
-            WeekHeader(
-                onMonthViewClick = onMonthViewClick,
-                onPreviousWeekClick = onPreviousWeekClick,
-                onNextWeekClick = onNextWeekClick
-            )
+        Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(14.dp))
+        WeekFilters(
+            selectedFilter = selectedFilter,
+            onFilterChange = {
+                selectedFilter = it
+            }
+        )
 
-            WeekFilters(
-                selectedFilter = selectedFilter,
-                onFilterChange = {
-                    selectedFilter = it
-                }
-            )
+        Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
+        WeekDays(
+            selectedDay = selectedDay,
+            onDaySelected = {
+                selectedDay = it
+            }
+        )
 
-            WeekDays(
-                selectedDay = selectedDay,
-                onDaySelected = {
-                    selectedDay = it
-                }
-            )
+        Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(14.dp))
+        WeekTasks(
+            onTaskClick = onTaskClick
+        )
 
-            WeekTasks(
-                onTaskClick = onTaskClick
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-        }
+        Spacer(modifier = Modifier.height(20.dp))
     }
 }
 

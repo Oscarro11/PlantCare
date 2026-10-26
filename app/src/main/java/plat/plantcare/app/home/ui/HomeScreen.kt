@@ -1,7 +1,8 @@
-package plat.plantcare.app.home
+package plat.plantcare.app.home.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +26,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,148 +36,156 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptions
+import androidx.navigation.compose.composable
+import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
-import plat.plantcare.app.core.FullAppScaffold
 import plat.plantcare.app.core.IconWithBackground
 import plat.plantcare.app.core.darkenColor
+import plat.plantcare.app.core.data.models.backgroundColor
+import plat.plantcare.app.core.data.models.contentColor
 import plat.plantcare.app.core.lightenColor
+import plat.plantcare.app.home.data.HomeEvent
+import plat.plantcare.app.home.data.HomeState
+import plat.plantcare.app.home.data.HomeTaskCardUiState
+import plat.plantcare.app.home.data.HomeViewModel
+import kotlin.math.round
 
-enum class Status {
-    URGENTE,
-    PRIORITARIO,
-    HOY
+@Serializable data object HomeDestination
+
+fun NavController.navigateToHomeDestination(navOptions: NavOptions? = null) {
+    navigate(HomeDestination, navOptions)
 }
 
-data class PlantShortCardInfo(
-    val name: String,
-    val image: Int,
-    val description: String?,
-    val actionIcon: Int?,
-    val location: String = "Jardín",
-    val status: Status = Status.HOY
-)
+fun NavGraphBuilder.homeScreen(
+    onSeeAll: () -> Unit,
+    onDiagnosis: () -> Unit,
+    onAddPlant: () -> Unit
+) {
+    composable<HomeDestination> {
+        HomeRoute(
+            onSeeAll = onSeeAll,
+            onDiagnosis = onDiagnosis,
+            onAddPlant = onAddPlant
+        )
+    }
+}
 
-private val mockCardInfo = listOf(
-    PlantShortCardInfo(
-        name = "Monstera Deliciosa",
-        image = R.drawable.plant_img_example,
-        description = "Regar · 350 mL de agua filtrada",
-        actionIcon = R.drawable.water_drop,
-        location = "Salón",
-        status = Status.URGENTE
-    ),
-    PlantShortCardInfo(
-        name = "Helecho Boston",
-        image = R.drawable.plant_img_example,
-        description = "Pulverizar hojas · Humedad foliar",
-        actionIcon = R.drawable.water_drop,
-        location = "Baño",
-        status = Status.HOY
-    ),
-    PlantShortCardInfo(
-        name = "Ficus Lyrata",
-        image = R.drawable.plant_img_example,
-        description = "Girar 90° hacia la ventana",
-        actionIcon = R.drawable.water_drop,
-        location = "Estudio",
-        status = Status.PRIORITARIO
+@Composable
+fun HomeRoute(
+    onSeeAll: () -> Unit,
+    onDiagnosis: () -> Unit,
+    onAddPlant: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    HomeScreen(
+        onSeeAll = onSeeAll,
+        onTaskCompletion = { id -> viewModel.onEvent(HomeEvent.CompleteTask(id)) },
+        onDiagnosis = onDiagnosis,
+        onAddPlant = onAddPlant,
+        state = state,
+        modifier = modifier
     )
-)
-
-@Composable
-private fun Status.backgroundColor(): Color = when (this) {
-    Status.URGENTE -> Color.Red
-    Status.PRIORITARIO -> darkenColor(MaterialTheme.colorScheme.primary)
-    Status.HOY -> MaterialTheme.colorScheme.primary
 }
 
 @Composable
-private fun Status.contentColor(): Color = when (this) {
-    Status.URGENTE -> Color.White
-    Status.PRIORITARIO,
-    Status.HOY -> MaterialTheme.colorScheme.onPrimary
-}
+private fun HomeScreen(
+    onSeeAll: () -> Unit,
+    onTaskCompletion: (String) -> Unit,
+    onDiagnosis: () -> Unit,
+    onAddPlant: () -> Unit,
+    state: HomeState,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(
+            start = 18.dp,
+            top = 18.dp,
+            end = 18.dp,
+            bottom = 32.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            HeaderSummary( state = state )
+        }
 
-@Composable
-fun HomeRoute(modifier: Modifier = Modifier) {
-    HomeScreen(modifier)
-}
-
-@Composable
-private fun HomeScreen(modifier: Modifier = Modifier) {
-    FullAppScaffold(section = "Inicio") {
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(
-                start = 18.dp,
-                top = 18.dp,
-                end = 18.dp,
-                bottom = 32.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                HeaderSummary()
-            }
-
-            item {
-                Column(
+        item {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "¡Buenos días, ${state.userName}!",
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "¡Buenos días, Elena!",
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
 
-                    Text(
-                        text = "Hoy tienes 4 plantas esperando tu toque verde",
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            item {
-                DailyProgressCard()
-            }
-
-            item {
-                TasksHeader()
-            }
-
-            items(
-                items = mockCardInfo,
-                key = { it.name }
-            ) { item ->
-                PlantShortCard(
-                    data = item,
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = "Hoy tienes ${state.remainingPlants} plantas esperando tu toque verde",
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
 
-            item {
-                QuickActions()
-            }
+        item {
+            DailyProgressCard(
+                pendingTasks = state.pendingTasks,
+                totalTasks = state.tasks.size
+            )
+        }
+
+        item {
+            TasksHeader(
+                onSeeAll = onSeeAll
+            )
+        }
+
+        items(
+            items = state.tasks
+        ) { item ->
+            TaskCard(
+                state = item,
+                onCompletion = onTaskCompletion,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        item {
+            QuickActions(
+                onDiagnosis = onDiagnosis,
+                onAddPlant = onAddPlant
+            )
         }
     }
 }
 
 @Composable
-private fun HeaderSummary() {
+private fun HeaderSummary(
+    state: HomeState,
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "MIÉRCOLES, 24 DE MAYO",
+            text = state.date.toString(),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -191,7 +201,7 @@ private fun HeaderSummary() {
             tintColor = MaterialTheme.colorScheme.onBackground
         ) {
             Text(
-                text = "12 plantas activas",
+                text = "${state.plantTotal} plantas activas",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -200,14 +210,20 @@ private fun HeaderSummary() {
 }
 
 @Composable
-private fun DailyProgressCard() {
+private fun DailyProgressCard(
+    pendingTasks: Int,
+    totalTasks: Int,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
+        val progressPercentage: Float = if (totalTasks > 0) 1f - (pendingTasks.toFloat() / totalTasks) else 1f
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -226,14 +242,14 @@ private fun DailyProgressCard() {
                 )
 
                 Text(
-                    text = "1 de 4 completadas (25%)",
+                    text = "${totalTasks - pendingTasks} de $totalTasks completadas (${round(progressPercentage * 100)}%)",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             LinearProgressIndicator(
-                progress = { 0.25f },
+                progress = { progressPercentage },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
@@ -247,9 +263,12 @@ private fun DailyProgressCard() {
 }
 
 @Composable
-private fun TasksHeader() {
+private fun TasksHeader(
+    onSeeAll: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -259,7 +278,10 @@ private fun TasksHeader() {
             fontWeight = FontWeight.SemiBold
         )
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable(onClick = onSeeAll)
+        ) {
             Text(
                 text = "Ver todas",
                 style = MaterialTheme.typography.labelMedium,
@@ -277,9 +299,11 @@ private fun TasksHeader() {
 }
 
 @Composable
-fun PlantShortCard(
-    data: PlantShortCardInfo,
-    modifier: Modifier = Modifier
+fun TaskCard(
+    state: HomeTaskCardUiState,
+    onCompletion: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    size: Int? = 2
 ) {
     Card(
         modifier = modifier,
@@ -292,8 +316,9 @@ fun PlantShortCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            //TODO: change image loading from local to Coil
             Image(
-                painter = painterResource(data.image),
+                painter = painterResource(R.drawable.plant_img_example),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -312,15 +337,15 @@ fun PlantShortCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = data.status.name,
+                        text = state.urgency.name,
                         modifier = Modifier
                             .background(
-                                color = data.status.backgroundColor(),
+                                color = state.urgency.backgroundColor(),
                                 shape = RoundedCornerShape(24.dp)
                             )
                             .padding(horizontal = 10.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = data.status.contentColor()
+                        color = state.urgency.contentColor()
                     )
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -334,7 +359,7 @@ fun PlantShortCard(
                         )
 
                         Text(
-                            text = data.location,
+                            text = state.location,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -342,41 +367,42 @@ fun PlantShortCard(
                 }
 
                 Text(
-                    text = data.name,
+                    text = state.plantName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
 
-                data.description?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2
-                    )
-                }
-            }
-
-            data.actionIcon?.let {
-                Spacer(Modifier.width(8.dp))
-
-                IconWithBackground(
-                    icon = it,
-                    size = 40.dp,
-                    backgroundColor = darkenColor(
-                        originalColor = MaterialTheme.colorScheme.background,
-                        factor = 0.2f
-                    ),
-                    backgroundShape = CircleShape,
-                    tintColor = MaterialTheme.colorScheme.onBackground
+                Text(
+                    text = "${state.action.displayName ?: ""} - ${state.description}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = size ?: Int.MAX_VALUE
                 )
             }
+
+            Spacer(Modifier.width(8.dp))
+
+            IconWithBackground(
+                icon = if (state.completed) R.drawable.check else state.action.iconId,
+                size = 40.dp,
+                backgroundColor = darkenColor(
+                    originalColor = MaterialTheme.colorScheme.background,
+                    factor = 0.2f
+                ),
+                backgroundShape = CircleShape,
+                tintColor = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .clickable( onClick = { onCompletion(state.id) } )
+            )
         }
     }
 }
 
 @Composable
-private fun QuickActions() {
+private fun QuickActions(
+    onDiagnosis: () -> Unit,
+    onAddPlant: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -394,6 +420,7 @@ private fun QuickActions() {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
+                .clickable(onClick = onDiagnosis)
         )
 
         ActionCard(
@@ -407,6 +434,7 @@ private fun QuickActions() {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
+                .clickable(onClick = onAddPlant)
         )
     }
 }
@@ -468,13 +496,13 @@ fun ActionCard(
 )
 @Composable
 private fun HomeScreenPreview() {
-    HomeScreen()
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PlantShortCardPreview() {
-    PlantShortCard(data = mockCardInfo.first())
+    HomeScreen(
+        onSeeAll = {},
+        onTaskCompletion = {},
+        onDiagnosis = {},
+        onAddPlant = {},
+        state = HomeState()
+    )
 }
 
 @Preview(showBackground = true)

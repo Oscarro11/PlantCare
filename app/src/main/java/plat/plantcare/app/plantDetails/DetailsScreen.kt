@@ -40,7 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import plat.plantcare.app.R
-import plat.plantcare.app.core.FullAppScaffold
 import plat.plantcare.app.core.darkenColor
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -99,93 +98,91 @@ private fun DetailsScreen(
     nextWatering: String,
     modifier: Modifier = Modifier
 ) {
-    FullAppScaffold(section = "Colección") {
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(
-                start = 20.dp,
-                end = 20.dp,
-                bottom = 32.dp
-            )
-        ) {
-            item { DetailsToolbar() }
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(
+            start = 20.dp,
+            end = 20.dp,
+            bottom = 32.dp
+        )
+    ) {
+        item { DetailsToolbar() }
 
-            item {
-                Column(
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+        item {
+            Column(
+                modifier = Modifier.padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = name,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        StatusChip(status)
-                    }
-
                     Text(
-                        text = scientificName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontStyle = FontStyle.Italic
+                        text = name,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
                     )
+                    StatusChip(status)
                 }
-            }
 
-            item {
-                PlantHero(
-                    image = image,
-                    location = location,
-                    age = age,
-                    nextWatering = nextWatering
+                Text(
+                    text = scientificName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontStyle = FontStyle.Italic
                 )
             }
+        }
 
-            item {
-                AccordionSection(
-                    icon = R.drawable.filters,
-                    title = "Características y requisitos",
-                    description = "6 parámetros óptimos"
-                ) {
-                    CharacteristicsContent()
-                }
+        item {
+            PlantHero(
+                image = image,
+                location = location,
+                age = age,
+                nextWatering = nextWatering
+            )
+        }
+
+        item {
+            AccordionSection(
+                icon = R.drawable.filters,
+                title = "Características y requisitos",
+                description = "6 parámetros óptimos"
+            ) {
+                CharacteristicsContent()
             }
+        }
 
-            item {
-                AccordionSection(
-                    icon = R.drawable.monitor,
-                    title = "Diagnóstico",
-                    description = "Hace 3 días - Botanika IA"
-                ) {
-                    DiagnosisContent()
-                }
+        item {
+            AccordionSection(
+                icon = R.drawable.monitor,
+                title = "Diagnóstico",
+                description = "Hace 3 días - Botanika IA"
+            ) {
+                DiagnosisContent()
             }
+        }
 
-            item {
-                AccordionSection(
-                    icon = R.drawable.checklist,
-                    title = "Pautas de cuidado",
-                    description = "Adaptadas al microclima del $location"
-                ) {
-                    CareGuidelinesContent()
-                }
+        item {
+            AccordionSection(
+                icon = R.drawable.checklist,
+                title = "Pautas de cuidado",
+                description = "Adaptadas al microclima del $location"
+            ) {
+                CareGuidelinesContent()
             }
+        }
 
-            item {
-                AccordionSection(
-                    icon = R.drawable.history,
-                    title = "Historial de cuidados",
-                    description = "5 eventos completados este mes"
-                ) {
-                    CareHistoryContent()
-                }
+        item {
+            AccordionSection(
+                icon = R.drawable.history,
+                title = "Historial de cuidados",
+                description = "5 eventos completados este mes"
+            ) {
+                CareHistoryContent()
             }
         }
     }

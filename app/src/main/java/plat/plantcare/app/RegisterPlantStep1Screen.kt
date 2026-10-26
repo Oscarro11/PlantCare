@@ -5,11 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import plat.plantcare.app.core.EmptyAppScaffold
+import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.ui.theme.PlantcareTheme
 
 
@@ -681,29 +681,20 @@ fun RegisterPlantStep1Screen(
         mutableStateOf("Salón")
     }
 
-    EmptyAppScaffold(
-        title = "Registro Planta Paso 1",
-        onBackClick = onCloseClick,
-        showBottomBar = false,
-        actions = {
-            Box(
-                modifier = Modifier
-                    .padding(end = 12.dp)
-                    .size(36.dp)
-                    .background(
-                        color = Color(0xFFB7DCC5),
-                        shape = CircleShape
-                    )
-                    .clickable(onClick = onProfileClick)
+    Scaffold(
+        topBar = {
+            AppTopBar(
+                title = "Registro Planta Paso 1",
+                onBackClick = onCloseClick,
             )
         }
-    ) {
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(backgroundColor)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
+                .padding(innerPadding + PaddingValues(horizontal = 20.dp))
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -777,6 +768,8 @@ fun RegisterPlantStep1Screen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+
+
 }
 
 
