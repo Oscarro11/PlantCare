@@ -53,6 +53,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import coil3.compose.AsyncImage
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
 import plat.plantcare.app.core.darkenColor
@@ -136,7 +137,7 @@ private fun PlantDetailsScreen(
                     ) {
                         Icon(
                             painter = painterResource(
-                                if (state.plant!!.favorite) R.drawable.favorites_full else R.drawable.favorites),
+                                if (state.plant?.favorite ?: false) R.drawable.favorites_full else R.drawable.favorites),
                             contentDescription = null
                         )
                     }
@@ -202,9 +203,7 @@ private fun PlantDetailsScreen(
 
             item {
                 PlantHero(
-                    //TODO: change image from local to Coil
-                    //image = state.plant?.imageUrl,
-                    image = R.drawable.plant_img_example,
+                    image = state.plant?.imageUrl ?: "",
                     location = state.plant?.location ?: "",
                     age = state.plant?.birthDate?.getAge() ?: "",
                     nextTask = state.nextTask,
@@ -297,7 +296,7 @@ private fun StatusChip(status: HealthStatus) {
 
 @Composable
 private fun PlantHero(
-    image: Int,
+    image: String,
     location: String,
     age: String,
     nextTask: Task?,
@@ -310,10 +309,10 @@ private fun PlantHero(
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.secondaryContainer)
     ) {
-        Image(
-            painter = painterResource(image),
+        AsyncImage(
+            model = image,
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxSize()
         )
 

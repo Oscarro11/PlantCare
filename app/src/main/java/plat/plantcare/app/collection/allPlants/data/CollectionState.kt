@@ -15,11 +15,10 @@ enum class CollectionLayout(
 }
 
 //Auxiliary class for UI
-//TODO: change image from int to url, using coil
 data class CollectionCardInfo(
     val id: String,
     val name: String,
-    val image: Int,
+    val image: String,
     val location: String,
     val tasks: List<Task> = emptyList()
 )

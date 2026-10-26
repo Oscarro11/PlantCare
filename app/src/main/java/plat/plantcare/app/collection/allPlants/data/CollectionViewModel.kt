@@ -64,7 +64,7 @@ class CollectionViewModel @Inject constructor (
                 CollectionCardInfo(
                     id = plant.id,
                     name = plant.name,
-                    image = R.drawable.plant_img_example,
+                    image = plant.imageUrl,
                     location = plant.location,
                     tasks = tasksByPlant[plant.id].orEmpty()
                 )

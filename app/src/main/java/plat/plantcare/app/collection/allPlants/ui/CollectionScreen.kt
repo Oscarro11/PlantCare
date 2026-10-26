@@ -1,18 +1,42 @@
 package plat.plantcare.app.collection.allPlants.ui
 
-//TODO: change material3.* to specific imports
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -31,6 +55,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import coil3.compose.AsyncImage
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
 import plat.plantcare.app.collection.allPlants.data.CollectionCardInfo
@@ -399,13 +424,13 @@ fun CollectionCard(
                     .fillMaxWidth()
                     .height(128.dp)
             ) {
-                Image(
-                    painterResource(id = data.image),
+                AsyncImage(
+                    model = data.image,
                     contentDescription = null,
-                    Modifier
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
                         .fillMaxSize()
-                        .clickable(onClick = onClick),
-                    contentScale = ContentScale.Crop
+                        .clickable(onClick = onClick)
                 )
                 LocationChip(
                     data.location,
@@ -503,14 +528,12 @@ fun CollectionRow(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            //TODO: change Image to Coil Image
-            Image(
-                painterResource(id = data.image),
+            AsyncImage(
+                model = data.image,
                 contentDescription = null,
-                Modifier
+                modifier = Modifier
                     .fillMaxSize()
                     .clickable(onClick = onClick),
-                contentScale = ContentScale.Crop
             )
         }
 

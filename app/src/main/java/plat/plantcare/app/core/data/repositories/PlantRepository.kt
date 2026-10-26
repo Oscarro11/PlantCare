@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import plat.plantcare.app.R
 import plat.plantcare.app.core.data.models.Diagnostic
 import plat.plantcare.app.core.data.models.Plant
 import plat.plantcare.app.core.data.models.PlantCharacteristics
@@ -37,7 +38,7 @@ class FakePlantRepository @Inject constructor() : PlantRepository {
             Plant(
                 id = "plant-1",
                 name = "Monstera",
-                imageUrl = "https://placehold.co/600x600?text=Monstera",
+                imageUrl = "https://placehold.co/600x400/png?text=Monstera",
                 location = "Living room",
                 birthDate = LocalDate.now().minusYears(2),
                 ownerId = "user-1",
@@ -46,7 +47,7 @@ class FakePlantRepository @Inject constructor() : PlantRepository {
             Plant(
                 id = "plant-2",
                 name = "Snake plant",
-                imageUrl = "https://placehold.co/600x600?text=Snake+plant",
+                imageUrl = "https://placehold.co/600x400/png?text=Snake_plant",
                 location = "Bedroom",
                 birthDate = LocalDate.now().minusMonths(8),
                 ownerId = "user-1",
@@ -55,7 +56,7 @@ class FakePlantRepository @Inject constructor() : PlantRepository {
             Plant(
                 id = "plant-3",
                 name = "Golden pothos",
-                imageUrl = "https://placehold.co/600x600?text=Pothos",
+                imageUrl = "https://placehold.co/600x400/png?text=Golden_pothos",
                 location = "Kitchen",
                 birthDate = null, // Entry date wasn't recorded
                 ownerId = "user-1",
