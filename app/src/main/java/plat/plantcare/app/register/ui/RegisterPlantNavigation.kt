@@ -11,9 +11,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import kotlinx.serialization.Serializable
-import plat.plantcare.app.RegisterPlantStep1Screen
-import plat.plantcare.app.RegisterPlantStep2Screen
-import plat.plantcare.app.RegisterPlantStep3Screen
 import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantViewModel
 

@@ -1,9 +1,9 @@
 package plat.plantcare.app.register.data
 
-import plat.plantcare.app.AttentionLevel
-import plat.plantcare.app.LightExposure
-import plat.plantcare.app.PotSize
-import plat.plantcare.app.WateringFrequency
+import plat.plantcare.app.register.ui.AttentionLevel
+import plat.plantcare.app.register.ui.LightExposure
+import plat.plantcare.app.register.ui.PotSize
+import plat.plantcare.app.register.ui.WateringFrequency
 
 data class RegisterPlantState(
     val plantName: String = "Monstera Monstrita",

@@ -1,4 +1,4 @@
-package plat.plantcare.app
+package plat.plantcare.app.calendar.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import plat.plantcare.app.R
 import plat.plantcare.app.ui.theme.PlantcareTheme
 import plat.plantcare.app.calendar.data.CalendarMonthState
 import plat.plantcare.app.calendar.data.CalendarMonthEvent

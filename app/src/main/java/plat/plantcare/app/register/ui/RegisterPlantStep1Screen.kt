@@ -1,4 +1,4 @@
-package plat.plantcare.app
+package plat.plantcare.app.register.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import plat.plantcare.app.R
 import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.ui.theme.PlantcareTheme
 import plat.plantcare.app.register.data.RegisterPlantState

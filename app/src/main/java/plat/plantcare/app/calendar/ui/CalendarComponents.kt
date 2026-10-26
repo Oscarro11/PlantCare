@@ -1,4 +1,4 @@
-package plat.plantcare.app
+package plat.plantcare.app.calendar.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
