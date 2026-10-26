@@ -22,7 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.ui.theme.PlantcareTheme
-
+import plat.plantcare.app.register.data.RegisterPlantState
+import plat.plantcare.app.register.data.RegisterPlantEvent
 
 enum class LightExposure {
     DIRECT,
@@ -559,16 +560,14 @@ fun RegisterPlantStep2Screen(
     onBackClick: () -> Unit = {},
     onContinueClick: () -> Unit = {},
     onDiscardClick: () -> Unit = {}
+,
+    state: RegisterPlantState = RegisterPlantState(),
+    onEvent: (RegisterPlantEvent) -> Unit = {} 
 ) {
     val backgroundColor = Color(0xFFEAF9F0)
 
-    var selectedLight by remember {
-        mutableStateOf(LightExposure.INDIRECT_HIGH)
-    }
-
-    var selectedSize by remember {
-        mutableStateOf(PotSize.MEDIUM)
-    }
+    val selectedLight = state.lightExposure
+    val selectedSize = state.potSize
 
     Scaffold(
         topBar = {
@@ -592,7 +591,7 @@ fun RegisterPlantStep2Screen(
             LightExposureSection(
                 selectedLight = selectedLight,
                 onLightSelected = {
-                    selectedLight = it
+                    onEvent(RegisterPlantEvent.SelectLight(it))
                 }
             )
 
@@ -607,7 +606,7 @@ fun RegisterPlantStep2Screen(
             PotSizeSection(
                 selectedSize = selectedSize,
                 onSizeSelected = {
-                    selectedSize = it
+                    onEvent(RegisterPlantEvent.SelectPotSize(it))
                 }
             )
 

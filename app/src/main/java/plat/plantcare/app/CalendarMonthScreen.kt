@@ -20,6 +20,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import plat.plantcare.app.ui.theme.PlantcareTheme
+import plat.plantcare.app.calendar.data.CalendarMonthState
+import plat.plantcare.app.calendar.data.CalendarMonthEvent
 
 
 data class CalendarDay(
@@ -519,18 +521,12 @@ fun CalendarMonthScreen(
     onPreviousMonthClick: () -> Unit = {},
     onNextMonthClick: () -> Unit = {},
     onAddTaskClick: () -> Unit = {},
-    onTaskClick: (CareTask) -> Unit = {}
+    onTaskClick: (CareTask) -> Unit = {},
+    state: CalendarMonthState = CalendarMonthState(),
+    onEvent: (CalendarMonthEvent) -> Unit = {}
 ) {
     val darkGreen = Color(0xFF123D2B)
     val backgroundColor = Color(0xFFEAF9F0)
-
-    var selectedFilter by remember {
-        mutableStateOf(CalendarFilter.ALL)
-    }
-
-    var selectedDay by remember {
-        mutableStateOf(18)
-    }
 
     Column(
         modifier = Modifier
@@ -596,19 +592,15 @@ fun CalendarMonthScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         CalendarFilters(
-            selectedFilter = selectedFilter,
-            onFilterChange = {
-                selectedFilter = it
-            }
+            selectedFilter = state.selectedFilter,
+            onFilterChange = { onEvent(CalendarMonthEvent.SelectFilter(it)) }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         MonthCalendar(
-            selectedDay = selectedDay,
-            onDaySelected = {
-                selectedDay = it
-            }
+            selectedDay = state.selectedDay,
+            onDaySelected = { onEvent(CalendarMonthEvent.SelectDay(it)) }
         )
 
         Spacer(modifier = Modifier.height(16.dp))

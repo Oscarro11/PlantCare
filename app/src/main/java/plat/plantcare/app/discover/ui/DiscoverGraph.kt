@@ -6,7 +6,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.navigation
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.DescubrirDestination
-import plat.plantcare.app.core.TopLevelRoute
+import plat.plantcare.app.core.navigation.TopLevelRoute
 import plat.plantcare.app.descubrirScreen
 import plat.plantcare.app.discover.data.PlantaRecomendada
 

@@ -24,7 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.ui.theme.PlantcareTheme
-
+import plat.plantcare.app.register.data.RegisterPlantState
+import plat.plantcare.app.register.data.RegisterPlantEvent
 
 data class PlantLocation(
     val name: String,
@@ -669,17 +670,15 @@ fun RegisterPlantStep1Screen(
     onDateClick: () -> Unit = {},
     onContinueClick: () -> Unit = {},
     onDiscardClick: () -> Unit = {}
+,
+    state: RegisterPlantState = RegisterPlantState(),
+    onEvent: (RegisterPlantEvent) -> Unit = {} 
 ) {
     val backgroundColor = Color(0xFFEAF9F0)
     val darkGreen = Color(0xFF123D2B)
 
-    var plantName by remember {
-        mutableStateOf("Monstera Monstrita")
-    }
-
-    var selectedLocation by remember {
-        mutableStateOf("Salón")
-    }
+    val plantName = state.plantName
+    val selectedLocation = state.location
 
     Scaffold(
         topBar = {
@@ -742,11 +741,11 @@ fun RegisterPlantStep1Screen(
             IdentitySection(
                 plantName = plantName,
                 onPlantNameChange = {
-                    plantName = it
+                    onEvent(RegisterPlantEvent.ChangeName(it))
                 },
                 selectedLocation = selectedLocation,
                 onLocationSelected = {
-                    selectedLocation = it
+                    onEvent(RegisterPlantEvent.SelectLocation(it))
                 },
                 onNewLocationClick = onNewLocationClick,
                 onDateClick = onDateClick
