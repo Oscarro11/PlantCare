@@ -43,6 +43,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import plat.plantcare.app.R
+import plat.plantcare.app.calendar.ui.CalendarGraph
+import plat.plantcare.app.calendar.ui.CalendarMonthDestination
+import plat.plantcare.app.calendar.ui.calendarGraph
+import plat.plantcare.app.register.ui.RegisterPlantGraph
+import plat.plantcare.app.register.ui.registerPlantGraph
 import plat.plantcare.app.collection.allPlants.ui.CollectionDestination
 import plat.plantcare.app.collection.CollectionGraph
 import plat.plantcare.app.collection.collectionGraph
@@ -90,19 +95,19 @@ enum class TopLevelDestination(
         label = R.string.navigation_favorites
     ),
 
-    /*
     CALENDAR(
-        route = null,
+        route = CalendarGraph,
+        startRoute = CalendarMonthDestination,
         icon = R.drawable.calendar,
         label = R.string.navigation_calendar
     ),
 
+    /*
     DISCOVER(
         route = null,
         icon = R.drawable.explore,
         label = R.string.navigation_discover
-    )
-    */
+    )*/
 }
 
 @Composable
@@ -173,15 +178,16 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             homeGraph(
                 navController = navController,
+
                 //TODO: update with diagnosis camera screen and add plant screen
                 onDiagnosisClick = {},
-                onAddPlantClick = {}
+                onAddPlantClick = { navController.navigate(RegisterPlantGraph) }
             )
 
             collectionGraph(
                 navController = navController,
                 //TODO: update
-                onAddPlantClick = {},
+                onAddPlantClick = { navController.navigate(RegisterPlantGraph) },
                 onMakeDiagnostic = {}
             )
 
@@ -195,6 +201,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 navController = navController,
                 onCerrarSesion = {}
             )
+
+            calendarGraph(navController)
+            registerPlantGraph(navController)
         }
     }
 }

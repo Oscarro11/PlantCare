@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.ui.theme.PlantcareTheme
+import plat.plantcare.app.register.data.RegisterPlantState
+import plat.plantcare.app.register.data.RegisterPlantEvent
 
 
 enum class WateringFrequency {
@@ -726,37 +728,23 @@ fun RegisterPlantStep3Screen(
     onSaveClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onDiscardClick: () -> Unit = {}
+,
+    state: RegisterPlantState = RegisterPlantState(),
+    onEvent: (RegisterPlantEvent) -> Unit = {} 
 ) {
     val backgroundColor = Color(0xFFEAF9F0)
 
-    var selectedFrequency by remember {
-        mutableStateOf(WateringFrequency.WEEKLY)
-    }
-
-    var waterAmount by remember {
-        mutableFloatStateOf(0.5f)
-    }
-
-    var selectedLevel by remember {
-        mutableStateOf(AttentionLevel.MODERATE)
-    }
-
-    var easyCare by remember {
-        mutableStateOf(true)
-    }
-
-    var airPurifier by remember {
-        mutableStateOf(true)
-    }
-
-    var ownCutting by remember {
-        mutableStateOf(false)
-    }
+    val selectedFrequency = state.wateringFrequency
+    val waterAmount = state.waterAmount
+    val selectedLevel = state.attentionLevel
+    val easyCare = state.easyCare
+    val airPurifier = state.airPurifier
+    val ownCutting = state.ownCutting
 
     Scaffold(
         topBar = {
             AppTopBar(
-                title = "Registro Planta Paso 2",
+                title = "Registro Planta Paso 3",
                 onBackClick = onCloseClick,
             )
         }
@@ -779,11 +767,11 @@ fun RegisterPlantStep3Screen(
             WateringRoutineSection(
                 selectedFrequency = selectedFrequency,
                 onFrequencySelected = {
-                    selectedFrequency = it
+                    onEvent(RegisterPlantEvent.SelectWateringFrequency(it))
                 },
                 waterAmount = waterAmount,
                 onWaterAmountChange = {
-                    waterAmount = it
+                    onEvent(RegisterPlantEvent.ChangeWaterAmount(it))
                 }
             )
 
@@ -792,7 +780,7 @@ fun RegisterPlantStep3Screen(
             AttentionLevelSection(
                 selectedLevel = selectedLevel,
                 onLevelSelected = {
-                    selectedLevel = it
+                    onEvent(RegisterPlantEvent.SelectAttentionLevel(it))
                 }
             )
 
@@ -803,13 +791,13 @@ fun RegisterPlantStep3Screen(
                 airPurifier = airPurifier,
                 ownCutting = ownCutting,
                 onEasyCareChange = {
-                    easyCare = it
+                    onEvent(RegisterPlantEvent.SetEasyCare(it))
                 },
                 onAirPurifierChange = {
-                    airPurifier = it
+                    onEvent(RegisterPlantEvent.SetAirPurifier(it))
                 },
                 onOwnCuttingChange = {
-                    ownCutting = it
+                    onEvent(RegisterPlantEvent.SetOwnCutting(it))
                 }
             )
 

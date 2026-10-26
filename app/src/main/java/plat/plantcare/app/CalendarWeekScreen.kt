@@ -20,6 +20,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import plat.plantcare.app.ui.theme.PlantcareTheme
+import plat.plantcare.app.calendar.data.CalendarWeekState
+import plat.plantcare.app.calendar.data.CalendarWeekEvent
 
 
 data class WeekTask(
@@ -459,17 +461,11 @@ fun CalendarWeekScreen(
     onMonthViewClick: () -> Unit = {},
     onPreviousWeekClick: () -> Unit = {},
     onNextWeekClick: () -> Unit = {},
-    onTaskClick: (WeekTask) -> Unit = {}
+    onTaskClick: (WeekTask) -> Unit = {},
+    state: CalendarWeekState = CalendarWeekState(),
+    onEvent: (CalendarWeekEvent) -> Unit = {}
 ) {
     val backgroundColor = Color(0xFFEAF9F0)
-
-    var selectedFilter by remember {
-        mutableStateOf(CalendarFilter.ALL)
-    }
-
-    var selectedDay by remember {
-        mutableStateOf("18")
-    }
 
     Column(
         modifier = Modifier
@@ -488,19 +484,15 @@ fun CalendarWeekScreen(
         Spacer(modifier = Modifier.height(14.dp))
 
         WeekFilters(
-            selectedFilter = selectedFilter,
-            onFilterChange = {
-                selectedFilter = it
-            }
+            selectedFilter = state.selectedFilter,
+            onFilterChange = { onEvent(CalendarWeekEvent.SelectFilter(it)) }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         WeekDays(
-            selectedDay = selectedDay,
-            onDaySelected = {
-                selectedDay = it
-            }
+            selectedDay = state.selectedDay,
+            onDaySelected = { onEvent(CalendarWeekEvent.SelectDay(it)) }
         )
 
         Spacer(modifier = Modifier.height(14.dp))
