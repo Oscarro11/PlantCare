@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Plantcare</string>
+    <string name="navigation_start">Inicio</string>
+    <string name="navigation_collection">Colección</string>
+    <string name="navigation_calendar">Calendario</string>
+    <string name="navigation_discover">Descubrir</string>
+    <string name="navigation_favorites">Favoritos</string>
 </resources>

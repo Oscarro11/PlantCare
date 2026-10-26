@@ -42,7 +42,8 @@ fun TextFieldWithTitle(
     fieldTrailingIcon: Int?,
     onTrailingIconClick: () -> Unit,
     visualTransformation: VisualTransformation?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    placeholder: String = ""
 ){
     Column(
         modifier = modifier
@@ -70,8 +71,8 @@ fun TextFieldWithTitle(
             value = fieldValue,
             onValueChange = onValueChange,
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.onBackground,
-                unfocusedContainerColor = MaterialTheme.colorScheme.onBackground
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             ),
             leadingIcon = {
                 if (fieldLeadingIcon != null) {
@@ -93,6 +94,7 @@ fun TextFieldWithTitle(
                     }
                 }
             },
+            placeholder = { Text(placeholder) },
             visualTransformation = visualTransformation ?: VisualTransformation.None,
             singleLine = true,
             modifier = Modifier
