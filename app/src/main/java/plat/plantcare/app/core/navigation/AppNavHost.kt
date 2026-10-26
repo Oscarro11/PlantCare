@@ -51,8 +51,17 @@ import plat.plantcare.app.home.home.ui.HomeDestination
 import plat.plantcare.app.home.HomeGraph
 import plat.plantcare.app.home.homeGraph
 import plat.plantcare.app.home.navigateToHomeGraph
+import plat.plantcare.app.favorites.ui.FavoritesGraph
+import plat.plantcare.app.favorites.ui.ListaDeseosDestination
+import plat.plantcare.app.favorites.ui.favoritesGraph
+import plat.plantcare.app.home.ui.HomeDestination
+import plat.plantcare.app.home.ui.HomeGraph
+import plat.plantcare.app.home.ui.homeGraph
+import plat.plantcare.app.home.ui.navigateToHomeGraph
 import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
+import plat.plantcare.app.settings.ui.ajustesGraph
+import plat.plantcare.app.settings.ui.navigateToAjustesGraph
 
 
 interface TopLevelRoute
@@ -69,6 +78,12 @@ enum class TopLevelDestination(
         startRoute = HomeDestination,
         icon = R.drawable.leaf,
         label = R.string.navigation_start
+    ),
+    FAVORITES(
+        route = FavoritesGraph,
+        startRoute = ListaDeseosDestination,
+        icon = R.drawable.favorites,
+        label = R.string.navigation_favorites
     ),
 
     COLLECTION(
@@ -89,13 +104,8 @@ enum class TopLevelDestination(
         route = null,
         icon = R.drawable.explore,
         label = R.string.navigation_discover
-    ),
-
-    FAVORITES(
-        route = null,
-        icon = R.drawable.favorites,
-        label = R.string.navigation_favorites
-    )*/
+    )
+    */
 }
 
 @Composable
@@ -119,8 +129,13 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             if (usesTopAppBar != null) {
                 AppSectionTopBar(
                     section = stringResource(usesTopAppBar.label),
-                    //TODO: add account screen to navigate to
-                    onProfileClick = {}
+                    onProfileClick = {
+                        navController.navigateToAjustesGraph(
+                            navOptions {
+                                launchSingleTop = true
+                            }
+                        )
+                    }
                 )
             }
         },
@@ -149,6 +164,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
         ){
+            ajustesGraph(
+                navController = navController,
+                onCerrarSesion = {}
+            )
+
             loginScreen(
                 onLogin = {
                     navController.navigateToHomeGraph(
@@ -172,6 +192,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 //TODO: update
                 onAddPlantClick = {},
                 onMakeDiagnostic = {}
+            )
+
+            favoritesGraph(
+                onAgregarClick = {},
+                onFiltrosClick = {},
+                onMoverAColeccion = {}
             )
         }
     }

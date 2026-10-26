@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,43 +45,98 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import plat.plantcare.app.collection.data.CollectionLayout
+import plat.plantcare.app.core.AppTopBar
+import plat.plantcare.app.settings.data.AjustesEvent
+import plat.plantcare.app.settings.data.AjustesState
+import plat.plantcare.app.settings.data.AjustesViewModel
 
-@Preview(showBackground = true)
 @Composable
-fun AjustesScreen(
-    fotoModel: Any? = null
+fun AjustesRoute(
+    onBackClick: () -> Unit,
+    onCerrarSesion: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: AjustesViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    AjustesScreen(
+        state = state,
+        onBackClick = onBackClick,
+        onCerrarSesion = onCerrarSesion,
+        onRecordatoriosChange = { enabled ->
+            viewModel.onEvent(
+                AjustesEvent.ChangeRecordatorios(enabled)
+            )
+        },
+        onAlertasChange = { enabled ->
+            viewModel.onEvent(
+                AjustesEvent.ChangeAlertasClimaticas(enabled)
+            )
+        },
+        onVistaColeccionChange = { layout ->
+            viewModel.onEvent(
+                AjustesEvent.ChangeVistaColeccion(layout)
+            )
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun AjustesScreen(
+    state: AjustesState,
+    onBackClick: () -> Unit,
+    onCerrarSesion: () -> Unit,
+    onRecordatoriosChange: (Boolean) -> Unit,
+    onAlertasChange: (Boolean) -> Unit,
+    onVistaColeccionChange: (CollectionLayout) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            AppTopBar(
+                title = "Ajustes",
+                onBackClick = onBackClick
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-            ,
+                .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(24.dp))
 
             FotoPerfil(
-                fotoModel = fotoModel
+                fotoModel = state.fotoUrl
             )
 
             Spacer(Modifier.height(16.dp))
 
-            Estadisticas()
+            Estadisticas(
+                plantasVivas = state.plantasVivas,
+                riegosHechos = state.riegosHechos,
+                diasRacha = state.diasRacha
+            )
 
             Spacer(Modifier.height(20.dp))
 
@@ -88,7 +145,14 @@ fun AjustesScreen(
                 title = "NOTIFICACIONES Y RECORDATORIOS"
             )
 
-            NotificationsCard()
+            NotificationsCard(
+                recordatoriosInteligentes =
+                    state.recordatoriosInteligentes,
+                alertasClimaticas = state.alertasClimaticas,
+                horaAviso = state.horaAviso,
+                onRecordatoriosChange = onRecordatoriosChange,
+                onAlertasChange = onAlertasChange
+            )
 
             Spacer(Modifier.height(20.dp))
 
@@ -97,7 +161,9 @@ fun AjustesScreen(
                 title = "MI ENTORNO"
             )
 
-            EnvironmentCard()
+            EnvironmentCard(
+                ubicacion = state.ubicacion
+            )
 
             Spacer(Modifier.height(20.dp))
 
@@ -106,24 +172,27 @@ fun AjustesScreen(
                 title = "PREFERENCIAS DE LA APP"
             )
 
-            PreferencesCard()
+            PreferencesCard(
+                vistaColeccion = state.vistaColeccion,
+                onVistaColeccionChange = onVistaColeccionChange
+            )
 
             Spacer(Modifier.height(28.dp))
 
-            LogoutButton()
+            LogoutButton(
+                onCerrarSesion = onCerrarSesion
+            )
 
             Spacer(Modifier.height(20.dp))
 
             Text(
                 text = "Botanika v2.4.0 (Build 342)",
-                modifier = Modifier.align(Alignment.CenterHorizontally),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
                 text = "Hecho con cariño para tus plantas",
-                modifier = Modifier.align(Alignment.CenterHorizontally),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                     alpha = 0.55f
@@ -132,6 +201,21 @@ fun AjustesScreen(
 
             Spacer(Modifier.height(32.dp))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AjustesScreenPreview() {
+    MaterialTheme {
+        AjustesScreen(
+            state = AjustesState(),
+            onBackClick = {},
+            onCerrarSesion = {},
+            onRecordatoriosChange = {},
+            onAlertasChange = {},
+            onVistaColeccionChange = {}
+        )
     }
 }
 
@@ -189,32 +273,32 @@ private fun FotoPerfil(
 }
 
 @Composable
-private fun Estadisticas() {
-    val plantas_vivas = 12
-    val riegos_hechos = 142
-    val dias_racha = 98
-
+private fun Estadisticas(
+    plantasVivas: Int,
+    riegosHechos: Int,
+    diasRacha: Int
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         StatCard(
             icon = Icons.Outlined.LocalFlorist,
-            value = plantas_vivas.toString(),
+            value = plantasVivas.toString(),
             description = "Plantas vivas",
             modifier = Modifier.weight(1f)
         )
 
         StatCard(
             icon = Icons.Outlined.WaterDrop,
-            value = riegos_hechos.toString(),
+            value = riegosHechos.toString(),
             description = "Riegos hechos",
             modifier = Modifier.weight(1f)
         )
 
         StatCard(
             icon = Icons.Outlined.LocalFireDepartment,
-            value = dias_racha.toString(),
+            value = diasRacha.toString(),
             description = "Días racha",
             highlighted = true,
             modifier = Modifier.weight(1f)
@@ -282,7 +366,13 @@ private fun StatCard(
 }
 
 @Composable
-private fun NotificationsCard() {
+private fun NotificationsCard(
+    recordatoriosInteligentes: Boolean,
+    alertasClimaticas: Boolean,
+    horaAviso: String,
+    onRecordatoriosChange: (Boolean) -> Unit,
+    onAlertasChange: (Boolean) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -313,8 +403,8 @@ private fun NotificationsCard() {
                 }
 
                 Switch(
-                    checked = true,
-                    onCheckedChange = {}
+                    checked = recordatoriosInteligentes,
+                    onCheckedChange = onRecordatoriosChange
                 )
             }
 
@@ -375,8 +465,8 @@ private fun NotificationsCard() {
                 }
 
                 Switch(
-                    checked = true,
-                    onCheckedChange = {}
+                    checked = alertasClimaticas,
+                    onCheckedChange = onAlertasChange
                 )
             }
         }
@@ -384,7 +474,9 @@ private fun NotificationsCard() {
 }
 
 @Composable
-private fun EnvironmentCard() {
+private fun EnvironmentCard(
+    ubicacion: String
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -410,7 +502,7 @@ private fun EnvironmentCard() {
                 )
 
                 Text(
-                    text = "Madrid, España (Templado-seco)",
+                    text = ubicacion,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -425,7 +517,10 @@ private fun EnvironmentCard() {
 }
 
 @Composable
-private fun PreferencesCard() {
+private fun PreferencesCard(
+    vistaColeccion: CollectionLayout,
+    onVistaColeccionChange: (CollectionLayout) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -436,80 +531,20 @@ private fun PreferencesCard() {
         Column(
             modifier = Modifier.padding(14.dp)
         ) {
-            PreferenceRow(
-                icon = Icons.Outlined.Straighten,
-                title = "Unidades de medida",
-                subtitle = "Volumen y temperatura",
-                trailing = "Métrico (ml, °C)"
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 10.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
-
-            CollectionPreference()
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 10.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
-
-            PreferenceRow(
-                icon = Icons.Outlined.Language,
-                title = "Idioma",
-                trailing = "Español"
+            CollectionPreference(
+                selectedLayout = vistaColeccion,
+                onLayoutSelected = onVistaColeccionChange
             )
         }
     }
 }
 
+
 @Composable
-private fun PreferenceRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String? = null,
-    trailing: String
+private fun CollectionPreference(
+    selectedLayout: CollectionLayout,
+    onLayoutSelected: (CollectionLayout) -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        SmallIcon(icon)
-
-        Spacer(Modifier.width(10.dp))
-
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Text(
-            text = trailing,
-            style = MaterialTheme.typography.bodySmall
-        )
-
-        Icon(
-            imageVector = Icons.Outlined.KeyboardArrowRight,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
-@Composable
-private fun CollectionPreference() {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -536,33 +571,44 @@ private fun CollectionPreference() {
         Row(
             modifier = Modifier
                 .background(
-                    MaterialTheme.colorScheme.secondaryContainer,
-                    RoundedCornerShape(10.dp)
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(10.dp)
                 )
                 .padding(3.dp)
+                .selectableGroup()
         ) {
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                Text(
-                    text = "▦ Cuadrícula",
-                    modifier = Modifier.padding(
-                        horizontal = 8.dp,
-                        vertical = 6.dp
-                    ),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
+            CollectionLayout.entries.forEach { layout ->
+                val selected = selectedLayout == layout
 
-            Text(
-                text = "▤ Lista",
-                modifier = Modifier.padding(
-                    horizontal = 8.dp,
-                    vertical = 6.dp
-                ),
-                style = MaterialTheme.typography.labelMedium
-            )
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.surface
+                    } else {
+                        androidx.compose.ui.graphics.Color.Transparent
+                    }
+                ) {
+                    Text(
+                        text = when (layout) {
+                            CollectionLayout.GRID -> "▦ Cuadrícula"
+                            CollectionLayout.LIST -> "▤ Lista"
+                        },
+                        modifier = Modifier
+                            .selectable(
+                                selected = selected,
+                                role = Role.RadioButton,
+                                onClick = {
+                                    onLayoutSelected(layout)
+                                }
+                            )
+                            .padding(
+                                horizontal = 8.dp,
+                                vertical = 6.dp
+                            ),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
         }
     }
 }
@@ -619,9 +665,11 @@ private fun SmallIcon(
 }
 
 @Composable
-private fun LogoutButton() {
+private fun LogoutButton(
+    onCerrarSesion: () -> Unit
+) {
     TextButton(
-        onClick = {},
+        onClick = onCerrarSesion,
         modifier = Modifier.fillMaxWidth()
     ) {
         Icon(
