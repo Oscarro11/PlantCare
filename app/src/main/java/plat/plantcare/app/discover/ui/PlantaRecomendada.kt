@@ -81,6 +81,18 @@ fun NavController.navigateToFichaBotanicaDestination(
     )
 }
 
+fun NavGraphBuilder.fichaBotanicaScreen(
+    onBackClick: () -> Unit,
+    onShareClick: () -> Unit
+) {
+    composable<FichaBotanicaDestination> {
+        FichaBotanicaRoute(
+            onBackClick = onBackClick,
+            onShareClick = onShareClick
+        )
+    }
+}
+
 @Composable
 fun FichaBotanicaRoute(
     onBackClick: () -> Unit,

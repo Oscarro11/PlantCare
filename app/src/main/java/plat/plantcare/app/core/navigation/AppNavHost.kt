@@ -42,6 +42,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
+import plat.plantcare.app.DescubrirDestination
 import plat.plantcare.app.R
 import plat.plantcare.app.calendar.ui.CalendarGraph
 import plat.plantcare.app.calendar.ui.CalendarMonthDestination
@@ -51,22 +52,21 @@ import plat.plantcare.app.register.ui.registerPlantGraph
 import plat.plantcare.app.collection.allPlants.ui.CollectionDestination
 import plat.plantcare.app.collection.CollectionGraph
 import plat.plantcare.app.collection.collectionGraph
-import plat.plantcare.app.core.darkenColor
 import plat.plantcare.app.home.home.ui.HomeDestination
 import plat.plantcare.app.home.HomeGraph
 import plat.plantcare.app.home.homeGraph
 import plat.plantcare.app.home.navigateToHomeGraph
 import plat.plantcare.app.discover.ui.discoverGraph
-import plat.plantcare.app.favorites.ui.FavoritesGraph
+import plat.plantcare.app.favorites.ui.WishesGraph
 import plat.plantcare.app.favorites.ui.ListaDeseosDestination
 import plat.plantcare.app.favorites.ui.favoritesGraph
 import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
 import plat.plantcare.app.ajustes.ui.ajustesGraph
 import plat.plantcare.app.ajustes.ui.navigateToAjustesGraph
+import plat.plantcare.app.core.ui.darkenColor
+import plat.plantcare.app.discover.ui.DiscoverGraph
 import plat.plantcare.app.navigateToFichaBotanicaDestination
-import plat.plantcare.app.settings.ui.ajustesGraph
-import plat.plantcare.app.settings.ui.navigateToAjustesGraph
 
 
 interface TopLevelRoute
@@ -92,8 +92,15 @@ enum class TopLevelDestination(
         label = R.string.navigation_collection
     ),
 
-    FAVORITES(
-        route = FavoritesGraph,
+    DISCOVER(
+    route = DiscoverGraph,
+    startRoute = DescubrirDestination,
+    icon = R.drawable.explore,
+    label = R.string.navigation_discover
+    ),
+
+    WISHES(
+        route = WishesGraph,
         startRoute = ListaDeseosDestination,
         icon = R.drawable.favorites,
         label = R.string.navigation_favorites
@@ -104,14 +111,7 @@ enum class TopLevelDestination(
         startRoute = CalendarMonthDestination,
         icon = R.drawable.calendar,
         label = R.string.navigation_calendar
-    ),
-
-    /*
-    DISCOVER(
-        route = null,
-        icon = R.drawable.explore,
-        label = R.string.navigation_discover
-    )*/
+    )
 }
 
 @Composable
@@ -201,6 +201,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             )
 
             discoverGraph(
+                navController = navController,
                 onVerCuidados = { plantaId ->
                     navController.navigateToFichaBotanicaDestination(
                         plantaId = plantaId
