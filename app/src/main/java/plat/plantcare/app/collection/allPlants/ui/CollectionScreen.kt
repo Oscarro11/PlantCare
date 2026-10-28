@@ -1,7 +1,5 @@
 package plat.plantcare.app.collection.allPlants.ui
 
-import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -63,8 +61,8 @@ import plat.plantcare.app.collection.allPlants.data.CollectionEvent
 import plat.plantcare.app.collection.allPlants.data.CollectionLayout
 import plat.plantcare.app.collection.allPlants.data.CollectionState
 import plat.plantcare.app.collection.allPlants.data.CollectionViewModel
-import plat.plantcare.app.core.darkenColor
-import plat.plantcare.app.core.lightenColor
+import plat.plantcare.app.core.ui.darkenColor
+import plat.plantcare.app.core.ui.lightenColor
 import kotlin.math.round
 
 @Serializable data object CollectionDestination

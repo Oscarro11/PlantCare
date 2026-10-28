@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import plat.plantcare.app.R
 import plat.plantcare.app.core.data.models.TaskAction
 import plat.plantcare.app.core.data.repositories.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository

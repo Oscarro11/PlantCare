@@ -1,6 +1,5 @@
 package plat.plantcare.app.core.data.models
 
-import android.R.attr.entries
 import androidx.annotation.DrawableRes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -8,11 +7,9 @@ import androidx.compose.ui.graphics.Color
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 import plat.plantcare.app.R
-import plat.plantcare.app.core.darkenColor
-import plat.plantcare.app.core.lightenColor
+import plat.plantcare.app.core.ui.darkenColor
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 
 // ---------------------------------------------------------------------------
 // Data layer: what is stored in Firestore
@@ -25,7 +22,6 @@ import java.time.temporal.ChronoUnit
  * Only the data layer (repositories) should know about this class.
  * Every property needs a default value so Firestore can deserialize it.
  */
-//TODO: change Entity name to Entity
 data class TaskEntity(
     @DocumentId val id: String = "",
     val plantId: String = "",
