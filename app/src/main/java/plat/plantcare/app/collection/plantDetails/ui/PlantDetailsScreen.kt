@@ -45,7 +45,9 @@ import androidx.navigation.compose.composable
 import coil3.compose.AsyncImage
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
-import plat.plantcare.app.core.ui.darkenColor
+import plat.plantcare.app.collection.plantDetails.data.PlantDetailsEvent
+import plat.plantcare.app.collection.plantDetails.data.PlantDetailsState
+import plat.plantcare.app.collection.plantDetails.data.PlantDetailsViewModel
 import plat.plantcare.app.core.data.models.HealthStatus
 import plat.plantcare.app.core.data.models.Task
 import plat.plantcare.app.core.data.models.color
@@ -55,9 +57,7 @@ import plat.plantcare.app.core.data.models.getRemainingDays
 import plat.plantcare.app.core.data.models.icon
 import plat.plantcare.app.core.data.models.label
 import plat.plantcare.app.core.navigation.AppTopBar
-import plat.plantcare.app.collection.plantDetails.data.PlantDetailsEvent
-import plat.plantcare.app.collection.plantDetails.data.PlantDetailsState
-import plat.plantcare.app.collection.plantDetails.data.PlantDetailsViewModel
+import plat.plantcare.app.core.ui.darkenColor
 
 @Serializable
 data class PlantDetailsDestination(

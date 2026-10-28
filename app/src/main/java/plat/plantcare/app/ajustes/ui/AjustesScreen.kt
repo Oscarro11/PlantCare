@@ -56,10 +56,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import plat.plantcare.app.settings.data.AjustesEvent
 import plat.plantcare.app.ajustes.data.AjustesState
 import plat.plantcare.app.collection.allPlants.data.CollectionLayout
 import plat.plantcare.app.core.navigation.AppTopBar
+import plat.plantcare.app.settings.data.AjustesEvent
 import plat.plantcare.app.settings.data.AjustesViewModel
 
 @Composable

@@ -1,6 +1,5 @@
 package plat.plantcare.app.collection.plantDetails.ui
 
-import android.R.attr.description
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
