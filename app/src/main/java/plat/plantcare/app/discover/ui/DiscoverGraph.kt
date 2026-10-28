@@ -8,7 +8,6 @@ import kotlinx.serialization.Serializable
 import plat.plantcare.app.DescubrirDestination
 import plat.plantcare.app.core.navigation.TopLevelRoute
 import plat.plantcare.app.descubrirScreen
-import plat.plantcare.app.discover.data.PlantaRecomendada
 
 @Serializable
 data object DiscoverGraph : TopLevelRoute
@@ -20,7 +19,7 @@ fun NavController.navigateToDiscoverGraph(
 }
 
 fun NavGraphBuilder.discoverGraph(
-    onVerCuidados: (PlantaRecomendada) -> Unit,
+    onVerCuidados: (String) -> Unit,
     onFiltrosClick: () -> Unit
 ) {
     navigation<DiscoverGraph>(

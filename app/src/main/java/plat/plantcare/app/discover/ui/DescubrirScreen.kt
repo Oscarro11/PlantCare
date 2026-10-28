@@ -53,7 +53,7 @@ fun NavController.navigateToDescubrirDestination(
 }
 
 fun NavGraphBuilder.descubrirScreen(
-    onVerCuidados: (PlantaRecomendada) -> Unit,
+    onVerCuidados: (String) -> Unit,
     onFiltrosClick: () -> Unit
 ) {
     composable<DescubrirDestination> {
@@ -66,7 +66,7 @@ fun NavGraphBuilder.descubrirScreen(
 
 @Composable
 fun DescubrirRoute(
-    onVerCuidados: (PlantaRecomendada) -> Unit,
+    onVerCuidados: (String) -> Unit,
     onFiltrosClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DescubrirViewModel = hiltViewModel()
@@ -86,7 +86,7 @@ fun DescubrirRoute(
 private fun DescubrirScreen(
     state: DescubrirState,
     onEvent: (DescubrirEvent) -> Unit,
-    onVerCuidados: (PlantaRecomendada) -> Unit,
+    onVerCuidados: (String) -> Unit,
     onFiltrosClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -132,7 +132,7 @@ private fun DescubrirScreen(
                     )
                 },
                 onVerCuidados = {
-                    onVerCuidados(planta)
+                    onVerCuidados(planta.id)
                 }
             )
         }

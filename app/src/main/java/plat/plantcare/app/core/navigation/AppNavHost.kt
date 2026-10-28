@@ -56,6 +56,7 @@ import plat.plantcare.app.home.home.ui.HomeDestination
 import plat.plantcare.app.home.HomeGraph
 import plat.plantcare.app.home.homeGraph
 import plat.plantcare.app.home.navigateToHomeGraph
+import plat.plantcare.app.discover.ui.discoverGraph
 import plat.plantcare.app.favorites.ui.FavoritesGraph
 import plat.plantcare.app.favorites.ui.ListaDeseosDestination
 import plat.plantcare.app.favorites.ui.favoritesGraph
@@ -63,6 +64,9 @@ import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
 import plat.plantcare.app.ajustes.ui.ajustesGraph
 import plat.plantcare.app.ajustes.ui.navigateToAjustesGraph
+import plat.plantcare.app.navigateToFichaBotanicaDestination
+import plat.plantcare.app.settings.ui.ajustesGraph
+import plat.plantcare.app.settings.ui.navigateToAjustesGraph
 
 
 interface TopLevelRoute
@@ -193,6 +197,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             favoritesGraph(
                 onAgregarClick = {},
+                onFiltrosClick = {}
+            )
+
+            discoverGraph(
+                onVerCuidados = { plantaId ->
+                    navController.navigateToFichaBotanicaDestination(
+                        plantaId = plantaId
+                    )
+                },
                 onFiltrosClick = {}
             )
 
