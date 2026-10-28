@@ -67,24 +67,18 @@ import androidx.compose.ui.semantics.semantics
 
 
 @Serializable
-data object FichaBotanicaDestination
+data class FichaBotanicaDestination(
+    val plantaId: String
+)
 
 fun NavController.navigateToFichaBotanicaDestination(
+    plantaId: String,
     navOptions: NavOptions? = null
 ) {
-    navigate(FichaBotanicaDestination, navOptions)
-}
-
-fun NavGraphBuilder.fichaBotanicaScreen(
-    onBackClick: () -> Unit,
-    onShareClick: () -> Unit
-) {
-    composable<FichaBotanicaDestination> {
-        FichaBotanicaRoute(
-            onBackClick = onBackClick,
-            onShareClick = onShareClick
-        )
-    }
+    navigate(
+        FichaBotanicaDestination(plantaId),
+        navOptions
+    )
 }
 
 @Composable

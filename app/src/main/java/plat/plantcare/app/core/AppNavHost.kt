@@ -43,6 +43,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import plat.plantcare.app.R
+import plat.plantcare.app.discover.ui.discoverGraph
 import plat.plantcare.app.favorites.ui.FavoritesGraph
 import plat.plantcare.app.favorites.ui.ListaDeseosDestination
 import plat.plantcare.app.favorites.ui.favoritesGraph
@@ -52,6 +53,7 @@ import plat.plantcare.app.home.ui.homeGraph
 import plat.plantcare.app.home.ui.navigateToHomeGraph
 import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
+import plat.plantcare.app.navigateToFichaBotanicaDestination
 import plat.plantcare.app.settings.ui.ajustesGraph
 import plat.plantcare.app.settings.ui.navigateToAjustesGraph
 
@@ -179,6 +181,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             favoritesGraph(
                 onAgregarClick = {},
+                onFiltrosClick = {}
+            )
+
+            discoverGraph(
+                onVerCuidados = { plantaId ->
+                    navController.navigateToFichaBotanicaDestination(
+                        plantaId = plantaId
+                    )
+                },
                 onFiltrosClick = {}
             )
         }
