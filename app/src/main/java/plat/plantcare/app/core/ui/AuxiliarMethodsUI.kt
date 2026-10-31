@@ -1,4 +1,4 @@
-package plat.plantcare.app.core
+package plat.plantcare.app.core.ui
 
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.ui.graphics.Color
