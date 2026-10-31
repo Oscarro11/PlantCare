@@ -3,24 +3,10 @@ package plat.plantcare.app.core.data.models
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.DocumentId
 import plat.plantcare.app.R
+import plat.plantcare.app.core.data.remote.DiagnosticDTO
 import java.time.LocalDate
 import java.time.ZoneId
-
-/** Colección: plantas/{plantId}/diagnosticos/{id} */
-data class DiagnosticEntity(
-    @DocumentId val id: String = "",
-    val plantId: String = "",                // FK -> Planta.id
-    val date: Timestamp? = null,             // Fecha de realización
-    val foliageState: String = "",           // Estado de follaje
-    val growthVigor: String = "",            // Vigor y crecimiento
-    val pestControl: String = "",            // Control de plagas
-    val diseaseSigns: String = "",           // Signos de enfermedades
-    val hasFlowersOrFruits: Boolean = false, // Flores o frutos
-    val score: Int = 0                       // Puntaje
-)
 
 data class Diagnostic(
     val id: String,
@@ -41,23 +27,8 @@ enum class HealthStatus {
     MUERTA
 }
 
-fun DiagnosticEntity.toDomain(zone: ZoneId = ZoneId.systemDefault()): Diagnostic?{
-    val date = date?.toLocalDate(zone) ?: return null
-    return Diagnostic(
-        id = id,
-        plantId = plantId,
-        date = date,
-        foliageState = foliageState,
-        growthVigor = growthVigor,
-        pestControl = pestControl,
-        diseaseSigns = diseaseSigns,
-        hasFlowersOrFruits = hasFlowersOrFruits,
-        score = score
-    )
-}
-
-fun Diagnostic.toEntity(zone: ZoneId = ZoneId.systemDefault()): DiagnosticEntity{
-    return DiagnosticEntity(
+fun Diagnostic.toDTO(zone: ZoneId = ZoneId.systemDefault()): DiagnosticDTO{
+    return DiagnosticDTO(
         id = id,
         plantId = plantId,
         date = date.toTimestamp(zone),
