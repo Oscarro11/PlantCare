@@ -3,11 +3,8 @@ package plat.plantcare.app.core.data.repositories
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import plat.plantcare.app.R
 import plat.plantcare.app.core.data.models.Diagnostic
 import plat.plantcare.app.core.data.models.Plant
 import plat.plantcare.app.core.data.models.PlantCharacteristics

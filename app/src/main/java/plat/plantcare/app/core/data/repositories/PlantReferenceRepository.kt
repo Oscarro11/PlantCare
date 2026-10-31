@@ -1,6 +1,5 @@
 package plat.plantcare.app.core.data.repositories
 
-import com.google.common.util.concurrent.Atomics.newReference
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged

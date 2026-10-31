@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,6 +32,7 @@ import plat.plantcare.app.core.data.repositories.PlantReferenceRepository
 import plat.plantcare.app.core.data.repositories.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 sealed interface PlantDetailsEvent{
     data object ToggleFavorite: PlantDetailsEvent
@@ -53,12 +56,6 @@ private data class ReferenceInfo(
 )
 
 private data class PlantDetailsLocalState(
-    val openSections: List<Pair<Section, Boolean>> = listOf(
-        Pair(Section.CHARACTERISTICS, false),
-        Pair(Section.DIAGNOSTIC, false),
-        Pair(Section.CONSIDERATIONS, false),
-        Pair(Section.HISTORY, false)
-    ),
     //TODO: see what to do on edition mode, and more options
     val isEditionModeActive: Boolean = false,
     val areMoreOptionsOpened: Boolean = false
@@ -116,24 +113,28 @@ class PlantDetailsViewModel @Inject constructor (
         history,
         _localState
     ) { plantGroup, referenceGroup, task, history, local ->
-        PlantDetailsState(
-            plant = plantGroup.plant,
-            reference = referenceGroup.reference,
-            nextTask = task,
-            characteristics = plantGroup.characteristics,
-            diagnostic = plantGroup.diagnostic,
-            considerations = referenceGroup.considerations,
-            history = history,
-            openSections = local.openSections,
-            editionMode = local.isEditionModeActive,
-            isMoreOptionsActive = local.areMoreOptionsOpened
-        )
+        if (plantGroup.plant == null) PlantDetailsState.NotFound
+        else {
+            PlantDetailsState.Content(
+                plant = plantGroup.plant,
+                reference = referenceGroup.reference,
+                nextTask = task,
+                characteristics = plantGroup.characteristics,
+                diagnostic = plantGroup.diagnostic,
+                considerations = referenceGroup.considerations,
+                history = history,
+                editionMode = local.isEditionModeActive,
+                isMoreOptionsActive = local.areMoreOptionsOpened
+            )
+        }
     }
+        //TODO: remove fake delay
+        .onStart { delay(3_000.milliseconds) }
         .catch {  }
         .stateIn(
             viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = PlantDetailsState()
+            initialValue = PlantDetailsState.Loading
         )
 
     fun onEvent(event: PlantDetailsEvent) {

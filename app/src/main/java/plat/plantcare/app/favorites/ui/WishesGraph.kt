@@ -6,22 +6,21 @@ import androidx.navigation.NavOptions
 import androidx.navigation.navigation
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.core.navigation.TopLevelRoute
-import plat.plantcare.app.favorites.data.PlantaDeseada
 
 @Serializable
-data object FavoritesGraph : TopLevelRoute
+data object WishesGraph : TopLevelRoute
 
 fun NavController.navigateToFavoritesGraph(
     navOptions: NavOptions? = null
 ) {
-    navigate(FavoritesGraph, navOptions)
+    navigate(WishesGraph, navOptions)
 }
 
 fun NavGraphBuilder.favoritesGraph(
     onAgregarClick: () -> Unit,
     onFiltrosClick: () -> Unit
 ) {
-    navigation<FavoritesGraph>(
+    navigation<WishesGraph>(
         startDestination = ListaDeseosDestination
     ) {
         listaDeseosScreen(
