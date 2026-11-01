@@ -1,6 +1,6 @@
 package plat.plantcare.app.core.data.models
 
-import plat.plantcare.app.core.data.remote.WishPlantDTO
+import plat.plantcare.app.core.data.remote.Firebase.WishPlantDTO
 
 data class WishPlant(
     val id: String,
@@ -8,7 +8,7 @@ data class WishPlant(
     val referenceId: String
 )
 
-fun WishPlant.toDTO(): WishPlantDTO =
+fun WishPlant.toFirebaseDTO(): WishPlantDTO =
     WishPlantDTO(
         id = id,
         userId = userId,

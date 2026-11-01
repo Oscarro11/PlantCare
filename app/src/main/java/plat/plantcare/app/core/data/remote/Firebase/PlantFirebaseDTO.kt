@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.remote
+package plat.plantcare.app.core.data.remote.Firebase
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
@@ -7,7 +7,7 @@ import plat.plantcare.app.core.data.models.toLocalDate
 import java.time.ZoneId
 
 /** Colección: plantas/{id} */
-data class PlantDTO(
+data class PlantFirebaseDTO(
     @DocumentId val id: String = "",
     val name: String = "",            // Nombre personal
     val image: String = "",           // URL de la imagen
@@ -18,7 +18,7 @@ data class PlantDTO(
     val favorite: Boolean = false
 )
 
-fun PlantDTO.toModel(zone: ZoneId = ZoneId.systemDefault()): Plant =
+fun PlantFirebaseDTO.toModel(zone: ZoneId = ZoneId.systemDefault()): Plant =
     Plant(
         id = id,
         name = name,

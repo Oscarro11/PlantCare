@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.remote
+package plat.plantcare.app.core.data.remote.Firebase
 
 import com.google.firebase.firestore.DocumentId
 import plat.plantcare.app.core.data.models.WishPlant

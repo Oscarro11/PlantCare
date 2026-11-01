@@ -1,6 +1,6 @@
 package plat.plantcare.app.core.data.models
 
-import plat.plantcare.app.core.data.remote.PlantReferenceConsiderationsDTO
+import plat.plantcare.app.core.data.remote.Firebase.PlantReferenceConsiderationsFirebaseDTO
 
 
 data class PlantReferenceConsiderations(
@@ -11,8 +11,8 @@ data class PlantReferenceConsiderations(
     val sprayingAndCleaning: String
 )
 
-fun PlantReferenceConsiderations.toDTO(): PlantReferenceConsiderationsDTO =
-    PlantReferenceConsiderationsDTO(
+fun PlantReferenceConsiderations.toFirebaseDTO(): PlantReferenceConsiderationsFirebaseDTO =
+    PlantReferenceConsiderationsFirebaseDTO(
         referenceId = referenceId,
         wateringGuide = wateringGuide,
         recommendedLocationAndLight = recommendedLocationAndLight,

@@ -5,7 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import plat.plantcare.app.R
-import plat.plantcare.app.core.data.remote.TaskDTO
+import plat.plantcare.app.core.data.remote.Firebase.TaskFirebaseDTO
 import plat.plantcare.app.core.ui.darkenColor
 import java.time.LocalDate
 import java.time.ZoneId
@@ -16,17 +16,18 @@ data class Task(
     val dueDate: LocalDate,              // Calendar date in the device's time zone
     val action: TaskAction,
     val description: String,
-    val completed: Boolean
+    val completed: Boolean,
+    val completedAt: LocalDate?
 ) {
     /** Derived, never stored. Pass [today] to make it testable. */
     fun urgency(today: LocalDate = LocalDate.now()): TaskUrgency = dueDate.toUrgency(today)
 }
 
-fun Task.toDTO(zone: ZoneId = ZoneId.systemDefault()): TaskDTO =
-    TaskDTO(
+fun Task.toFirebaseDTO(zone: ZoneId = ZoneId.systemDefault()): TaskFirebaseDTO =
+    TaskFirebaseDTO(
         id = id,
         plantId = plantId,
-        dueDate = dueDate.toTimestamp(zone),
+        dueDate = dueDate.toString(),
         action = action.name,
         description = description,
         completed = completed

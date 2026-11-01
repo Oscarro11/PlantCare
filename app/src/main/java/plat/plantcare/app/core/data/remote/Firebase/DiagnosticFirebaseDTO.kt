@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.remote
+package plat.plantcare.app.core.data.remote.Firebase
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
@@ -7,7 +7,7 @@ import plat.plantcare.app.core.data.models.toLocalDate
 import java.time.ZoneId
 
 /** Colección: plantas/{plantId}/diagnosticos/{id} */
-data class DiagnosticDTO(
+data class DiagnosticFirebaseDTO(
     @DocumentId val id: String = "",
     val plantId: String = "",
     val date: Timestamp? = null,
@@ -19,7 +19,7 @@ data class DiagnosticDTO(
     val score: Int = 0
 )
 
-fun DiagnosticDTO.toModel(zone: ZoneId = ZoneId.systemDefault()): Diagnostic?{
+fun DiagnosticFirebaseDTO.toModel(zone: ZoneId = ZoneId.systemDefault()): Diagnostic?{
     val date = date?.toLocalDate(zone) ?: return null
     return Diagnostic(
         id = id,

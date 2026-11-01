@@ -1,6 +1,6 @@
 package plat.plantcare.app.core.data.models
 
-import plat.plantcare.app.core.data.remote.PlantDTO
+import plat.plantcare.app.core.data.remote.Firebase.PlantFirebaseDTO
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -15,8 +15,8 @@ data class Plant(
     val favorite: Boolean = false
 )
 
-fun Plant.toDTO(zone: ZoneId = ZoneId.systemDefault()): PlantDTO =
-    PlantDTO(
+fun Plant.toFirebaseDTO(zone: ZoneId = ZoneId.systemDefault()): PlantFirebaseDTO =
+    PlantFirebaseDTO(
         id = id,
         name = name,
         image = imageUrl,

@@ -1,6 +1,6 @@
 package plat.plantcare.app.core.data.models
 
-import plat.plantcare.app.core.data.remote.UserDTO
+import plat.plantcare.app.core.data.remote.Firebase.UserFirebaseDTO
 
 // ---------------------------------------------------------------------------
 // Data layer: what is stored in Firestore
@@ -21,8 +21,8 @@ data class User(
 )
 
 
-fun User.toDTO(): UserDTO =
-    UserDTO(
+fun User.toFirebaseDTO(): UserFirebaseDTO =
+    UserFirebaseDTO(
         id = id,
         name = name,
         location = location,

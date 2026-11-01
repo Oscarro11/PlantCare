@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.remote
+package plat.plantcare.app.core.data.remote.Firebase
 
 import com.google.firebase.firestore.DocumentId
 import plat.plantcare.app.core.data.models.PlantCharacteristics
@@ -7,7 +7,7 @@ import plat.plantcare.app.core.data.models.PlantRequiredLight
 import plat.plantcare.app.core.data.models.PlantWateringFrequency
 
 /** Documento: caracteristicas/{plantId} (mismo ID que la planta) */
-data class PlantCharacteristicsDTO(
+data class PlantCharacteristicsFirebaseDTO(
     @DocumentId val plantId: String = "",
     val requiredLight: String = "",
     val wateringFrequencyDays: Int = 0,
@@ -17,7 +17,7 @@ data class PlantCharacteristicsDTO(
     val substrate: String = ""
 )
 
-fun PlantCharacteristicsDTO.toModel(): PlantCharacteristics =
+fun PlantCharacteristicsFirebaseDTO.toModel(): PlantCharacteristics =
     PlantCharacteristics(
         plantId = plantId,
         requiredLight = PlantRequiredLight.entries

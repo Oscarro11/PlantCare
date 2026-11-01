@@ -4,7 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import plat.plantcare.app.R
-import plat.plantcare.app.core.data.remote.DiagnosticDTO
+import plat.plantcare.app.core.data.remote.Firebase.DiagnosticFirebaseDTO
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -27,8 +27,8 @@ enum class HealthStatus {
     MUERTA
 }
 
-fun Diagnostic.toDTO(zone: ZoneId = ZoneId.systemDefault()): DiagnosticDTO{
-    return DiagnosticDTO(
+fun Diagnostic.toFirebaseDTO(zone: ZoneId = ZoneId.systemDefault()): DiagnosticFirebaseDTO{
+    return DiagnosticFirebaseDTO(
         id = id,
         plantId = plantId,
         date = date.toTimestamp(zone),

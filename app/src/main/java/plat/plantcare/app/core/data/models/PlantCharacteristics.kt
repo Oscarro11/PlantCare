@@ -1,6 +1,6 @@
 package plat.plantcare.app.core.data.models
 
-import plat.plantcare.app.core.data.remote.PlantCharacteristicsDTO
+import plat.plantcare.app.core.data.remote.Firebase.PlantCharacteristicsFirebaseDTO
 
 data class PlantCharacteristics(
     val plantId: String,
@@ -12,8 +12,8 @@ data class PlantCharacteristics(
     val substrate: String
 )
 
-fun PlantCharacteristics.toDTO(): PlantCharacteristicsDTO =
-    PlantCharacteristicsDTO(
+fun PlantCharacteristics.toFirebaseDTO(): PlantCharacteristicsFirebaseDTO =
+    PlantCharacteristicsFirebaseDTO(
         plantId = plantId,
         requiredLight = requiredLight.displayName,
         //TODO: update

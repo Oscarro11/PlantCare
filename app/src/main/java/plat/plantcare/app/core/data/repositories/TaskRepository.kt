@@ -27,15 +27,17 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
                 dueDate = LocalDate.now().plusDays(2),
                 action = TaskAction.WATER, // Replace with your enum value
                 description = "Water the monstera",
-                completed = false
-                ),
-                Task(
+                completed = false,
+                completedAt = LocalDate.now()
+            ),
+            Task(
                 id = "task-2",
                 plantId = "plant-2",
                 dueDate = LocalDate.now(),
                 action = TaskAction.CHECK_SOIL_MOISTURE,
                 description = "Check whether the soil is dry",
-                completed = false
+                completed = false,
+                completedAt = LocalDate.now()
             ),
             Task(
                 id = "task-3",
@@ -43,7 +45,8 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
                 dueDate = LocalDate.now().plusDays(1),
                 action = TaskAction.FERTILIZE,
                 description = "Add a small amount of fertilizer",
-                completed = false
+                completed = false,
+                completedAt = LocalDate.now()
             ),
             Task(
                 id = "task-2",
@@ -51,7 +54,8 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
                 dueDate = LocalDate.now().plusDays(5),
                 action = TaskAction.PRUNE,
                 description = "Trim dry leaves",
-                completed = false
+                completed = false,
+                completedAt = LocalDate.now()
             ),
             Task(
                 id = "task-5",
@@ -59,7 +63,8 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
                 dueDate = LocalDate.now().plusDays(1),
                 action = TaskAction.WATER,
                 description = "Water the monstera",
-                completed = false
+                completed = false,
+                completedAt = LocalDate.now()
             )
         )
     )

@@ -1,9 +1,9 @@
-package plat.plantcare.app.core.data.remote
+package plat.plantcare.app.core.data.remote.Firebase
 
 import com.google.firebase.firestore.DocumentId
 import plat.plantcare.app.core.data.models.User
 
-data class UserDTO(
+data class UserFirebaseDTO(
     @DocumentId val id: String = "",
     val name: String = "",
     val location: String = "",
@@ -11,7 +11,7 @@ data class UserDTO(
     val streakDays: Int = 0
 )
 
-fun UserDTO.toModel(): User =
+fun UserFirebaseDTO.toModel(): User =
     User(
         id = id,
         name = name,

@@ -4,7 +4,9 @@ import com.google.firebase.Timestamp
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 /** Instant -> calendar date as seen in [zone]. */
 fun Timestamp.toLocalDate(zone: ZoneId = ZoneId.systemDefault()): LocalDate =
@@ -36,4 +38,10 @@ fun LocalDate.getAge(today: LocalDate = LocalDate.now()): String {
     val months = if (age.months == 1) "mes" else "meses"
 
     return "${age.years} $years and ${age.months} $months"
+}
+
+fun String.toLocalDate(): LocalDate {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
+        .withLocale( Locale.ENGLISH )
+    return LocalDate.parse(this, formatter);
 }
