@@ -176,8 +176,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         navOptions { popUpTo(LoginDestination) {inclusive = true} }
                     )
                 },
-                onRegister = {},
-                onLoginWithGoogle = {}
+                onRegister = {}
             )
 
             homeGraph(

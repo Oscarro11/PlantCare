@@ -23,19 +23,25 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
-        release {
-            optimization {
-                enable = false
-            }
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    buildTypes {
+        debug {
+            buildConfigField("boolean", "USE_EMULATOR", "true")
+            buildConfigField("String", "EMULATOR_HOST", "\"localhost\"")
+        }
+        release {
+            buildConfigField("boolean", "USE_EMULATOR", "false")
+            buildConfigField("String", "EMULATOR_HOST", "\"\"")
+            // ...your existing release config
+        }
     }
 }
 
@@ -68,6 +74,11 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     ksp(libs.hilt.compiler)
+
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

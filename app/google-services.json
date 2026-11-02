@@ -12,7 +12,20 @@
           "package_name": "plat.plantcare.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "518431960706-gi76anuugbts8a0p506j27re13nktodn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "plat.plantcare.app",
+            "certificate_hash": "74cc3533696ef56c5189b237b7ceaf87b7d301f7"
+          }
+        },
+        {
+          "client_id": "518431960706-sjrmscn81a4hvj5gasmj8oo3k429ueu9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB7NykklmdVUni29u9xhFBueKXKwwIdfLU"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "518431960706-sjrmscn81a4hvj5gasmj8oo3k429ueu9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -1,5 +1,7 @@
 package plat.plantcare.app.login.ui
 
+import android.R.attr.enabled
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,8 +31,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -45,14 +51,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
+import plat.plantcare.app.authentication.GoogleSignInHelper
 import plat.plantcare.app.core.ui.IconWithBackground
 import plat.plantcare.app.core.ui.TextFieldWithTitle
 import plat.plantcare.app.core.ui.darkenColor
@@ -69,14 +77,12 @@ fun NavController.navigateToLoginDestination(navOptions: NavOptions? = null){
 
 fun NavGraphBuilder.loginScreen(
     onLogin: () -> Unit,
-    onRegister: () -> Unit,
-    onLoginWithGoogle: () -> Unit,
+    onRegister: () -> Unit
 ) {
     composable<LoginDestination> {
         LoginRoute(
             onLogin = onLogin,
             onRegister = onRegister,
-            onLoginWithGoogle = onLoginWithGoogle
         )
     }
 }
@@ -86,17 +92,29 @@ fun NavGraphBuilder.loginScreen(
 fun LoginRoute(
     onLogin: () -> Unit,
     onRegister: () -> Unit,
-    onLoginWithGoogle: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(
+        state.isSignedIn
+    ) {
+        if (state.isSignedIn) onLogin()
+    }
+
+    LaunchedEffect(
+        state.errorMessage
+    ) {
+        state.errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
 
     LoginScreen(
         state = state,
-        onLogin = onLogin,
         onRegister = onRegister,
-        onLoginWithGoogle = onLoginWithGoogle,
         onEvent = viewModel::onChange,
         modifier = modifier
     )
@@ -105,9 +123,7 @@ fun LoginRoute(
 @Composable
 private fun LoginScreen(
     state: LoginState,
-    onLogin: () -> Unit,
     onRegister: () -> Unit,
-    onLoginWithGoogle: () -> Unit,
     onEvent: (LoginEvent) -> Unit,
     modifier: Modifier = Modifier
 ){
@@ -229,14 +245,14 @@ private fun LoginScreen(
             }
 
             TextFieldWithTitle(
-                title = "Usuario o correo",
+                title = "Correo",
                 titleIcon = R.drawable.email,
-                fieldValue = state.user,
+                fieldValue = state.email,
                 onValueChange = { onEvent(LoginEvent.ChangeUser(it)) },
                 fieldLeadingIcon = R.drawable.arroba,
                 fieldTrailingIcon = null,
                 onTrailingIconClick = {},
-                placeholder = "ej. elena_botanica o elena@oasis.es",
+                placeholder = "ej. elena@oasis.es",
                 visualTransformation = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -284,8 +300,8 @@ private fun LoginScreen(
 
             Button(
                 shape = RoundedCornerShape(20.dp),
-                //TODO: add login implementation
-                onClick = onLogin,
+                onClick = { onEvent(LoginEvent.SignIn) },
+                enabled = !state.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)
@@ -324,6 +340,10 @@ private fun LoginScreen(
                 )
             }
 
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+            val googleSignIn = remember { GoogleSignInHelper() }
+
             Image(
                 painter = painterResource(id = R.drawable.google_sign_in_light),
                 contentDescription = "Iniciar sesión con Google",
@@ -331,8 +351,13 @@ private fun LoginScreen(
                 modifier = Modifier
                     .height(40.dp)
                     .clickable(
-                        //TODO: add login with Google
-                        onClick = onLoginWithGoogle
+                        onClick = {
+                            scope.launch {
+                                googleSignIn.getIdToken(context)
+                                    .onSuccess { token -> onEvent(LoginEvent.GoogleSignIn(token)) }
+                                    .onFailure { error -> onEvent(LoginEvent.GoogleSignInFailed(error)) }
+                            }
+                        }
                     )
             )
 
@@ -351,8 +376,8 @@ private fun LoginScreen(
                         fontWeight = FontWeight.Bold
                     ),
                     modifier = Modifier.clickable(
-                        //TODO: add register implementation
-                        onClick = onRegister
+                        //TODO: change this to its own screen, instead of using the fields
+                        onClick = { onEvent(LoginEvent.CreateAccount) }
                     )
                 )
             }
@@ -416,8 +441,6 @@ fun LoginScreenPreview(){
     LoginScreen(
         state = LoginState(),
         onEvent = {},
-        onLogin = {},
-        onLoginWithGoogle = {},
         onRegister = {}
     )
 }
