@@ -21,6 +21,9 @@ ksp = "2.3.10"
 credentials = "1.6.0"
 coroutines = "1.11.0"
 googleid = "1.2.0"
+dataStore = "1.2.1"
+room = "2.8.1"
+ktor = "3.5.2"
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -61,6 +64,27 @@ androidx-credentials = { group = "androidx.credentials", name = "credentials", v
 androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }
+
+androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStore" }
+
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+ktor-client-cio = { group = "io.ktor", name="ktor-client-cio", version.ref = "ktor" }
+ktor-client-content-negotiation = { group = "io.ktor", name="ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-core = { group = "io.ktor", name="ktor-client-core", version.ref = "ktor" }
+ktor-client-logging = { group = "io.ktor", name="ktor-client-logging", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { group = "io.ktor", name="ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+[bundles]
+ktor = [
+    "ktor-client-cio",
+    "ktor-client-content-negotiation",
+    "ktor-client-core",
+    "ktor-client-logging",
+    "ktor-serialization-kotlinx-json"
+]
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

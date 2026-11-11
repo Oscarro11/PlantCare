@@ -1,6 +1,7 @@
-package plat.plantcare.app.core.data.models
+package plat.plantcare.app.core.data.user.domain
 
-import plat.plantcare.app.core.data.remote.Firebase.UserFirebaseDTO
+import plat.plantcare.app.core.data.user.local.UserEntity
+import plat.plantcare.app.core.data.user.remote.UserFirebaseDTO
 
 // ---------------------------------------------------------------------------
 // Data layer: what is stored in Firestore
@@ -20,7 +21,6 @@ data class User(
     val streakDays: Int
 )
 
-
 fun User.toFirebaseDTO(): UserFirebaseDTO =
     UserFirebaseDTO(
         id = id,
@@ -29,3 +29,6 @@ fun User.toFirebaseDTO(): UserFirebaseDTO =
         image = imageUrl,
         streakDays = streakDays
     )
+
+fun User.toEntity(): UserEntity =
+    UserEntity(id, name, location, imageUrl, streakDays)

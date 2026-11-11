@@ -27,6 +27,7 @@ sealed class AuthError(cause: Throwable? = null) : Exception(cause) {
     class WeakPassword(cause: Throwable? = null) : AuthError(cause)
     class NoNetwork(cause: Throwable? = null) : AuthError(cause)
     class TooManyRequests(cause: Throwable? = null) : AuthError(cause)
+    class ProfileUnavailable(cause: Throwable? = null) : AuthError(cause)
     class Unknown(cause: Throwable? = null) : AuthError(cause)
 }
 

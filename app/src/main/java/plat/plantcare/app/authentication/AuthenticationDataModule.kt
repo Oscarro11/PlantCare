@@ -1,7 +1,6 @@
 package plat.plantcare.app.authentication
 
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import com.google.firebase.auth.FirebaseAuth
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,5 +14,5 @@ import javax.inject.Singleton
 object AuthenticationDataModule {
 
     @Provides @Singleton
-    fun provideAuthApi(): AuthApi = FirebaseAuthApi(Firebase.auth)
+    fun provideAuthApi(auth: FirebaseAuth): AuthApi = FirebaseAuthApi(auth)
 }
