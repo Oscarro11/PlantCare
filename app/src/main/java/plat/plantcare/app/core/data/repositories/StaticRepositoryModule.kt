@@ -29,8 +29,4 @@ abstract class StaticRepositoryModule {
     @Binds
     @Singleton
     abstract fun bindWeatherRepository(impl: FakeWeatherRepository): WeatherRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindAuthRepository(impl: FirebaseAuthRepository): AuthRepository
 }

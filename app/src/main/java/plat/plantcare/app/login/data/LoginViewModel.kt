@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import plat.plantcare.app.core.data.repositories.AuthRepository
+import plat.plantcare.app.authentication.AuthRepository
 import javax.inject.Inject
 
 sealed interface LoginEvent{
