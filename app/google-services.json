@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "518431960706-00141i1vcsucq1br0g2glq500kfsbcga.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "plat.plantcare.app",
+            "certificate_hash": "119202a64089a31f1f64d836ba8de6990134399e"
+          }
+        },
+        {
+          "client_id": "518431960706-7ieku09qakrt4ntm9et9td379sj661sp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "plat.plantcare.app",
+            "certificate_hash": "ad9412e1261522076010a6d3258fe3a2484627ab"
+          }
+        },
+        {
           "client_id": "518431960706-gi76anuugbts8a0p506j27re13nktodn.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
