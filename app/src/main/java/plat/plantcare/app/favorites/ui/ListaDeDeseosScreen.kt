@@ -37,6 +37,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.LinearProgressIndicator
+import plat.plantcare.app.discover.ui.CatalogPlantImage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -58,6 +61,7 @@ import plat.plantcare.app.favorites.data.PlantaDeseada
 fun ListaDeseosRoute(
     onAgregarClick: () -> Unit,
     onFiltrosClick: () -> Unit,
+    onVerCuidados: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ListaDeseosViewModel = hiltViewModel()
 ) {
@@ -67,7 +71,8 @@ fun ListaDeseosRoute(
         state = state,
         onEvent = viewModel::onEvent,
         onAgregarClick = onAgregarClick,
-        onFiltrosClick = onFiltrosClick,
+        onFiltrosClick = { viewModel.onEvent(ListaDeseosEvent.ToggleOrden) },
+        onVerCuidados = onVerCuidados,
         modifier = modifier
     )
 }
@@ -78,6 +83,7 @@ private fun ListaDeseosScreen(
     onEvent: (ListaDeseosEvent) -> Unit,
     onAgregarClick: () -> Unit,
     onFiltrosClick: () -> Unit,
+    onVerCuidados: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -109,7 +115,13 @@ private fun ListaDeseosScreen(
             )
         }
 
-        if (state.plantasFiltradas.isEmpty()) {
+        if (state.isLoading) item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
+        state.error?.let { message -> item {
+            Text(message, color = MaterialTheme.colorScheme.error)
+            TextButton(onClick = { onEvent(ListaDeseosEvent.Retry) }) { Text("Reintentar") }
+        } }
+        item { Text(if (state.ordenInverso) "Orden: Z–A" else "Orden: A–Z", style = MaterialTheme.typography.labelMedium) }
+        if (!state.isLoading && state.error == null && state.plantasFiltradas.isEmpty()) {
             item {
                 Text(
                     text = if (state.plantasDeseadas.isEmpty()) {
@@ -129,6 +141,7 @@ private fun ListaDeseosScreen(
         ) { planta ->
             PlantaDeseadaCard(
                 planta = planta,
+                enabled = planta.id !in state.pendingIds,
                 onEliminarClick = {
                     onEvent(
                         ListaDeseosEvent.EliminarPlanta(
@@ -136,13 +149,7 @@ private fun ListaDeseosScreen(
                         )
                     )
                 },
-                onMoverAColeccion = {
-                    onEvent(
-                        ListaDeseosEvent.MoverAColeccion(
-                            plantaId = planta.id
-                        )
-                    )
-                }
+                onVerCuidados = { onVerCuidados(planta.id) }
             )
         }
     }
@@ -258,7 +265,7 @@ private fun SearchSection(
         ) {
             Icon(
                 imageVector = Icons.Outlined.Tune,
-                contentDescription = "Filtros",
+                contentDescription = "Cambiar orden alfabético",
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -284,8 +291,9 @@ private fun SearchSection(
 @Composable
 private fun PlantaDeseadaCard(
     planta: PlantaDeseada,
+    enabled: Boolean,
     onEliminarClick: () -> Unit,
-    onMoverAColeccion: () -> Unit
+    onVerCuidados: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -304,13 +312,12 @@ private fun PlantaDeseadaCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(planta.imagen),
-                    contentDescription = "Imagen de ${planta.nombre}",
+                CatalogPlantImage(
+                    url = planta.imageUrl,
+                    description = "Imagen de ${planta.nombre}",
                     modifier = Modifier
                         .size(105.dp)
                         .clip(RoundedCornerShape(16.dp)),
-                    contentScale = ContentScale.Crop
                 )
 
                 Spacer(Modifier.width(16.dp))
@@ -319,9 +326,7 @@ private fun PlantaDeseadaCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.Center
                 ) {
-                    MatchBadge(
-                        match = planta.match
-                    )
+                    Text(text = planta.nombreCientifico, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                     Spacer(Modifier.height(10.dp))
 
@@ -341,7 +346,7 @@ private fun PlantaDeseadaCard(
                 horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Button(
-                    onClick = onMoverAColeccion,
+                    onClick = onVerCuidados,
                     modifier = Modifier
                         .weight(4f)
                         .height(45.dp),
@@ -364,7 +369,7 @@ private fun PlantaDeseadaCard(
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        text = "Mover a mi Colección",
+                        text = "Ver cuidados",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -372,6 +377,7 @@ private fun PlantaDeseadaCard(
 
                 FilledTonalIconButton(
                     onClick = onEliminarClick,
+                    enabled = enabled,
                     modifier = Modifier.size(45.dp)
                         .weight(1f),
                     shape = RoundedCornerShape(
@@ -389,43 +395,10 @@ private fun PlantaDeseadaCard(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
-                        contentDescription = "Eliminar planta"
+                        contentDescription = "Quitar de la lista de deseos"
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun MatchBadge(
-    match: Int
-) {
-    Surface(
-        shape = RoundedCornerShape(50.dp),
-        color = MaterialTheme.colorScheme.primaryContainer
-    ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = 12.dp
-            ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.AutoAwesome,
-                contentDescription = null,
-                modifier = Modifier.size(17.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-
-            Spacer(Modifier.width(4.dp))
-
-            Text(
-                text = "$match% match",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
         }
     }
 }

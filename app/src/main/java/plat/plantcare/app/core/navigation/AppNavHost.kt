@@ -1,5 +1,6 @@
 package plat.plantcare.app.core.navigation
 
+import plat.plantcare.app.fichaBotanicaScreen
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
@@ -196,8 +197,13 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             )
 
             favoritesGraph(
-                onAgregarClick = {},
-                onFiltrosClick = {}
+                onAgregarClick = { navController.navigate(DiscoverGraph) { launchSingleTop = true } },
+                onFiltrosClick = {},
+                onVerCuidados = { navController.navigateToFichaBotanicaDestination(it) }
+            )
+            fichaBotanicaScreen(
+                onBackClick = { navController.popBackStack() },
+                onShareClick = {}
             )
 
             discoverGraph(

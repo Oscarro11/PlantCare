@@ -17,12 +17,14 @@ fun NavController.navigateToListaDeseosDestination(
 
 fun NavGraphBuilder.listaDeseosScreen(
     onAgregarClick: () -> Unit,
-    onFiltrosClick: () -> Unit
+    onFiltrosClick: () -> Unit,
+    onVerCuidados: (String) -> Unit
 ) {
     composable<ListaDeseosDestination> {
         ListaDeseosRoute(
             onAgregarClick = onAgregarClick,
-            onFiltrosClick = onFiltrosClick
+            onFiltrosClick = onFiltrosClick,
+            onVerCuidados = onVerCuidados
         )
     }
 }

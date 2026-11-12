@@ -1,7 +1,5 @@
 package plat.plantcare.app
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,16 +26,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.LinearProgressIndicator
+import plat.plantcare.app.discover.ui.CatalogPlantImage
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
@@ -96,12 +97,19 @@ fun FichaBotanicaRoute(
     viewModel: FichaBotanicaViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     FichaBotanicaScreen(
         state = state,
         onEvent = viewModel::onEvent,
         onBackClick = onBackClick,
-        onShareClick = onShareClick,
+        onShareClick = {
+            val text = listOf(state.planta.nombre, state.planta.nombreCientifico, state.planta.descripcion).filter { it.isNotBlank() }.joinToString("\n\n")
+            if (text.isNotBlank()) context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+            }, "Compartir planta"))
+        },
         modifier = modifier
     )
 }
@@ -123,6 +131,7 @@ private fun FichaBotanicaScreen(
                 onBackClick = onBackClick,
                 actions = {
                     IconButton(
+                        enabled = !state.isLoading && !state.notFound && !state.isSaving,
                         onClick = {
                             onEvent(
                                 FichaBotanicaEvent.ToggleListaDeseos
@@ -169,17 +178,19 @@ private fun FichaBotanicaScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            if (state.isLoading) item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
+            state.error?.let { message -> item {
+                Text(message, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = { onEvent(FichaBotanicaEvent.Retry) }) { Text("Reintentar") }
+            } }
+            if (state.notFound) item { Text("Esta planta ya no está disponible en el catálogo.") }
+            if (!state.isLoading && !state.notFound && state.planta.nombre.isNotBlank()) {
             item {
                 PlantaHeroCard(
                     planta = state.planta
                 )
             }
 
-            item {
-                CompatibilidadCard(
-                    porcentaje = state.planta.compatibilidad
-                )
-            }
 
             item {
                 PerfilPlanta(
@@ -187,13 +198,14 @@ private fun FichaBotanicaScreen(
                 )
             }
 
-            item {
+            if (state.caracteristicas.isNotEmpty()) item {
                 CaracteristicasGrid(
                     caracteristicas = state.caracteristicas
                 )
             }
 
-            item {
+            if (state.pasos.isEmpty()) item { Text("Aún no hay una guía de cuidados para esta especie.") }
+            else item {
                 GuiaCuidadosCard(
                     pasos = state.pasos
                 )
@@ -201,6 +213,7 @@ private fun FichaBotanicaScreen(
 
             item {
                 Button(
+                    enabled = !state.isSaving,
                     onClick = {
                         onEvent(
                             FichaBotanicaEvent.ToggleListaDeseos
@@ -225,6 +238,7 @@ private fun FichaBotanicaScreen(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
             }
         }
     }
@@ -269,18 +283,7 @@ private fun PlantaHeroCard(
                     .fillMaxWidth()
                     .height(270.dp)
             ) {
-                val imagen = planta.imagen
-
-                if (imagen != null) {
-                    Image(
-                        painter = painterResource(imagen),
-                        contentDescription = planta.nombre,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    PlaceholderPlanta()
-                }
+                CatalogPlantImage(url = planta.imageUrl, description = planta.nombre, modifier = Modifier.fillMaxSize())
 
                 Box(
                     modifier = Modifier
@@ -305,7 +308,7 @@ private fun PlantaHeroCard(
                     color = MaterialTheme.colorScheme.surface
                 ) {
                     Text(
-                        text = "◉  Match Personalizado",
+                        text = "Ficha de la especie",
                         modifier = Modifier.padding(
                             horizontal = 12.dp,
                             vertical = 6.dp
@@ -343,285 +346,7 @@ private fun PlantaHeroCard(
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 14.dp,
-                        vertical = 10.dp
-                    ),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    EtiquetaHero(
-                        texto = "☻  Dificultad muy baja"
-                    )
 
-                    EtiquetaHero(
-                        texto = "☀  Luz baja a media"
-                    )
-                }
-
-                EtiquetaHero(
-                    texto = "≋  Purificadora top"
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PlaceholderPlanta() {
-    val backgroundColor =
-        MaterialTheme.colorScheme.primaryContainer
-
-    val gridColor =
-        MaterialTheme.colorScheme.onPrimaryContainer.copy(
-            alpha = 0.18f
-        )
-
-    Canvas(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        drawRect(
-            color = backgroundColor
-        )
-
-        val separation = 24.dp.toPx()
-
-        var x = 0f
-
-        while (x <= size.width) {
-            drawLine(
-                color = gridColor,
-                start = Offset(
-                    x = x,
-                    y = 0f
-                ),
-                end = Offset(
-                    x = x,
-                    y = size.height
-                ),
-                strokeWidth = 1.dp.toPx()
-            )
-
-            x += separation
-        }
-
-        var y = 0f
-
-        while (y <= size.height) {
-            drawLine(
-                color = gridColor,
-                start = Offset(
-                    x = 0f,
-                    y = y
-                ),
-                end = Offset(
-                    x = size.width,
-                    y = y
-                ),
-                strokeWidth = 1.dp.toPx()
-            )
-
-            y += separation
-        }
-    }
-}
-
-@Composable
-private fun EtiquetaHero(
-    texto: String
-) {
-    Surface(
-        shape = RoundedCornerShape(50.dp),
-        color = MaterialTheme.colorScheme.primaryContainer
-    ) {
-        Text(
-            text = texto,
-            modifier = Modifier.padding(
-                horizontal = 10.dp,
-                vertical = 5.dp
-            ),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-    }
-}
-
-@Composable
-private fun CompatibilidadCard(
-    porcentaje: Int
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    modifier = Modifier.size(38.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "✦",
-                            fontSize = 20.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "Compatibilidad con tu hogar",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "Calculado según tus 3 plantas actuales",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Text(
-                        text = "$porcentaje%",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "afinidad",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            LinearProgressIndicator(
-                progress = {
-                    porcentaje / 100f
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(CircleShape),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primaryContainer
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            CompatibilidadItem(
-                icono = "♧",
-                texto = "Mismo ciclo hídrico: Se regará al mismo tiempo " +
-                        "que tu Sansevieria \"Espada\" cada 15–18 días."
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            CompatibilidadItem(
-                icono = "⌂",
-                texto = "Aprovecha sombras: Ocupará el rincón noroeste " +
-                        "del salón donde tu Monstera \"Monty\" no prospera."
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            CompatibilidadItem(
-                icono = "♢",
-                texto = "Microclima equilibrado: Sus tallos carnosos " +
-                        "aportan densidad visual sin competir por la humedad."
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Curva de aprendizaje:",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Text(
-                        text = "Apto para principiantes",
-                        modifier = Modifier.padding(
-                            horizontal = 14.dp,
-                            vertical = 4.dp
-                        ),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CompatibilidadItem(
-    icono: String,
-    texto: String
-) {
-    Surface(
-        shape = RoundedCornerShape(9.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(
-            alpha = 0.55f
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Text(
-                text = icono,
-                fontSize = 18.sp
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = texto,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
     }
 }

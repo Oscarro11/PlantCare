@@ -1,57 +1,18 @@
 package plat.plantcare.app.favorites.data
 
-import androidx.annotation.DrawableRes
-import plat.plantcare.app.R
-
-data class PlantaDeseada(
-    val id: String,
-    @DrawableRes val imagen: Int,
-    val nombre: String,
-    val match: Int
-)
-
+data class PlantaDeseada(val id: String, val imageUrl: String, val nombre: String, val nombreCientifico: String)
 data class ListaDeseosState(
     val busqueda: String = "",
-    val plantasDeseadas: List<PlantaDeseada> = listOf(
-        PlantaDeseada(
-            id = "zamioculcas",
-            imagen = R.drawable.ic_launcher_background,
-            nombre = "Zamioculcas Zamiifolia",
-            match = 95
-        ),
-        PlantaDeseada(
-            id = "ficus-lyrata",
-            imagen = R.drawable.ic_launcher_background,
-            nombre = "Ficus Lyrata",
-            match = 88
-        ),
-        PlantaDeseada(
-            id = "calathea-orbifolia",
-            imagen = R.drawable.ic_launcher_background,
-            nombre = "Calathea Orbifolia",
-            match = 91
-        ),
-        PlantaDeseada(
-            id = "pilea-peperomioides",
-            imagen = R.drawable.ic_launcher_background,
-            nombre = "Pilea Peperomioides",
-            match = 97
-        )
-    )
+    val plantasDeseadas: List<PlantaDeseada> = emptyList(),
+    val isLoading: Boolean = true,
+    val error: String? = null,
+    val pendingIds: Set<String> = emptySet(),
+    val ordenInverso: Boolean = false
 ) {
-    val plantasFiltradas: List<PlantaDeseada>
-        get() {
-            val texto = busqueda.trim()
-
-            return if (texto.isEmpty()) {
-                plantasDeseadas
-            } else {
-                plantasDeseadas.filter { planta ->
-                    planta.nombre.contains(
-                        other = texto,
-                        ignoreCase = true
-                    )
-                }
-            }
+    val plantasFiltradas: List<PlantaDeseada> get() {
+        val results = plantasDeseadas.filter {
+            it.nombre.contains(busqueda.trim(), true) || it.nombreCientifico.contains(busqueda.trim(), true)
         }
+        return if (ordenInverso) results.reversed() else results
+    }
 }
