@@ -59,7 +59,7 @@ private fun CareHistoryContent(
                         icon = task.action.iconId,
                         title = task.action.displayName,
                         description = task.description,
-                        date = "Hace ${task.dueDate.getRemainingDays()} días"
+                        date = task.completedAt?.let { "Realizada: $it" } ?: "Sin fecha de realización"
                     )
                 }
         }

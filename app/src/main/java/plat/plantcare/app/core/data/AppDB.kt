@@ -1,5 +1,8 @@
 package plat.plantcare.app.core.data
 
+import plat.plantcare.app.core.data.tasks.TaskEntity
+import plat.plantcare.app.core.data.tasks.TaskWrite
+import plat.plantcare.app.core.data.tasks.TaskDao
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import plat.plantcare.app.core.data.plant.local.PlantDAO
@@ -10,11 +13,14 @@ import plat.plantcare.app.core.data.user.local.UserEntity
 @Database(
     entities = [
         UserEntity::class,
-        PlantEntity::class
+        PlantEntity::class,
+        TaskEntity::class,
+        TaskWrite::class
     ],
-    version = 5
+    version = 6
 )
 abstract class AppDatabase: RoomDatabase() {
+    abstract fun taskDao(): TaskDao
     abstract fun userDAO(): UserDAO
     abstract fun plantDAO(): PlantDAO
 }

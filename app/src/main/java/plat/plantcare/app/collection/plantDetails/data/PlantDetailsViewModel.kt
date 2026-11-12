@@ -109,7 +109,7 @@ class PlantDetailsViewModel @Inject constructor (
     private val history: Flow<List<Task>?> = tasksRepository.observeAllTasks()
         .map { tasks ->
             tasks.filter { it.plantId == plantId && it.completed }
-                .sortedBy { it.dueDate }
+                .sortedBy { it.completedAt }
         }
 
     val state: StateFlow<PlantDetailsState> = combine(
@@ -162,7 +162,7 @@ class PlantDetailsViewModel @Inject constructor (
 
     private fun completeTask(id: String) {
         viewModelScope.launch {
-            tasksRepository.setTaskCompleted(id, true)
+            tasksRepository.completeTask(id)
         }
     }
 

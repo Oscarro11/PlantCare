@@ -116,6 +116,7 @@ private fun HomeScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        state.error?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.error) } }
         item {
             HeaderSummary( state = state )
         }
@@ -242,7 +243,7 @@ private fun DailyProgressCard(
                 )
 
                 Text(
-                    text = "$pendingTasks de $totalTasks completadas (${round(progressPercentage * 100)}%)",
+                    text = "${totalTasks - pendingTasks} de $totalTasks completadas (${round(progressPercentage * 100)}%)",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -336,7 +337,7 @@ fun TaskCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = state.urgency.name,
+                        text = if (state.completed) "COMPLETADA" else state.urgency.name,
                         modifier = Modifier
                             .background(
                                 color = state.urgency.backgroundColor(),
@@ -372,11 +373,12 @@ fun TaskCard(
                 )
 
                 Text(
-                    text = "${state.action.displayName ?: ""} - ${state.description}",
+                    text = "${state.action.displayName} - ${state.description}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = size ?: Int.MAX_VALUE
                 )
+                Text(text = if (state.completed) "Realizada: ${state.completedAt ?: state.dueDate}" else "Programada: ${state.dueDate}", style = MaterialTheme.typography.labelSmall)
             }
 
             Spacer(Modifier.width(8.dp))
@@ -391,7 +393,7 @@ fun TaskCard(
                 backgroundShape = CircleShape,
                 tintColor = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
-                    .clickable( onClick = { onCompletion(state.id) } )
+                    .clickable(enabled = !state.completed, onClick = { onCompletion(state.id) })
             )
         }
     }
