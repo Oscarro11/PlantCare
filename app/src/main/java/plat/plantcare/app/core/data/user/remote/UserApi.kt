@@ -1,6 +1,7 @@
 package plat.plantcare.app.core.data.user.remote
 
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 interface UserApi {
     fun observeProfile(uid: String): Flow<UserDTO?>
@@ -16,6 +17,6 @@ interface UserApi {
         location: String,
         imageUrl: String
     )
-    suspend fun setStreakDays(uid: String, days: Int)
+    suspend fun recordStreakDays(uid: String, today: LocalDate = LocalDate.now())
     suspend fun deleteProfile(uid: String)
 }

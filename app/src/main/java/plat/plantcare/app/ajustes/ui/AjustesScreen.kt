@@ -74,7 +74,7 @@ fun AjustesRoute(
     AjustesScreen(
         state = state,
         onBackClick = onBackClick,
-        onCerrarSesion = onCerrarSesion,
+        onCerrarSesion = { viewModel.logOut(onCerrarSesion) },
         onRecordatoriosChange = { enabled ->
             viewModel.onEvent(
                 AjustesEvent.ChangeRecordatorios(enabled)

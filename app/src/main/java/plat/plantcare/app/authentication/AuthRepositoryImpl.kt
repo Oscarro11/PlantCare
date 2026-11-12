@@ -3,6 +3,8 @@ package plat.plantcare.app.authentication
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
@@ -20,6 +22,7 @@ import plat.plantcare.app.core.data.user.remote.UserApi
 import plat.plantcare.app.core.data.user.remote.UserDTO
 import plat.plantcare.app.core.data.user.remote.toDomain
 import plat.plantcare.app.core.data.user.remote.toEntity
+import plat.plantcare.app.core.preferences.DataStorePreferences
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
@@ -28,10 +31,24 @@ import kotlin.time.Duration.Companion.milliseconds
 class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
     private val userApi: UserApi,
-    private val userDao: UserDAO
-) : AuthRepository{
-    override val currentUser: Flow<AuthUser?> = authApi.authState.map { it?.toDomain() }
-    override val currentUid: String? get() = authApi.currentUid
+    private val userDao: UserDAO,
+    private val preferences: DataStorePreferences
+) : AuthRepository {
+
+    override val currentUser: Flow<AuthUser?> =
+        authApi.authState
+            .map { it?.toDomain() }
+            .distinctUntilChanged()
+
+    override val currentUid: String?
+        get() = authApi.currentUid
+
+    override val sessionUid: Flow<String?> = combine(
+        authApi.authState.map { it?.uid },
+        preferences.getUid()
+    ) { authUid, savedUid ->
+        authUid ?: savedUid?.takeIf { it.isNotBlank() }
+    }.distinctUntilChanged()
 
     override suspend fun signInWithEmail(
         email: String,
@@ -50,6 +67,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signOut() {
         authApi.signOut()
+        preferences.removeUid()
         userDao.clear()
     }
 
@@ -62,6 +80,7 @@ class AuthRepositoryImpl @Inject constructor(
 
             try {
                 loadProfile(result.user)          // server first, then the local cache
+                preferences.setUid(result.user.uid)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

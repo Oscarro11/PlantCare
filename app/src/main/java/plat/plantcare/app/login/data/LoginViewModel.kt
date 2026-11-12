@@ -1,7 +1,6 @@
 package plat.plantcare.app.login.data
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,7 +8,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import plat.plantcare.app.authentication.AuthRepository
-import plat.plantcare.app.core.preferences.DataStorePreferences
 import javax.inject.Inject
 
 sealed interface LoginEvent{
@@ -24,11 +22,8 @@ sealed interface LoginEvent{
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val app: Application,
     private val authRepository: AuthRepository
-): AndroidViewModel(app) {
-
-    private val preferences = DataStorePreferences(app.applicationContext)
+): ViewModel() {
 
     private val _state = MutableStateFlow(LoginState())
     val state = _state.asStateFlow()
@@ -36,10 +31,10 @@ class LoginViewModel @Inject constructor(
     //TODO: update so that androids own splash screen is used
     init {
         viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    isSignedIn = preferences.getSignedIn()
-                )
+            authRepository.currentUser.collect() { user ->
+                _state.update {
+                    it.copy(isSignedIn = user != null)
+                }
             }
         }
     }
@@ -85,7 +80,6 @@ class LoginViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             authRepository.signInWithEmail(_state.value.email, _state.value.password)
                 .onSuccess {
-                    preferences.setSignedIn()
                     _state.update { it.copy(isLoading = false, isSignedIn = true) }
                 }
                 .onFailure {
@@ -99,7 +93,6 @@ class LoginViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             authRepository.registerWithEmail(_state.value.email, _state.value.password)
                 .onSuccess {
-                    preferences.setSignedIn()
                     _state.update { it.copy(isLoading = false, isSignedIn = true) }
                 }
                 .onFailure {
@@ -113,7 +106,6 @@ class LoginViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             authRepository.signInWithGoogle(token)
                 .onSuccess {
-                    preferences.setSignedIn()
                     _state.update { it.copy(isLoading = false, isSignedIn = true) }
                 }
                 .onFailure {

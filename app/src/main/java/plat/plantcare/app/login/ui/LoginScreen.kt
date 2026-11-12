@@ -1,6 +1,5 @@
 package plat.plantcare.app.login.ui
 
-import android.R.attr.enabled
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

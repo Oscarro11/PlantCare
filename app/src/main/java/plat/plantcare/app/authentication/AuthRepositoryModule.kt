@@ -12,4 +12,7 @@ abstract class AuthRepositoryModule {
 
     @Binds @Singleton
     abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
+
+    @Binds @Singleton
+    abstract fun bindSessionProvider(impl: AuthRepositoryImpl): SessionProvider
 }

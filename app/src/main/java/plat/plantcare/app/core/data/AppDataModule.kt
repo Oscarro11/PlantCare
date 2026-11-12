@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import plat.plantcare.app.core.preferences.DataStorePreferences
 import javax.inject.Singleton
 
 @Module
@@ -22,4 +23,10 @@ object AppDataModule {
             AppDatabase::class.java,
             "plantcare.db"
         ).build()
+
+    @Provides @Singleton
+    fun providePreferences(
+        @ApplicationContext context: Context
+    ) : DataStorePreferences =
+        DataStorePreferences(context)
 }

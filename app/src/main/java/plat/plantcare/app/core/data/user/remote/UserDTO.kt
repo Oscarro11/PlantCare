@@ -10,7 +10,8 @@ data class UserDTO(
     val name: String = "",
     val location: String = "",
     val image: String = "",
-    val streakDays: Int = 0
+    val streakDays: Int = 0,
+    val lastStreakDate: String = ""
 )
 
 fun UserDTO.toDomain(): User =
@@ -19,7 +20,8 @@ fun UserDTO.toDomain(): User =
         name = name,
         location = location,
         imageUrl = image,
-        streakDays = streakDays
+        streakDays = streakDays,
+        lastStreakDate = lastStreakDate
     )
 
 fun UserDTO.toEntity(): UserEntity =
@@ -28,5 +30,6 @@ fun UserDTO.toEntity(): UserEntity =
         name = name,
         location = location,
         imageUrl = image,
-        streakDays = streakDays
+        streakDays = streakDays,
+        lastStreakDate = lastStreakDate
     )

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import plat.plantcare.app.core.data.documentFlow
+import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -64,13 +65,39 @@ class FirestoreUserApi @Inject constructor (
         ).await()
     }
 
-    override suspend fun setStreakDays(uid: String, days: Int) {
-        usersRef.document(uid).update(
-            mapOf(
-                "streakDays" to days,
-                "updatedAt" to FieldValue.serverTimestamp()
-            )
-        ).await()
+    override suspend fun recordStreakDays(uid: String, today: LocalDate) {
+
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(usersRef.document())
+            check(snapshot.exists()) { "User profile does not exist: $uid" }
+
+            val currentDays = snapshot.getLong("streakDays")?.toInt() ?: 0
+            val lastActivityDate = snapshot.getString("lastStreakDate")
+                ?.let { date -> runCatching { LocalDate.parse(date) }.getOrNull() }
+
+            when (lastActivityDate) {
+                today -> currentDays // Already counted today.
+                today.minusDays(1) -> {
+                    val nextDays = currentDays + 1
+                    transaction.update(
+                        usersRef.document(),
+                        mapOf(
+                            "streakDays" to nextDays,
+                            "lastStreakDate" to today.toString()
+                        )
+                    )
+                }
+                else -> {
+                    transaction.update(
+                        usersRef.document(),
+                        mapOf(
+                            "streakDays" to 1,
+                            "lastStreakDate" to today.toString()
+                        )
+                    )
+                }
+            }
+        }.await()
     }
 
     override suspend fun deleteProfile(uid: String) {

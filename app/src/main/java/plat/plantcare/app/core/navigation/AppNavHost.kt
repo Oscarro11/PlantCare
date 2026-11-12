@@ -64,6 +64,7 @@ import plat.plantcare.app.home.homeGraph
 import plat.plantcare.app.home.navigateToHomeGraph
 import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
+import plat.plantcare.app.login.ui.navigateToLoginDestination
 import plat.plantcare.app.navigateToFichaBotanicaDestination
 import plat.plantcare.app.register.ui.RegisterPlantGraph
 import plat.plantcare.app.register.ui.registerPlantGraph
@@ -211,7 +212,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             ajustesGraph(
                 navController = navController,
-                onCerrarSesion = {}
+                onCerrarSesion = { navController.navigateToLoginDestination(
+                    navOptions { popUpTo(0) {inclusive = true} }
+                ) }
             )
 
             calendarGraph(navController)

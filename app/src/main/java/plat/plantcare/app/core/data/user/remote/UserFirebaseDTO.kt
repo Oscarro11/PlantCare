@@ -11,6 +11,7 @@ data class UserFirebaseDTO(
     val location: String = "",
     val image: String = "",
     val streakDays: Int = 0,
+    val lastStreakDate: String = "",
     @ServerTimestamp val updatedAt: Timestamp? = null
 )
 
@@ -20,8 +21,9 @@ fun UserFirebaseDTO.toModel(): User =
         name = name,
         location = location,
         imageUrl = image,
-        streakDays = streakDays
+        streakDays = streakDays,
+        lastStreakDate = lastStreakDate
     )
 
 fun UserFirebaseDTO.toCommonDTO(): UserDTO =
-    UserDTO( id, name, location, image, streakDays )
+    UserDTO( id, name, location, image, streakDays, lastStreakDate )

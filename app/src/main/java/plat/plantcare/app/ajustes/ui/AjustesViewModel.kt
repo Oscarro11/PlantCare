@@ -1,11 +1,14 @@
 package plat.plantcare.app.settings.data
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import plat.plantcare.app.ajustes.data.AjustesState
+import plat.plantcare.app.authentication.AuthRepository
 import plat.plantcare.app.collection.allPlants.data.CollectionLayout
 import javax.inject.Inject
 
@@ -24,7 +27,9 @@ sealed interface AjustesEvent {
 }
 
 @HiltViewModel
-class AjustesViewModel @Inject constructor() : ViewModel() {
+class AjustesViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _state = MutableStateFlow(AjustesState())
     val state = _state.asStateFlow()
@@ -66,6 +71,14 @@ class AjustesViewModel @Inject constructor() : ViewModel() {
             it.copy(
                 vistaColeccion = layout
             )
+        }
+    }
+
+    fun logOut(onDone: () -> Unit) {
+        viewModelScope.launch {
+            authRepository.signOut()
+
+            onDone()
         }
     }
 }

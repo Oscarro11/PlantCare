@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import plat.plantcare.app.core.data.models.toUrgency
 import plat.plantcare.app.core.data.repositories.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
-import plat.plantcare.app.core.data.repositories.UserRepository
+import plat.plantcare.app.core.data.user.UserRepository
 import javax.inject.Inject
 
 sealed interface HomeEvent{
@@ -29,13 +29,13 @@ class HomeViewModel @Inject constructor(
     val state: StateFlow<HomeState> = combine(
         taskRepository.observeAllTasks(),
         plantRepository.observePlants(),
-        userRepository.observeUserName()
-    ) { tasks, plants, userName ->
+        userRepository.observeCurrentUser()
+    ) { tasks, plants, user ->
         val plantsById = plants.associateBy { it.id }
         val pending = tasks.filter { !it.completed }
 
         HomeState(
-            userName = userName,
+            userName = user?.name ?: "",
             plantTotal = plants.size,
             remainingPlants = pending.map { it.plantId }.distinct().size,
             pendingTasks = tasks.filter { !it.completed }.size,

@@ -18,7 +18,8 @@ data class User(
     val name: String,
     val location: String,
     val imageUrl: String,
-    val streakDays: Int
+    val streakDays: Int,
+    val lastStreakDate: String
 )
 
 fun User.toFirebaseDTO(): UserFirebaseDTO =
@@ -27,8 +28,9 @@ fun User.toFirebaseDTO(): UserFirebaseDTO =
         name = name,
         location = location,
         image = imageUrl,
-        streakDays = streakDays
+        streakDays = streakDays,
+        lastStreakDate = lastStreakDate
     )
 
 fun User.toEntity(): UserEntity =
-    UserEntity(id, name, location, imageUrl, streakDays)
+    UserEntity(id, name, location, imageUrl, streakDays, lastStreakDate)
