@@ -3,73 +3,32 @@ package plat.plantcare.app.home.home.data
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import plat.plantcare.app.core.data.models.toUrgency
 import plat.plantcare.app.core.data.repositories.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import plat.plantcare.app.core.data.user.UserRepository
 import javax.inject.Inject
 
-sealed interface HomeEvent{
-    data class CompleteTask( val id: String ): HomeEvent
-}
-
+sealed interface HomeEvent { data class CompleteTask(val id: String) : HomeEvent }
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val taskRepository: TaskRepository,
-    private val plantRepository: PlantRepository,
-    private val userRepository: UserRepository
+    private val taskRepository: TaskRepository, plantRepository: PlantRepository, userRepository: UserRepository
 ) : ViewModel() {
-
-    val state: StateFlow<HomeState> = combine(
-        taskRepository.observeAllTasks(),
-        plantRepository.observePlants(),
-        userRepository.observeCurrentUser()
-    ) { tasks, plants, user ->
-        val plantsById = plants.associateBy { it.id }
+    private val error = MutableStateFlow<String?>(null)
+    val state = combine(taskRepository.observeTodayTasks(), plantRepository.observePlants(), userRepository.observeCurrentUser(), error) { tasks, plants, user, message ->
         val pending = tasks.filter { !it.completed }
-
-        HomeState(
-            userName = user?.name ?: "",
-            plantTotal = plants.size,
-            remainingPlants = pending.map { it.plantId }.distinct().size,
-            pendingTasks = tasks.filter { !it.completed }.size,
-            tasks = tasks.mapNotNull { task ->
-                val plant = plantsById[task.plantId] ?: return@mapNotNull null
-                HomeTaskCardUiState(
-                    id = task.id,
-                    urgency = task.dueDate.toUrgency(),
-                    completed = task.completed,
-                    action = task.action,
-                    description = task.description,
-                    plantName = plant.name,
-                    plantImageUrl = plant.imageUrl,
-                    location = plant.location
-                )
-            }
-        )
-    }
-        .catch { /* log, or emit an error state */ }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = HomeState()
-        )
-
+        HomeState(userName = user?.name.orEmpty(), plantTotal = plants.size,
+            remainingPlants = pending.map { it.plantId }.distinct().size, pendingTasks = pending.size,
+            tasks = tasks.map { it.toTaskCard(plants.associateBy { plant -> plant.id }) }, error = message)
+    }.catch { emit(HomeState(error = "No se pudieron cargar las tareas.")) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeState())
     fun onEvent(event: HomeEvent) {
-        when (event) {
-            is HomeEvent.CompleteTask -> viewModelScope.launch { completeTask(event.id) }
+        if (event is HomeEvent.CompleteTask && state.value.tasks.any { it.id == event.id && !it.completed }) viewModelScope.launch {
+            try { taskRepository.completeTask(event.id); error.value = null }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (exception: Exception) { error.value = exception.message ?: "No se pudo completar la tarea." }
         }
-    }
-
-    private suspend fun completeTask(id: String) {
-        val current = state.value.tasks.firstOrNull { it.id == id } ?: return
-
-        taskRepository.setTaskCompleted(id, !current.completed)
     }
 }

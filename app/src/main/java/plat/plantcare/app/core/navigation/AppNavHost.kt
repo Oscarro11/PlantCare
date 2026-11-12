@@ -1,6 +1,8 @@
 package plat.plantcare.app.core.navigation
 
 import plat.plantcare.app.fichaBotanicaScreen
+import androidx.compose.runtime.LaunchedEffect
+import plat.plantcare.app.home.allTasks.ui.navigateToAllTasksDestination
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
@@ -117,7 +119,7 @@ enum class TopLevelDestination(
 }
 
 @Composable
-fun AppNavHost(modifier: Modifier = Modifier) {
+fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTasksOpened: () -> Unit = {}) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -128,6 +130,13 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
     val usesTopAppBar = TopLevelDestination.entries.firstOrNull() { destination ->
         currentDestination?.hierarchy?.any { it.hasRoute(destination.startRoute::class) } == true
+    }
+
+    LaunchedEffect(openTasks, currentDestination) {
+        if (openTasks && currentDestination != null && !currentDestination.hasRoute<LoginDestination>()) {
+            navController.navigateToAllTasksDestination(navOptions { launchSingleTop = true })
+            onTasksOpened()
+        }
     }
 
     Scaffold(

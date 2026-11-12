@@ -13,7 +13,10 @@ data class HomeTaskCardUiState(
     val description: String = "",
     val plantName: String = "",
     val plantImageUrl: String = "",
-    val location: String = ""
+    val location: String = "",
+    val dueDate: LocalDate? = null,
+    val completedAt: LocalDate? = null,
+    val isSynced: Boolean = true
 )
 
 data class HomeState (
@@ -22,5 +25,6 @@ data class HomeState (
     val plantTotal: Int = 0,
     val remainingPlants: Int = 0,
     val pendingTasks: Int = 0,
-    val tasks: List<HomeTaskCardUiState> = emptyList()
+    val tasks: List<HomeTaskCardUiState> = emptyList(),
+    val error: String? = null
 )

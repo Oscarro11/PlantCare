@@ -8,9 +8,9 @@ data class AjustesState(
     val riegosHechos: Int = 142,
     val diasRacha: Int = 98,
 
-    val recordatoriosInteligentes: Boolean = true,
+    val recordatoriosInteligentes: Boolean = false,
     val alertasClimaticas: Boolean = true,
-    val horaAviso: String = "09:00 AM",
+    val horaAviso: String = "09:00",
 
     val ubicacion: String = "Madrid, España (Templado-seco)",
 

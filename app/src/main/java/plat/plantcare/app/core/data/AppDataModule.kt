@@ -1,5 +1,7 @@
 package plat.plantcare.app.core.data
 
+import plat.plantcare.app.core.data.tasks.USER_MIGRATION_1_2
+import plat.plantcare.app.core.data.tasks.TASK_MIGRATION_2_3
 import android.content.Context
 import androidx.room.Room
 import dagger.Module
@@ -22,7 +24,7 @@ object AppDataModule {
             context,
             AppDatabase::class.java,
             "plantcare.db"
-        ).build()
+        ).addMigrations(USER_MIGRATION_1_2, TASK_MIGRATION_2_3).build()
 
     @Provides @Singleton
     fun providePreferences(

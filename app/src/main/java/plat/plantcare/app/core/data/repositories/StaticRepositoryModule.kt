@@ -1,5 +1,6 @@
 package plat.plantcare.app.core.data.repositories
 
+import plat.plantcare.app.core.data.tasks.SyncedTaskRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -12,7 +13,7 @@ abstract class StaticRepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindTaskRepository(impl: FakeTaskRepository): TaskRepository
+    abstract fun bindTaskRepository(impl: SyncedTaskRepository): TaskRepository
 
     @Binds
     @Singleton

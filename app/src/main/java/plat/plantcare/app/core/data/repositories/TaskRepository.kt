@@ -13,6 +13,8 @@ import javax.inject.Singleton
 interface TaskRepository {
     fun observeAllTasks(): Flow<List<Task>>
     fun observeTodayTasks(): Flow<List<Task>>
+    suspend fun createTask(task: Task)
+    suspend fun completeTask(id: String, completedOn: LocalDate = LocalDate.now())
     suspend fun setTaskCompleted(id: String, completed: Boolean)
 }
 
@@ -71,6 +73,10 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
 
     override fun observeAllTasks(): Flow<List<Task>> = fakeTasks
     override fun observeTodayTasks(): Flow<List<Task>> = flowOf(emptyList())
+    override suspend fun createTask(task: Task) { fakeTasks.update { it + task } }
+    override suspend fun completeTask(id: String, completedOn: LocalDate) {
+        fakeTasks.update { tasks -> tasks.map { if (it.id == id) it.copy(completed = true, completedAt = completedOn) else it } }
+    }
     override suspend fun setTaskCompleted(id: String, completed: Boolean) {
         fakeTasks.update { currentTasks ->
             currentTasks.map { task ->

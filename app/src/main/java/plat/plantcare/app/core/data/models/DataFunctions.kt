@@ -40,8 +40,4 @@ fun LocalDate.getAge(today: LocalDate = LocalDate.now()): String {
     return "${age.years} $years and ${age.months} $months"
 }
 
-fun String.toLocalDate(): LocalDate {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
-        .withLocale( Locale.ENGLISH )
-    return LocalDate.parse(this, formatter);
-}
+fun String.toLocalDate(): LocalDate = LocalDate.parse(this)
