@@ -1,7 +1,6 @@
 package plat.plantcare.app
 
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +31,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.TextButton
+import plat.plantcare.app.discover.ui.CatalogPlantImage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -55,14 +58,6 @@ import plat.plantcare.app.discover.data.DescubrirEvent
 import plat.plantcare.app.discover.data.DescubrirState
 import plat.plantcare.app.discover.data.DescubrirViewModel
 import plat.plantcare.app.discover.data.PlantaRecomendada
-
-data class PlantaRecomendada(
-    @DrawableRes val imagen: Int,
-    val nombre: String,
-    val nombreAlternativo: String,
-    val caracteristica: String,
-    val match: Int
-)
 
 @Serializable
 data object DescubrirDestination
@@ -98,7 +93,7 @@ fun DescubrirRoute(
         state = state,
         onEvent = viewModel::onEvent,
         onVerCuidados = onVerCuidados,
-        onFiltrosClick = onFiltrosClick,
+        onFiltrosClick = { viewModel.onEvent(DescubrirEvent.ToggleFiltro) },
         modifier = modifier
     )
 }
@@ -123,7 +118,7 @@ private fun DescubrirScreen(
     ) {
         item {
             HeaderDescubrir(
-                cantidad = state.plantasRecomendadas.size
+                cantidad = state.plantasFiltradas.size
             )
         }
 
@@ -139,12 +134,28 @@ private fun DescubrirScreen(
             }
         }
 
+        item {
+            OutlinedTextField(value = state.busqueda,
+                onValueChange = { onEvent(DescubrirEvent.ChangeBusqueda(it)) },
+                label = { Text("Buscar por nombre o especie") }, singleLine = true,
+                modifier = Modifier.fillMaxWidth())
+            if (state.soloDeseadas) Text("Filtro: solo plantas en tu lista de deseos")
+        }
+        if (state.isLoading) item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
+        state.error?.let { message -> item {
+            Text(message, color = MaterialTheme.colorScheme.error)
+            TextButton(onClick = { onEvent(DescubrirEvent.Retry) }) { Text("Reintentar") }
+        } }
+        if (!state.isLoading && state.error == null && state.plantasFiltradas.isEmpty()) item {
+            Text(if (state.plantasRecomendadas.isEmpty()) "Todavía no hay plantas en el catálogo." else "No hay plantas que coincidan con tu búsqueda o filtro.")
+        }
         items(
-            items = state.plantasRecomendadas,
+            items = state.plantasFiltradas,
             key = { planta -> planta.id }
         ) { planta ->
             PlantaRecomendadaCard(
                 planta = planta,
+                enabled = planta.id !in state.pendingIds,
                 onToggleListaDeseos = {
                     onEvent(
                         DescubrirEvent.ToggleListaDeseos(
@@ -183,7 +194,7 @@ private fun HeaderDescubrir(
 ) {
     Column {
         Text(
-            text = "✦ ALGORITMO BOTÁNICO",
+            text = "✦ CATÁLOGO BOTÁNICO",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.primary
@@ -203,8 +214,7 @@ private fun HeaderDescubrir(
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Recomendaciones personalizadas según la luz y " +
-                    "microclima medido en tu hogar.",
+            text = "Explora especies, consulta sus cuidados y guarda las que te gustaría tener.",
             style = MaterialTheme.typography.titleLarge.copy(
                 lineHeight = 30.sp
             ),
@@ -233,7 +243,7 @@ private fun RecomendacionesHeader(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = "● Perfectas para tu espacio",
+                text = "Plantas para descubrir",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -242,7 +252,7 @@ private fun RecomendacionesHeader(
             Spacer(Modifier.height(4.dp))
 
             Text(
-                text = "Calibrado para: Salón con luz indirecta media",
+                text = "Encuentra tu próxima planta",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -264,6 +274,7 @@ private fun RecomendacionesHeader(
 @Composable
 private fun PlantaRecomendadaCard(
     planta: PlantaRecomendada,
+    enabled: Boolean,
     onToggleListaDeseos: () -> Unit,
     onVerCuidados: () -> Unit
 ) {
@@ -304,6 +315,7 @@ private fun PlantaRecomendadaCard(
 
             PlantActions(
                 enListaDeseos = planta.enListaDeseos,
+                enabled = enabled,
                 onToggleListaDeseos = onToggleListaDeseos,
                 onVerCuidados = onVerCuidados
             )
@@ -321,13 +333,12 @@ private fun PlantaImage(
             height = 155.dp
         )
     ) {
-        Image(
-            painter = painterResource(planta.imagen),
-            contentDescription = "Imagen de ${planta.nombre}",
+        CatalogPlantImage(
+            url = planta.imageUrl,
+            description = "Imagen de ${planta.nombre}",
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(16.dp)),
-            contentScale = ContentScale.Crop
         )
 
         Surface(
@@ -338,7 +349,7 @@ private fun PlantaImage(
             color = MaterialTheme.colorScheme.surface
         ) {
             Text(
-                text = "✦ ${planta.match}%",
+                text = if (planta.enListaDeseos) "♥ En deseos" else "Catálogo",
                 modifier = Modifier.padding(
                     horizontal = 10.dp,
                     vertical = 5.dp
@@ -392,6 +403,7 @@ private fun PlantaInformation(
 @Composable
 private fun PlantActions(
     enListaDeseos: Boolean,
+    enabled: Boolean,
     onToggleListaDeseos: () -> Unit,
     onVerCuidados: () -> Unit
 ) {
@@ -401,6 +413,7 @@ private fun PlantActions(
     ) {
         FilledTonalButton(
             onClick = onToggleListaDeseos,
+            enabled = enabled,
             modifier = Modifier
                 .weight(1f)
                 .height(45.dp),
