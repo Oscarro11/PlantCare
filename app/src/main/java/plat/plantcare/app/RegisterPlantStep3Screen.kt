@@ -25,6 +25,8 @@ import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.ui.theme.PlantcareTheme
 import plat.plantcare.app.register.data.RegisterPlantState
 import plat.plantcare.app.register.data.RegisterPlantEvent
+import plat.plantcare.app.register.data.RegisterPlantViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 
 enum class WateringFrequency {
@@ -834,4 +836,28 @@ private fun RegisterPlantStep3ScreenPreview() {
     PlantcareTheme {
         RegisterPlantStep3Screen()
     }
+}
+
+@Composable
+fun RegisterPlantStep3Route(
+    viewModel: RegisterPlantViewModel,
+    onBack: () -> Unit,
+    onFinished: () -> Unit,
+    onDiscard: () -> Unit
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(state.saved) {
+        if (state.saved) onFinished()
+    }
+    RegisterPlantStep3Screen(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onBackClick = onBack,
+        onCloseClick = onBack,
+        onSaveClick = { viewModel.onEvent(RegisterPlantEvent.Save) },
+        onDiscardClick = {
+            viewModel.onEvent(RegisterPlantEvent.Discard)
+            onDiscard()
+        }
+    )
 }

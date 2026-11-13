@@ -24,6 +24,9 @@ import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.ui.theme.PlantcareTheme
 import plat.plantcare.app.register.data.RegisterPlantState
 import plat.plantcare.app.register.data.RegisterPlantEvent
+import plat.plantcare.app.register.data.RegisterPlantViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 
 enum class LightExposure {
     DIRECT,
@@ -645,4 +648,25 @@ private fun RegisterPlantStep2ScreenPreview() {
     PlantcareTheme {
         RegisterPlantStep2Screen()
     }
+}
+
+@Composable
+fun RegisterPlantStep2Route(
+    viewModel: RegisterPlantViewModel,
+    onBack: () -> Unit,
+    onContinue: () -> Unit,
+    onDiscard: () -> Unit
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    RegisterPlantStep2Screen(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onBackClick = onBack,
+        onCloseClick = onBack,
+        onContinueClick = onContinue,
+        onDiscardClick = {
+            viewModel.onEvent(RegisterPlantEvent.Discard)
+            onDiscard()
+        }
+    )
 }
