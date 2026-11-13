@@ -1,17 +1,13 @@
 
 package plat.plantcare.app.register.ui
 
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import kotlinx.serialization.Serializable
-import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantViewModel
 
 @Serializable
@@ -29,12 +25,11 @@ data object RegisterPlantStep3Destination
 fun NavGraphBuilder.registerPlantGraph(
     navController: NavController
 ) {
-
     navigation<RegisterPlantGraph>(
         startDestination = RegisterPlantStep1Destination
     ) {
 
-        // PASO 1: Identidad y ubicación
+        // PASO 1: Identidad y fotografías
         composable<RegisterPlantStep1Destination> { entry ->
 
             val parent = remember(entry) {
@@ -45,22 +40,15 @@ fun NavGraphBuilder.registerPlantGraph(
                 viewModelStoreOwner = parent
             )
 
-            val state by vm.state.collectAsStateWithLifecycle()
-
-            RegisterPlantStep1Screen(
-                state = state,
-                onEvent = vm::onEvent,
-
-                onContinueClick = {
+            RegisterPlantStep1Route(
+                viewModel = vm,
+                onContinue = {
                     navController.navigate(RegisterPlantStep2Destination)
                 },
-
-                onCloseClick = {
+                onClose = {
                     navController.popBackStack()
                 },
-
-                onDiscardClick = {
-                    vm.onEvent(RegisterPlantEvent.Discard)
+                onDiscard = {
                     navController.popBackStack(
                         RegisterPlantGraph,
                         inclusive = true
@@ -80,26 +68,18 @@ fun NavGraphBuilder.registerPlantGraph(
                 viewModelStoreOwner = parent
             )
 
-            val state by vm.state.collectAsStateWithLifecycle()
-
-            RegisterPlantStep2Screen(
-                state = state,
-                onEvent = vm::onEvent,
-
-                onBackClick = {
+            RegisterPlantStep2Route(
+                viewModel = vm,
+                onBack = {
                     navController.popBackStack()
                 },
-
-                onCloseClick = {
+                onClose = {
                     navController.popBackStack()
                 },
-
-                onContinueClick = {
+                onContinue = {
                     navController.navigate(RegisterPlantStep3Destination)
                 },
-
-                onDiscardClick = {
-                    vm.onEvent(RegisterPlantEvent.Discard)
+                onDiscard = {
                     navController.popBackStack(
                         RegisterPlantGraph,
                         inclusive = true
@@ -108,7 +88,7 @@ fun NavGraphBuilder.registerPlantGraph(
             )
         }
 
-        // PASO 3: Rutina de cuidados y guardado
+        // PASO 3: Rutina de cuidados
         composable<RegisterPlantStep3Destination> { entry ->
 
             val parent = remember(entry) {
@@ -119,36 +99,21 @@ fun NavGraphBuilder.registerPlantGraph(
                 viewModelStoreOwner = parent
             )
 
-            val state by vm.state.collectAsStateWithLifecycle()
-
-            // Esperar a que termine el guardado
-            LaunchedEffect(state.saved) {
-                if (state.saved) {
+            RegisterPlantStep3Route(
+                viewModel = vm,
+                onBack = {
+                    navController.popBackStack()
+                },
+                onClose = {
+                    navController.popBackStack()
+                },
+                onDiscard = {
                     navController.popBackStack(
                         RegisterPlantGraph,
                         inclusive = true
                     )
-                }
-            }
-
-            RegisterPlantStep3Screen(
-                state = state,
-                onEvent = vm::onEvent,
-
-                onBackClick = {
-                    navController.popBackStack()
                 },
-
-                onCloseClick = {
-                    navController.popBackStack()
-                },
-
-                onSaveClick = {
-                    vm.onEvent(RegisterPlantEvent.Save)
-                },
-
-                onDiscardClick = {
-                    vm.onEvent(RegisterPlantEvent.Discard)
+                onSaved = {
                     navController.popBackStack(
                         RegisterPlantGraph,
                         inclusive = true
