@@ -53,10 +53,10 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.R
-import plat.plantcare.app.core.IconWithBackground
-import plat.plantcare.app.core.TextFieldWithTitle
-import plat.plantcare.app.core.darkenColor
-import plat.plantcare.app.core.relativePadding
+import plat.plantcare.app.core.ui.IconWithBackground
+import plat.plantcare.app.core.ui.TextFieldWithTitle
+import plat.plantcare.app.core.ui.darkenColor
+import plat.plantcare.app.core.ui.relativePadding
 import plat.plantcare.app.login.data.LoginEvent
 import plat.plantcare.app.login.data.LoginState
 import plat.plantcare.app.login.data.LoginViewModel

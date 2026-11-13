@@ -16,6 +16,9 @@ abstract class RepositoryModule {
     abstract fun bindPlantRepository(impl: FakePlantRepository): PlantRepository
 
     @Binds
+    abstract fun bindPlantReferenceRepository(impl: FakePlantReferenceRepository): PlantReferenceRepository
+
+    @Binds
     abstract fun bindUserRepository(impl: FakeUserRepository): UserRepository
 
     @Binds

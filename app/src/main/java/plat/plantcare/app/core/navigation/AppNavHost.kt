@@ -42,22 +42,32 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
+import plat.plantcare.app.DescubrirDestination
 import plat.plantcare.app.R
+import plat.plantcare.app.ajustes.ui.ajustesGraph
+import plat.plantcare.app.ajustes.ui.navigateToAjustesGraph
 import plat.plantcare.app.calendar.ui.CalendarGraph
 import plat.plantcare.app.calendar.ui.CalendarMonthDestination
 import plat.plantcare.app.calendar.ui.calendarGraph
-import plat.plantcare.app.register.ui.RegisterPlantGraph
-import plat.plantcare.app.register.ui.registerPlantGraph
-import plat.plantcare.app.collection.ui.CollectionDestination
-import plat.plantcare.app.collection.ui.CollectionGraph
-import plat.plantcare.app.collection.ui.collectionGraph
-import plat.plantcare.app.core.darkenColor
-import plat.plantcare.app.home.ui.HomeDestination
-import plat.plantcare.app.home.ui.HomeGraph
-import plat.plantcare.app.home.ui.homeGraph
-import plat.plantcare.app.home.ui.navigateToHomeGraph
+import plat.plantcare.app.collection.CollectionGraph
+import plat.plantcare.app.collection.allPlants.ui.CollectionDestination
+import plat.plantcare.app.collection.collectionGraph
+import plat.plantcare.app.core.ui.darkenColor
+import plat.plantcare.app.discover.ui.DiscoverGraph
+import plat.plantcare.app.discover.ui.discoverGraph
+import plat.plantcare.app.favorites.ui.ListaDeseosDestination
+import plat.plantcare.app.favorites.ui.WishesGraph
+import plat.plantcare.app.favorites.ui.favoritesGraph
+import plat.plantcare.app.home.HomeGraph
+import plat.plantcare.app.home.home.ui.HomeDestination
+import plat.plantcare.app.home.homeGraph
+import plat.plantcare.app.home.navigateToHomeGraph
 import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
+import plat.plantcare.app.navigateToFichaBotanicaDestination
+import plat.plantcare.app.register.ui.RegisterPlantGraph
+import plat.plantcare.app.register.ui.registerPlantGraph
+
 
 interface TopLevelRoute
 
@@ -82,25 +92,26 @@ enum class TopLevelDestination(
         label = R.string.navigation_collection
     ),
 
+    DISCOVER(
+    route = DiscoverGraph,
+    startRoute = DescubrirDestination,
+    icon = R.drawable.explore,
+    label = R.string.navigation_discover
+    ),
+
+    WISHES(
+        route = WishesGraph,
+        startRoute = ListaDeseosDestination,
+        icon = R.drawable.favorites,
+        label = R.string.navigation_favorites
+    ),
+
     CALENDAR(
         route = CalendarGraph,
         startRoute = CalendarMonthDestination,
         icon = R.drawable.calendar,
         label = R.string.navigation_calendar
-    ),
-
-    /*
-    DISCOVER(
-        route = null,
-        icon = R.drawable.explore,
-        label = R.string.navigation_discover
-    ),
-
-    FAVORITES(
-        route = null,
-        icon = R.drawable.favorites,
-        label = R.string.navigation_favorites
-    )*/
+    )
 }
 
 @Composable
@@ -124,8 +135,13 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             if (usesTopAppBar != null) {
                 AppSectionTopBar(
                     section = stringResource(usesTopAppBar.label),
-                    //TODO: add account screen to navigate to
-                    onProfileClick = {}
+                    onProfileClick = {
+                        navController.navigateToAjustesGraph(
+                            navOptions {
+                                launchSingleTop = true
+                            }
+                        )
+                    }
                 )
             }
         },
@@ -137,7 +153,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         navController.navigate(
                             destination.route,
                             navOptions {
-                                popUpTo(HomeGraph) { saveState = true }
+                                popUpTo(0) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -174,7 +190,29 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             collectionGraph(
                 navController = navController,
-                onAddPlantClick = { navController.navigate(RegisterPlantGraph) }
+                //TODO: update
+                onAddPlantClick = { navController.navigate(RegisterPlantGraph) },
+                onMakeDiagnostic = {}
+            )
+
+            favoritesGraph(
+                onAgregarClick = {},
+                onFiltrosClick = {}
+            )
+
+            discoverGraph(
+                navController = navController,
+                onVerCuidados = { plantaId ->
+                    navController.navigateToFichaBotanicaDestination(
+                        plantaId = plantaId
+                    )
+                },
+                onFiltrosClick = {}
+            )
+
+            ajustesGraph(
+                navController = navController,
+                onCerrarSesion = {}
             )
 
             calendarGraph(navController)

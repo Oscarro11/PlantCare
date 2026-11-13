@@ -4,8 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import plat.plantcare.app.CalendarMonthScreen
-import plat.plantcare.app.CalendarWeekScreen
 import plat.plantcare.app.calendar.data.CalendarMonthViewModel
 import plat.plantcare.app.calendar.data.CalendarWeekViewModel
 
