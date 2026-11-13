@@ -44,6 +44,8 @@ import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantState
 import plat.plantcare.app.ui.theme.PlantcareTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import plat.plantcare.app.register.data.RegisterPlantViewModel
 
 data class PlantLocation(
     val name: String,
@@ -788,7 +790,26 @@ fun RegisterPlantStep1Screen(
 
 
 }
+@Composable
+fun RegisterPlantStep1Route(
+    viewModel: RegisterPlantViewModel,
+    onContinue: () -> Unit,
+    onClose: () -> Unit,
+    onDiscard: () -> Unit
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
+    RegisterPlantStep1Screen(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onContinueClick = onContinue,
+        onCloseClick = onClose,
+        onDiscardClick = {
+            viewModel.onEvent(RegisterPlantEvent.Discard)
+            onDiscard()
+        }
+    )
+}
 
 @Preview(
     showBackground = true,
@@ -800,3 +821,4 @@ private fun RegisterPlantStep1ScreenPreview() {
         RegisterPlantStep1Screen()
     }
 }
+

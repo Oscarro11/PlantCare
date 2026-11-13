@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +38,8 @@ import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantState
 import plat.plantcare.app.ui.theme.PlantcareTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import plat.plantcare.app.register.data.RegisterPlantViewModel
 
 enum class LightExposure {
     DIRECT,
@@ -646,6 +649,28 @@ fun RegisterPlantStep2Screen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
+@Composable
+fun RegisterPlantStep2Route(
+    viewModel: RegisterPlantViewModel,
+    onContinue: () -> Unit,
+    onBack: () -> Unit,
+    onClose: () -> Unit,
+    onDiscard: () -> Unit
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    RegisterPlantStep2Screen(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onContinueClick = onContinue,
+        onBackClick = onBack,
+        onCloseClick = onClose,
+        onDiscardClick = {
+            viewModel.onEvent(RegisterPlantEvent.Discard)
+            onDiscard()
+        }
+    )
 }
 
 
