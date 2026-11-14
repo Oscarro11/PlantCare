@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -23,13 +24,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import plat.plantcare.app.collection.plantDetails.ui.PlantDetailsDestination
 import plat.plantcare.app.core.data.models.Diagnostic
-import plat.plantcare.app.core.data.models.Plant
 import plat.plantcare.app.core.data.models.PlantCharacteristics
 import plat.plantcare.app.core.data.models.PlantReference
 import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
 import plat.plantcare.app.core.data.models.Task
+import plat.plantcare.app.core.data.plant.PlantRepository
+import plat.plantcare.app.core.data.plant.domain.Plant
 import plat.plantcare.app.core.data.repositories.PlantReferenceRepository
-import plat.plantcare.app.core.data.repositories.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -79,10 +80,15 @@ class PlantDetailsViewModel @Inject constructor (
         .map { it?.referenceId?.takeIf { id -> id.isNotBlank() } }
         .distinctUntilChanged()
 
+    private val testFlow1 = flowOf(null)
+    private val testFlow2 = flowOf(null)
+
     private val plantInfo: Flow<PlantInfo> = combine(
         plant,
-        plantRepository.observeCharacteristics(plantId),
-        plantRepository.observeDiagnostic(plantId)
+        testFlow1,
+        testFlow2
+        //plantRepository.observeCharacteristics(plantId),
+        //plantRepository.observeDiagnostic(plantId)
     ) { plant, characteristics, diagnostic -> PlantInfo(plant, characteristics, diagnostic) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -148,7 +154,9 @@ class PlantDetailsViewModel @Inject constructor (
 
     private fun changeFavorite() {
         viewModelScope.launch {
-            plantRepository.togglePlantFavorite(plantId)
+            val plant = plant.first()
+
+            plantRepository.setFavorite(plantId, if (plant != null) !plant.favorite else false)
         }
     }
 

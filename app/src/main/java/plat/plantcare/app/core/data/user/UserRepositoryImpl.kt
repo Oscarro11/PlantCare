@@ -27,7 +27,7 @@ class UserRepositoryImpl @Inject constructor(
             if (uid.isNullOrBlank()) {
                 flowOf(null)
             } else {
-                userDao.getUser(uid).map { entity -> entity?.toDomain() }
+                userDao.observeUser(uid).map { entity -> entity?.toDomain() }
             }
         }
 
@@ -37,7 +37,7 @@ class UserRepositoryImpl @Inject constructor(
         return if (id.isNullOrBlank()) {
             null
         } else {
-            userDao.getUser(id).first()?.toDomain()
+            userDao.observeUser(id).first()?.toDomain()
         }
     }
 

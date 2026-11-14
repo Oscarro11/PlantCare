@@ -12,7 +12,7 @@ data class HomeTaskCardUiState(
     val action: TaskAction = TaskAction.OTHER,
     val description: String = "",
     val plantName: String = "",
-    val plantImageUrl: String = "",
+    val plantImageUrl: String? = null,
     val location: String = ""
 )
 

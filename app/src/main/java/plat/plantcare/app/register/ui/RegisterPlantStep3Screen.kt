@@ -1,5 +1,7 @@
 package plat.plantcare.app.register.ui
 
+import android.util.Log
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,23 +28,24 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import plat.plantcare.app.R
 import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantState
-import plat.plantcare.app.ui.theme.PlantcareTheme
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import plat.plantcare.app.register.data.RegisterPlantViewModel
+import plat.plantcare.app.ui.theme.PlantcareTheme
 
 
 enum class WateringFrequency {
@@ -56,6 +59,38 @@ enum class AttentionLevel {
     EASY,
     MODERATE,
     DEMANDING
+}
+
+@Composable
+fun RegisterPlantStep3Route(
+    viewModel: RegisterPlantViewModel,
+    onBack: () -> Unit,
+    onClose: () -> Unit,
+    onDiscard: () -> Unit,
+    onSaved: () -> Unit
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state.saved) {
+        if (state.saved) {
+            onSaved()
+        }
+    }
+
+    RegisterPlantStep3Screen(
+        state = state,
+        onEvent = viewModel::handleEvent,
+        onBackClick = onBack,
+        onCloseClick = onClose,
+        onSaveClick = {
+            Log.i("Registration", "Registration button was clicked")
+            viewModel.handleEvent(RegisterPlantEvent.Save)
+        },
+        onDiscardClick = {
+            viewModel.handleEvent(RegisterPlantEvent.Discard)
+            onDiscard()
+        }
+    )
 }
 
 
@@ -742,22 +777,32 @@ private fun BackToStepTwoButton(
 @Composable
 fun RegisterPlantStep3Screen(
     onCloseClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {},
     onSaveClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    onDiscardClick: () -> Unit = {}
-,
+    onDiscardClick: () -> Unit = {},
     state: RegisterPlantState = RegisterPlantState(),
-    onEvent: (RegisterPlantEvent) -> Unit = {} 
+    onEvent: (RegisterPlantEvent) -> Unit = {}
 ) {
     val backgroundColor = Color(0xFFEAF9F0)
+    val draft = state.draft
 
-    val selectedFrequency = state.wateringFrequency
-    val waterAmount = state.waterAmount
-    val selectedLevel = state.attentionLevel
-    val easyCare = state.easyCare
-    val airPurifier = state.airPurifier
-    val ownCutting = state.ownCutting
+    val selectedFrequency = draft.wateringFrequency
+    val waterAmount = draft.waterAmount
+    val selectedLevel = draft.attentionLevel
+    val easyCare = draft.easyCare
+    val airPurifier = draft.airPurifier
+    val ownCutting = draft.ownCutting
+    val context = LocalContext.current
+
+    LaunchedEffect(state.error) {
+        if (state.error != null) {
+            Toast.makeText(
+                context,
+                state.error,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -785,11 +830,19 @@ fun RegisterPlantStep3Screen(
             WateringRoutineSection(
                 selectedFrequency = selectedFrequency,
                 onFrequencySelected = {
-                    onEvent(RegisterPlantEvent.SelectWateringFrequency(it))
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(wateringFrequency = it)
+                        )
+                    )
                 },
                 waterAmount = waterAmount,
                 onWaterAmountChange = {
-                    onEvent(RegisterPlantEvent.ChangeWaterAmount(it))
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(waterAmount = it)
+                        )
+                    )
                 }
             )
 
@@ -798,7 +851,11 @@ fun RegisterPlantStep3Screen(
             AttentionLevelSection(
                 selectedLevel = selectedLevel,
                 onLevelSelected = {
-                    onEvent(RegisterPlantEvent.SelectAttentionLevel(it))
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(attentionLevel = it)
+                        )
+                    )
                 }
             )
 
@@ -809,13 +866,25 @@ fun RegisterPlantStep3Screen(
                 airPurifier = airPurifier,
                 ownCutting = ownCutting,
                 onEasyCareChange = {
-                    onEvent(RegisterPlantEvent.SetEasyCare(it))
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(easyCare = it)
+                        )
+                    )
                 },
                 onAirPurifierChange = {
-                    onEvent(RegisterPlantEvent.SetAirPurifier(it))
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(airPurifier = it)
+                        )
+                    )
                 },
                 onOwnCuttingChange = {
-                    onEvent(RegisterPlantEvent.SetOwnCutting(it))
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(ownCutting = it)
+                        )
+                    )
                 }
             )
 
@@ -840,37 +909,6 @@ fun RegisterPlantStep3Screen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
-}
-
-@Composable
-fun RegisterPlantStep3Route(
-    viewModel: RegisterPlantViewModel,
-    onBack: () -> Unit,
-    onClose: () -> Unit,
-    onDiscard: () -> Unit,
-    onSaved: () -> Unit
-) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(state.saved) {
-        if (state.saved) {
-            onSaved()
-        }
-    }
-
-    RegisterPlantStep3Screen(
-        state = state,
-        onEvent = viewModel::onEvent,
-        onBackClick = onBack,
-        onCloseClick = onClose,
-        onSaveClick = {
-            viewModel.onEvent(RegisterPlantEvent.Save)
-        },
-        onDiscardClick = {
-            viewModel.onEvent(RegisterPlantEvent.Discard)
-            onDiscard()
-        }
-    )
 }
 
 @Preview(

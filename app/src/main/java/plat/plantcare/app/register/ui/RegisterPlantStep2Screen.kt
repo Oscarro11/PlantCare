@@ -33,13 +33,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import plat.plantcare.app.R
 import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantState
-import plat.plantcare.app.ui.theme.PlantcareTheme
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import plat.plantcare.app.register.data.RegisterPlantViewModel
+import plat.plantcare.app.ui.theme.PlantcareTheme
 
 enum class LightExposure {
     DIRECT,
@@ -567,23 +567,46 @@ private fun StepTwoNavigation(
 
 
 @Composable
+fun RegisterPlantStep2Route(
+    viewModel: RegisterPlantViewModel,
+    onContinue: () -> Unit,
+    onBack: () -> Unit,
+    onClose: () -> Unit,
+    onDiscard: () -> Unit
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    RegisterPlantStep2Screen(
+        state = state,
+        onEvent = viewModel::handleEvent,
+        onContinueClick = onContinue,
+        onBackClick = onBack,
+        onCloseClick = onClose,
+        onDiscardClick = {
+            viewModel.handleEvent(RegisterPlantEvent.Discard)
+            onDiscard()
+        }
+    )
+}
+
+
+@Composable
 fun RegisterPlantStep2Screen(
     onCloseClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {},
     onPotTypeClick: () -> Unit = {},
     onSubstrateClick: () -> Unit = {},
     onRemoveSubstrateClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onContinueClick: () -> Unit = {},
-    onDiscardClick: () -> Unit = {}
-,
+    onDiscardClick: () -> Unit = {},
     state: RegisterPlantState = RegisterPlantState(),
-    onEvent: (RegisterPlantEvent) -> Unit = {} 
+    onEvent: (RegisterPlantEvent) -> Unit = {}
 ) {
     val backgroundColor = Color(0xFFEAF9F0)
+    val draft = state.draft
 
-    val selectedLight = state.lightExposure
-    val selectedSize = state.potSize
+    val selectedLight = draft.lightExposure
+    val selectedSize = draft.potSize
 
     Scaffold(
         topBar = {
@@ -607,7 +630,11 @@ fun RegisterPlantStep2Screen(
             LightExposureSection(
                 selectedLight = selectedLight,
                 onLightSelected = {
-                    onEvent(RegisterPlantEvent.SelectLight(it))
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(lightExposure = it)
+                        )
+                    )
                 }
             )
 
@@ -622,7 +649,11 @@ fun RegisterPlantStep2Screen(
             PotSizeSection(
                 selectedSize = selectedSize,
                 onSizeSelected = {
-                    onEvent(RegisterPlantEvent.SelectPotSize(it))
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(potSize = it)
+                        )
+                    )
                 }
             )
 
@@ -649,28 +680,6 @@ fun RegisterPlantStep2Screen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
-}
-@Composable
-fun RegisterPlantStep2Route(
-    viewModel: RegisterPlantViewModel,
-    onContinue: () -> Unit,
-    onBack: () -> Unit,
-    onClose: () -> Unit,
-    onDiscard: () -> Unit
-) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-
-    RegisterPlantStep2Screen(
-        state = state,
-        onEvent = viewModel::onEvent,
-        onContinueClick = onContinue,
-        onBackClick = onBack,
-        onCloseClick = onClose,
-        onDiscardClick = {
-            viewModel.onEvent(RegisterPlantEvent.Discard)
-            onDiscard()
-        }
-    )
 }
 
 

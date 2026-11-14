@@ -1,12 +1,17 @@
 package plat.plantcare.app.core.data.models
 
+import com.google.android.gms.tasks.Task
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
+import java.time.Instant
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 
 /** Instant -> calendar date as seen in [zone]. */
 fun Timestamp.toLocalDate(zone: ZoneId = ZoneId.systemDefault()): LocalDate =
@@ -44,4 +49,10 @@ fun String.toLocalDate(): LocalDate {
     val formatter = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
         .withLocale( Locale.ENGLISH )
     return LocalDate.parse(this, formatter);
+}
+
+fun Instant.toTimestamp() = Timestamp(epochSecond, nano)
+
+suspend fun Task<Void>.awaitOrQueued() {
+    withTimeoutOrNull(5_000L.milliseconds) { await() }
 }

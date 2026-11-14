@@ -330,7 +330,7 @@ private fun StatusChip(status: HealthStatus) {
 
 @Composable
 private fun PlantShowcase(
-    image: String,
+    image: String?,
     location: String,
     age: String,
     nextTask: Task?,

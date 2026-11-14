@@ -53,6 +53,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
 
     implementation(platform(libs.firebase.bom))
+    implementation(libs.androidx.exifinterface)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)

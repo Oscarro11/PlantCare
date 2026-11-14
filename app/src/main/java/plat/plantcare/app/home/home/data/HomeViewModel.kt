@@ -10,13 +10,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import plat.plantcare.app.core.data.models.toUrgency
-import plat.plantcare.app.core.data.repositories.PlantRepository
+import plat.plantcare.app.core.data.plant.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import plat.plantcare.app.core.data.user.UserRepository
 import javax.inject.Inject
 
 sealed interface HomeEvent{
     data class CompleteTask( val id: String ): HomeEvent
+    data object TakePhoto: HomeEvent
 }
 
 @HiltViewModel
@@ -63,13 +64,20 @@ class HomeViewModel @Inject constructor(
 
     fun onEvent(event: HomeEvent) {
         when (event) {
-            is HomeEvent.CompleteTask -> viewModelScope.launch { completeTask(event.id) }
+            is HomeEvent.CompleteTask -> completeTask(event.id)
+            is HomeEvent.TakePhoto -> takePhoto()
         }
     }
 
-    private suspend fun completeTask(id: String) {
+    private fun completeTask(id: String) {
         val current = state.value.tasks.firstOrNull { it.id == id } ?: return
 
-        taskRepository.setTaskCompleted(id, !current.completed)
+        viewModelScope.launch {
+            taskRepository.setTaskCompleted(id, !current.completed)
+        }
+    }
+
+    private fun takePhoto() {
+
     }
 }

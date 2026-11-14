@@ -18,7 +18,7 @@ enum class CollectionLayout(
 data class CollectionCardInfo(
     val id: String,
     val name: String,
-    val image: String,
+    val image: String?,
     val location: String,
     val tasks: List<Task> = emptyList()
 )

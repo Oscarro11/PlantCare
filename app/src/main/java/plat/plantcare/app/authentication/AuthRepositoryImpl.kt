@@ -32,7 +32,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
     private val userApi: UserApi,
     private val userDao: UserDAO,
-    private val preferences: DataStorePreferences
+    private val preferences: DataStorePreferences,
 ) : AuthRepository {
 
     override val currentUser: Flow<AuthUser?> =
@@ -98,7 +98,7 @@ class AuthRepositoryImpl @Inject constructor(
         val remote = fetchRemoteProfile(user.uid)
 
         if (remote.isFailure) {
-            return userDao.getUser(user.uid).first()?.toDomain()
+            return userDao.observeUser(user.uid).first()?.toDomain()
                 ?: throw AuthError.ProfileUnavailable(remote.exceptionOrNull())
         }
 

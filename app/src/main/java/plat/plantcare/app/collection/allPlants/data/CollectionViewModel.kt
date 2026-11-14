@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import plat.plantcare.app.core.data.models.TaskAction
-import plat.plantcare.app.core.data.repositories.PlantRepository
+import plat.plantcare.app.core.data.plant.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import plat.plantcare.app.core.data.repositories.WeatherRepository
 import javax.inject.Inject
