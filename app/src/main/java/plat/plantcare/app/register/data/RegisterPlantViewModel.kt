@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import plat.plantcare.app.core.data.plant.PlantRepository
-import plat.plantcare.app.core.data.plant.domain.NewPlant
+import plat.plantcare.app.core.data.plant.general.PlantRepository
+import plat.plantcare.app.core.data.plant.general.domain.NewPlant
 import java.time.LocalDate
 import javax.inject.Inject
 

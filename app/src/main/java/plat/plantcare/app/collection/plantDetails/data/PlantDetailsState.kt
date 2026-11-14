@@ -5,7 +5,7 @@ import plat.plantcare.app.core.data.models.PlantCharacteristics
 import plat.plantcare.app.core.data.models.PlantReference
 import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
 import plat.plantcare.app.core.data.models.Task
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 
 sealed interface PlantDetailsState {
     data object Loading : PlantDetailsState

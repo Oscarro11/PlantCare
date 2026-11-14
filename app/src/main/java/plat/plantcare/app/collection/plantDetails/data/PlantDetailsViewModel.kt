@@ -28,8 +28,8 @@ import plat.plantcare.app.core.data.models.PlantCharacteristics
 import plat.plantcare.app.core.data.models.PlantReference
 import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
 import plat.plantcare.app.core.data.models.Task
-import plat.plantcare.app.core.data.plant.PlantRepository
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.PlantRepository
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.core.data.repositories.PlantReferenceRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import javax.inject.Inject

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import plat.plantcare.app.core.data.models.toUrgency
-import plat.plantcare.app.core.data.plant.PlantRepository
+import plat.plantcare.app.core.data.plant.general.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import plat.plantcare.app.core.data.user.UserRepository
 import javax.inject.Inject
