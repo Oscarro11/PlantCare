@@ -1,8 +1,8 @@
-package plat.plantcare.app.core.data.plant
+package plat.plantcare.app.core.data.plant.general
 
 import kotlinx.coroutines.flow.Flow
-import plat.plantcare.app.core.data.plant.domain.NewPlant
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.NewPlant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 
 interface PlantRepository {
     fun observePlants(): Flow<List<Plant>>

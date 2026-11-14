@@ -1,11 +1,11 @@
-package plat.plantcare.app.core.data.plant.remote
+package plat.plantcare.app.core.data.plant.general.remote
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ServerTimestamp
 import plat.plantcare.app.core.data.models.toLocalDate
 import plat.plantcare.app.core.data.models.toTimestamp
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset

@@ -16,7 +16,6 @@ fun PlantCharacteristics.toFirebaseDTO(): PlantCharacteristicsFirebaseDTO =
     PlantCharacteristicsFirebaseDTO(
         plantId = plantId,
         requiredLight = requiredLight.displayName,
-        //TODO: update
         wateringFrequencyDays = 0,
         humidityLevel = 0,
         preferredClimate = preferredClimate,

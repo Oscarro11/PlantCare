@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.plant.local
+package plat.plantcare.app.core.data.plant.general.local
 
 import androidx.room.Dao
 import androidx.room.Insert

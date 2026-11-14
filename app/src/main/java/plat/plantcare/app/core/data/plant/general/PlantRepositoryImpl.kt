@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.plant
+package plat.plantcare.app.core.data.plant.general
 
 import android.util.Log
 import kotlinx.coroutines.CancellationException
@@ -11,13 +11,13 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import plat.plantcare.app.authentication.SessionProvider
-import plat.plantcare.app.core.data.plant.domain.NewPlant
-import plat.plantcare.app.core.data.plant.domain.Plant
-import plat.plantcare.app.core.data.plant.domain.validate
-import plat.plantcare.app.core.data.plant.local.PlantDAO
-import plat.plantcare.app.core.data.plant.local.toDomain
-import plat.plantcare.app.core.data.plant.local.toEntity
-import plat.plantcare.app.core.data.plant.remote.PlantDataSourceApi
+import plat.plantcare.app.core.data.plant.general.domain.NewPlant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.validate
+import plat.plantcare.app.core.data.plant.general.local.PlantDAO
+import plat.plantcare.app.core.data.plant.general.local.toDomain
+import plat.plantcare.app.core.data.plant.general.local.toEntity
+import plat.plantcare.app.core.data.plant.general.remote.PlantDataSourceApi
 import plat.plantcare.app.core.photos.local.LocalImageStorage
 import plat.plantcare.app.core.photos.local.isRemoteImage
 import plat.plantcare.app.core.photos.remote.OnlineImageStorage

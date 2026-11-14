@@ -2,8 +2,8 @@ package plat.plantcare.app.core.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import plat.plantcare.app.core.data.plant.local.PlantDAO
-import plat.plantcare.app.core.data.plant.local.PlantEntity
+import plat.plantcare.app.core.data.plant.general.local.PlantDAO
+import plat.plantcare.app.core.data.plant.general.local.PlantEntity
 import plat.plantcare.app.core.data.user.local.UserDAO
 import plat.plantcare.app.core.data.user.local.UserEntity
 
