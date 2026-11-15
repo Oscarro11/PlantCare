@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import plat.plantcare.app.R
 import plat.plantcare.app.core.navigation.AppTopBar
+import plat.plantcare.app.core.ui.LocalDatePickerDialog
 import plat.plantcare.app.core.ui.PhotoCameraButton
 import plat.plantcare.app.core.ui.PhotoGalleryButton
 import plat.plantcare.app.register.data.RegisterPlantDraft
@@ -51,6 +52,7 @@ import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantState
 import plat.plantcare.app.register.data.RegisterPlantViewModel
 import plat.plantcare.app.ui.theme.PlantcareTheme
+import java.time.LocalDate
 
 data class PlantLocation(
     val name: String,
@@ -184,7 +186,21 @@ fun RegisterPlantStep1Screen(
                     )
                 },
                 onNewLocationClick = {},
-                onDateClick = {}
+                arrivalDate = draft.arrivalDate,
+                onArrivalDateChange = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(arrivalDate = it)
+                        )
+                    )
+                },
+                onArrivalDateDismiss = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(arrivalDate = LocalDate.now())
+                        )
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -508,16 +524,14 @@ private fun LocationSelector(
     }
 }
 
-
 @Composable
 private fun ArrivalDateSelector(
-    onDateClick: () -> Unit
+    date: LocalDate,
+    onDateClick: () -> Unit,
+    onTodayClick: () -> Unit
 ) {
     val darkGreen = MaterialTheme.colorScheme.primary
-
-    var todaySelected by remember {
-        mutableStateOf(false)
-    }
+    val todaySelected = date == LocalDate.now()
 
     Column {
         Text(
@@ -553,11 +567,7 @@ private fun ArrivalDateSelector(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = if (todaySelected) {
-                        "Hoy"
-                    } else {
-                        "12 de Octubre, 2024"
-                    },
+                    text = date.toString(),
                     fontSize = 10.sp,
                     color = darkGreen
                 )
@@ -574,7 +584,7 @@ private fun ArrivalDateSelector(
                         shape = RoundedCornerShape(8.dp)
                     )
                     .clickable {
-                        todaySelected = !todaySelected
+                        onTodayClick()
                     }
                     .padding(
                         horizontal = 16.dp,
@@ -596,6 +606,34 @@ private fun ArrivalDateSelector(
     }
 }
 
+@Composable
+private fun ArrivalDateSection(
+    arrivalDate: LocalDate,
+    onArrivalDateChange: (LocalDate) -> Unit,
+    onArrivalDateDismiss: () -> Unit
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    ArrivalDateSelector(
+        date = arrivalDate,
+        onDateClick = { showDatePicker = true },
+        onTodayClick = onArrivalDateDismiss
+    )
+
+    if (showDatePicker) {
+        LocalDatePickerDialog(
+            initialDate = arrivalDate,
+            onDateSelected = {
+                onArrivalDateChange(it)
+                showDatePicker = false
+            },
+            onDismiss = {
+                onArrivalDateDismiss()
+                showDatePicker = false
+            }
+        )
+    }
+}
 
 @Composable
 private fun IdentitySection(
@@ -604,7 +642,9 @@ private fun IdentitySection(
     selectedLocation: String,
     onLocationSelected: (String) -> Unit,
     onNewLocationClick: () -> Unit,
-    onDateClick: () -> Unit
+    arrivalDate: LocalDate,
+    onArrivalDateChange: (LocalDate) -> Unit,
+    onArrivalDateDismiss: () -> Unit,
 ) {
     val darkGreen = MaterialTheme.colorScheme.primary
 
@@ -692,8 +732,10 @@ private fun IdentitySection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ArrivalDateSelector(
-            onDateClick = onDateClick
+        ArrivalDateSection(
+            arrivalDate = arrivalDate,
+            onArrivalDateChange = onArrivalDateChange,
+            onArrivalDateDismiss = onArrivalDateDismiss
         )
     }
 }

@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.plant.general
+package plat.plantcare.app.core.data.plant
 
 import dagger.Binds
 import dagger.Module

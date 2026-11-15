@@ -8,25 +8,20 @@ interface PlantIdentificationAPI {
     //suspend fun identify(image: File):
 }
 
-interface PlantStorageApi {
-    suspend fun upload(ownerId: String, plantId: String, image: File): String
-    suspend fun delete(ownerId: String, plantId: String)
-}
-
 interface PlantDataSourceApi {
     fun newId(ownerId: String): String
 
-    suspend fun create(ownerId: String, plant: Plant)
+    suspend fun create(ownerId: String, plant: PlantDTO)
 
-    fun observeAll(ownerId: String): Flow<List<Plant>>
+    fun observeAll(ownerId: String): Flow<List<PlantDTO>>
 
     /** Emits null when the plant doesn't exist. */
-    fun observe(ownerId: String, plantId: String): Flow<Plant?>
+    fun observe(ownerId: String, plantId: String): Flow<PlantDTO?>
 
-    suspend fun get(ownerId: String, plantId: String): Plant?
+    suspend fun get(ownerId: String, plantId: String): PlantDTO?
 
     /** Writes only the editable fields; fails if the plant no longer exists. */
-    suspend fun update(ownerId: String, plant: Plant)
+    suspend fun update(ownerId: String, plant: PlantDTO)
 
     suspend fun setFavorite(ownerId: String, plantId: String, favorite: Boolean)
 

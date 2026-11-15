@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.plant.general
+package plat.plantcare.app.core.data.plant
 
 import android.util.Log
 import kotlinx.coroutines.CancellationException
@@ -11,6 +11,12 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import plat.plantcare.app.authentication.SessionProvider
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
+import plat.plantcare.app.core.data.plant.characteristics.local.PlantCharacteristicsDAO
+import plat.plantcare.app.core.data.plant.characteristics.local.toDomain
+import plat.plantcare.app.core.data.plant.characteristics.local.toEntity
+import plat.plantcare.app.core.data.plant.characteristics.remote.PlantCharacteristicsApi
+import plat.plantcare.app.core.data.plant.characteristics.remote.toCommonDTO
 import plat.plantcare.app.core.data.plant.general.domain.NewPlant
 import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.core.data.plant.general.domain.validate
@@ -18,6 +24,7 @@ import plat.plantcare.app.core.data.plant.general.local.PlantDAO
 import plat.plantcare.app.core.data.plant.general.local.toDomain
 import plat.plantcare.app.core.data.plant.general.local.toEntity
 import plat.plantcare.app.core.data.plant.general.remote.PlantDataSourceApi
+import plat.plantcare.app.core.data.plant.general.remote.toCommonDTO
 import plat.plantcare.app.core.photos.local.LocalImageStorage
 import plat.plantcare.app.core.photos.local.isRemoteImage
 import plat.plantcare.app.core.photos.remote.OnlineImageStorage
@@ -32,7 +39,9 @@ class PlantRepositoryImpl @Inject constructor(
     private val remoteImages: OnlineImageStorage,
     private val localImages: LocalImageStorage,
     private val plantApi: PlantDataSourceApi,
-    private val plantDao: PlantDAO
+    private val plantCharacteristicsApi: PlantCharacteristicsApi,
+    private val plantDao: PlantDAO,
+    private val plantCharacteristicsDao: PlantCharacteristicsDAO
 ) : PlantRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -55,7 +64,18 @@ class PlantRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun addPlant(newPlant: NewPlant): String {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observeCharacteristics(plantId: String): Flow<PlantCharacteristics?> =
+        session.sessionUid.flatMapLatest { uid ->
+            if (uid.isNullOrBlank()) {
+                flowOf(null)
+            } else {
+                plantCharacteristicsDao.observePlantCharacteristics(plantId)
+                    .map { entity -> entity?.toDomain() }
+            }
+        }
+
+    override suspend fun addPlant(newPlant: NewPlant, characteristics: PlantCharacteristics): String {
         val errors = newPlant.validate()
         require(errors.isEmpty()) { "Planta invalida: $errors" }
 
@@ -69,15 +89,18 @@ class PlantRepositoryImpl @Inject constructor(
             id = id,
             ownerId = ownerId,
             name = newPlant.name.trim(),
-            imageUrl = uploadedUrl ?: newPlant.imageUrl?.takeIf { it.isNotBlank() },
+            imageUrl = uploadedUrl ?: newPlant.imageUrl.takeIf { it.isNotBlank() },
             location = newPlant.location.trim(),
             birthDate = newPlant.birthDate,
             referenceId = null,
             favorite = false
         )
 
-        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.create(ownerId, plant) }
+        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.create(ownerId, plant.toCommonDTO()) }
         plantDao.updateOrInsertPlant(plant.toEntity())
+
+        plantCharacteristicsApi.addToPlant(ownerId, id, characteristics.toCommonDTO())
+        plantCharacteristicsDao.updateOrInsertPlantCharacteristics(characteristics.copy( plantId = id ).toEntity())
 
         localImage?.let { localImages.delete(it) }
         return id
@@ -93,7 +116,7 @@ class PlantRepositoryImpl @Inject constructor(
             imageUrl = uploadedUrl ?: plant.imageUrl?.takeIf { it.isNotBlank() }
         )
 
-        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.update(ownerId, updated) }
+        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.update(ownerId, updated.toCommonDTO()) }
         plantDao.updateOrInsertPlant(updated.toEntity())
 
         if (previousUrl != null && previousUrl != updated.imageUrl && previousUrl.isRemoteImage()) {

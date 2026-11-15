@@ -22,7 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import plat.plantcare.app.R
-import plat.plantcare.app.core.data.models.PlantCharacteristics
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
 import plat.plantcare.app.core.ui.AccordionSection
 import plat.plantcare.app.core.ui.darkenColor
 
@@ -60,8 +60,8 @@ private fun CharacteristicsContent(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ParameterCard(
                     label = "Luz requerida",
-                    value = characteristics.requiredLight.displayName,
-                    level = characteristics.requiredLight.level,
+                    value = characteristics.lightExposure.displayName,
+                    level = characteristics.lightExposure.level,
                     icon = R.drawable.sunny,
                     modifier = Modifier.weight(1f)
                 )
@@ -86,9 +86,7 @@ private fun CharacteristicsContent(
                 )
                 ParameterCard(
                     label = "Clima",
-                    value = characteristics.preferredClimate,
-                    //TODO: update
-                    supportingText = "Templado cálido",
+                    value = characteristics.currentClimate.displayName,
                     icon = R.drawable.thermostat,
                     modifier = Modifier.weight(1f)
                 )
@@ -102,9 +100,8 @@ private fun CharacteristicsContent(
             RequirementRow(
                 icon = R.drawable.potted_plant,
                 label = "Maceta y tamaño:",
-                value = characteristics.pot,
-                //TODO: update
-                trailingText = "Grande · 26cm"
+                value = characteristics.potType,
+                trailingText = characteristics.potSize.displayName
             )
         }
     }

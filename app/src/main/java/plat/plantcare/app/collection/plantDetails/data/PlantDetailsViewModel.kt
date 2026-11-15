@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,22 +17,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import plat.plantcare.app.collection.plantDetails.ui.PlantDetailsDestination
 import plat.plantcare.app.core.data.models.Diagnostic
-import plat.plantcare.app.core.data.models.PlantCharacteristics
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
 import plat.plantcare.app.core.data.models.PlantReference
 import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
 import plat.plantcare.app.core.data.models.Task
-import plat.plantcare.app.core.data.plant.general.PlantRepository
+import plat.plantcare.app.core.data.plant.PlantRepository
 import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.core.data.repositories.PlantReferenceRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 
 sealed interface PlantDetailsEvent{
     data object ToggleFavorite: PlantDetailsEvent
@@ -85,9 +82,8 @@ class PlantDetailsViewModel @Inject constructor (
 
     private val plantInfo: Flow<PlantInfo> = combine(
         plant,
-        testFlow1,
+        plantRepository.observeCharacteristics(plantId),
         testFlow2
-        //plantRepository.observeCharacteristics(plantId),
         //plantRepository.observeDiagnostic(plantId)
     ) { plant, characteristics, diagnostic -> PlantInfo(plant, characteristics, diagnostic) }
 
@@ -134,8 +130,6 @@ class PlantDetailsViewModel @Inject constructor (
             )
         }
     }
-        //TODO: remove fake delay
-        .onStart { delay(3_000.milliseconds) }
         .catch {  }
         .stateIn(
             viewModelScope,

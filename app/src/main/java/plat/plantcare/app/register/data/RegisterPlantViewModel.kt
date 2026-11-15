@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import plat.plantcare.app.core.data.plant.general.PlantRepository
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
+import plat.plantcare.app.core.data.plant.PlantRepository
 import plat.plantcare.app.core.data.plant.general.domain.NewPlant
 import java.time.LocalDate
 import javax.inject.Inject
@@ -41,26 +42,28 @@ class RegisterPlantViewModel @Inject constructor(
             return
         }
 
-        val arrivalDate = try {
-            draft.arrivalDate.takeIf { it.isNotBlank() }?.let { LocalDate.parse(it) }
-                ?: LocalDate.now()
-        } catch (e: Exception) {
-            _state.update {
-                it.copy(error = "La fecha debe tener el formato YYYY-MM-DD")
-            }
-            return
-        }
-
         _state.update { it.copy(isSaving = true, saved = false, error = null) }
 
         viewModelScope.launch {
             try {
                 plantRepository.addPlant(
-                    NewPlant(
+                    newPlant = NewPlant(
                         name = draft.plantName,
                         imageUrl = draft.imageUrl.orEmpty(),
                         location = draft.location,
-                        birthDate = arrivalDate
+                        birthDate = draft.arrivalDate
+                    ),
+                    characteristics = PlantCharacteristics(
+                        plantId = "",
+                        lightExposure = draft.lightExposure,
+                        wateringFrequencyDays = draft.wateringFrequency,
+                        waterVolume = draft.waterVolume,
+                        humidityLevel = draft.humidity,
+                        currentClimate = draft.currentClimate,
+                        potSize = draft.potSize,
+                        potType = draft.potType,
+                        substrate = draft.substrate,
+                        attentionLevel = draft.attentionLevel
                     )
                 )
 

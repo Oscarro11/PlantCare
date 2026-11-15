@@ -3,9 +3,7 @@ package plat.plantcare.app.core.data.plant.general.remote
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ServerTimestamp
-import plat.plantcare.app.core.data.models.toLocalDate
 import plat.plantcare.app.core.data.models.toTimestamp
-import plat.plantcare.app.core.data.plant.general.domain.Plant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -37,13 +35,13 @@ fun PlantDTO.toFirebaseDTO(): PlantFirebaseDTO? {
 }
 
 
-fun PlantFirebaseDTO.toDomain(zone: ZoneId = ZoneId.systemDefault()): Plant =
-    Plant(
+fun PlantFirebaseDTO.toCommonDTO(zone: ZoneId = ZoneId.systemDefault()): PlantDTO =
+    PlantDTO(
         id = id,
         name = name,
         imageUrl = image,
         location = location,
-        birthDate = birthDate?.toLocalDate(zone),
+        birthDate = birthDate.toString(),
         ownerId = ownerId,
         referenceId = referenceId,
         favorite = favorite

@@ -1,7 +1,7 @@
 package plat.plantcare.app.collection.plantDetails.data
 
 import plat.plantcare.app.core.data.models.Diagnostic
-import plat.plantcare.app.core.data.models.PlantCharacteristics
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
 import plat.plantcare.app.core.data.models.PlantReference
 import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
 import plat.plantcare.app.core.data.models.Task
