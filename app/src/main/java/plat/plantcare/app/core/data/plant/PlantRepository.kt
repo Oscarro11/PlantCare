@@ -2,6 +2,7 @@ package plat.plantcare.app.core.data.plant
 
 import kotlinx.coroutines.flow.Flow
 import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
+import plat.plantcare.app.core.data.plant.considerations.domain.PlantConsiderations
 import plat.plantcare.app.core.data.plant.general.domain.NewPlant
 import plat.plantcare.app.core.data.plant.general.domain.Plant
 
@@ -9,6 +10,7 @@ interface PlantRepository {
     fun observePlants(): Flow<List<Plant>>
     fun observePlant(id: String): Flow<Plant?>
     fun observeCharacteristics(plantId: String): Flow<PlantCharacteristics?>
+    fun observeConsiderations(plantId: String): Flow<PlantConsiderations?>
 
     suspend fun addPlant(newPlant: NewPlant, characteristics: PlantCharacteristics): String
 

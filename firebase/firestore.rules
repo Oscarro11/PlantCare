@@ -20,6 +20,10 @@ service cloud.firestore {
       match /caracteristicas/{docId} {
         allow read, create, update, delete: if isOwner(uid);
       }
+
+      match /consideraciones/{docId} {
+        allow read, create, update, delete: if isOwner(uid);
+      }
     }
 
     match /usuarios/{uid}/tareas/{taskId} {

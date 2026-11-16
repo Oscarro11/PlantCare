@@ -4,8 +4,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import plat.plantcare.app.core.data.plant.characteristics.domain.AttentionLevel
 import plat.plantcare.app.core.data.plant.characteristics.domain.Climate
-import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
 import plat.plantcare.app.core.data.plant.characteristics.domain.Humidity
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
 import plat.plantcare.app.core.data.plant.characteristics.domain.PlantLightExposure
 import plat.plantcare.app.core.data.plant.characteristics.domain.PlantWateringFrequency
 import plat.plantcare.app.core.data.plant.characteristics.domain.PotSize

@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import plat.plantcare.app.core.data.documentFlow
 import plat.plantcare.app.core.data.models.awaitOrQueued
-import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.core.data.snapshotFlow
 import javax.inject.Inject
 import javax.inject.Singleton

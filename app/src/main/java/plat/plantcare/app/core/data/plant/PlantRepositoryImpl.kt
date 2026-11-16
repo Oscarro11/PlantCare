@@ -17,6 +17,14 @@ import plat.plantcare.app.core.data.plant.characteristics.local.toDomain
 import plat.plantcare.app.core.data.plant.characteristics.local.toEntity
 import plat.plantcare.app.core.data.plant.characteristics.remote.PlantCharacteristicsApi
 import plat.plantcare.app.core.data.plant.characteristics.remote.toCommonDTO
+import plat.plantcare.app.core.data.plant.considerations.domain.PlantConsiderations
+import plat.plantcare.app.core.data.plant.considerations.local.PlantConsiderationsDAO
+import plat.plantcare.app.core.data.plant.considerations.local.toDomain
+import plat.plantcare.app.core.data.plant.considerations.local.toEntity
+import plat.plantcare.app.core.data.plant.considerations.remote.PlantConsiderationsAiApi
+import plat.plantcare.app.core.data.plant.considerations.remote.PlantConsiderationsStorageApi
+import plat.plantcare.app.core.data.plant.considerations.remote.toCommonDTO
+import plat.plantcare.app.core.data.plant.considerations.remote.toDomain
 import plat.plantcare.app.core.data.plant.general.domain.NewPlant
 import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.core.data.plant.general.domain.validate
@@ -40,8 +48,11 @@ class PlantRepositoryImpl @Inject constructor(
     private val localImages: LocalImageStorage,
     private val plantApi: PlantDataSourceApi,
     private val plantCharacteristicsApi: PlantCharacteristicsApi,
+    private val plantConsiderationsStorageApi: PlantConsiderationsStorageApi,
     private val plantDao: PlantDAO,
-    private val plantCharacteristicsDao: PlantCharacteristicsDAO
+    private val plantCharacteristicsDao: PlantCharacteristicsDAO,
+    private val plantConsiderationsDao: PlantConsiderationsDAO,
+    private val plantConsiderationsAiApi: PlantConsiderationsAiApi
 ) : PlantRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -75,6 +86,17 @@ class PlantRepositoryImpl @Inject constructor(
             }
         }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observeConsiderations(plantId: String): Flow<PlantConsiderations?> =
+        session.sessionUid.flatMapLatest { uid ->
+            if (uid.isNullOrBlank()) {
+                flowOf(null)
+            } else {
+                plantConsiderationsDao.observePlantConsiderations(plantId)
+                    .map { entity -> entity?.toDomain() }
+            }
+        }
+
     override suspend fun addPlant(newPlant: NewPlant, characteristics: PlantCharacteristics): String {
         val errors = newPlant.validate()
         require(errors.isEmpty()) { "Planta invalida: $errors" }
@@ -101,6 +123,22 @@ class PlantRepositoryImpl @Inject constructor(
 
         plantCharacteristicsApi.addToPlant(ownerId, id, characteristics.toCommonDTO())
         plantCharacteristicsDao.updateOrInsertPlantCharacteristics(characteristics.copy( plantId = id ).toEntity())
+
+        if (localImage != null) {
+            val considerations = plantConsiderationsAiApi.generateConsiderations(
+                speciesName = null,
+                photo = localImages.readForUpload(localImage)
+            )
+
+            plantConsiderationsStorageApi.addToPlant(ownerId, id, considerations.toCommonDTO())
+            plantConsiderationsDao.updateOrInsertPlantConsiderations(
+                considerations
+                    .toCommonDTO()
+                    .copy(plantId = id)
+                    .toDomain()
+                    .toEntity()
+            )
+        }
 
         localImage?.let { localImages.delete(it) }
         return id

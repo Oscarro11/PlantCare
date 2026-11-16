@@ -5,16 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -22,13 +19,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import plat.plantcare.app.collection.plantDetails.ui.PlantDetailsDestination
 import plat.plantcare.app.core.data.models.Diagnostic
-import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
-import plat.plantcare.app.core.data.models.PlantReference
-import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
 import plat.plantcare.app.core.data.models.Task
 import plat.plantcare.app.core.data.plant.PlantRepository
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
+import plat.plantcare.app.core.data.plant.considerations.domain.PlantConsiderations
 import plat.plantcare.app.core.data.plant.general.domain.Plant
-import plat.plantcare.app.core.data.repositories.PlantReferenceRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import javax.inject.Inject
 
@@ -45,12 +40,8 @@ sealed interface PlantDetailsEvent{
 private data class PlantInfo(
     val plant: Plant? = null,
     val characteristics: PlantCharacteristics? = null,
+    val considerations: PlantConsiderations? = null,
     val diagnostic: Diagnostic? = null
-)
-
-private data class ReferenceInfo(
-    val reference: PlantReference? = null,
-    val considerations: PlantReferenceConsiderations? = null
 )
 
 private data class PlantDetailsLocalState(
@@ -63,8 +54,7 @@ private data class PlantDetailsLocalState(
 class PlantDetailsViewModel @Inject constructor (
     savedStateHandle: SavedStateHandle,
     private val tasksRepository: TaskRepository,
-    private val plantRepository: PlantRepository,
-    private val referencesRepository: PlantReferenceRepository
+    private val plantRepository: PlantRepository
 ): ViewModel() {
 
     private val destination = savedStateHandle.toRoute<PlantDetailsDestination>()
@@ -73,20 +63,18 @@ class PlantDetailsViewModel @Inject constructor (
     private val _localState = MutableStateFlow(PlantDetailsLocalState())
     private val plant: Flow<Plant?> = plantRepository.observePlant(plantId)
 
-    private val referenceId: Flow<String?> = plant
-        .map { it?.referenceId?.takeIf { id -> id.isNotBlank() } }
-        .distinctUntilChanged()
-
-    private val testFlow1 = flowOf(null)
     private val testFlow2 = flowOf(null)
 
     private val plantInfo: Flow<PlantInfo> = combine(
         plant,
         plantRepository.observeCharacteristics(plantId),
+        plantRepository.observeConsiderations(plantId),
         testFlow2
         //plantRepository.observeDiagnostic(plantId)
-    ) { plant, characteristics, diagnostic -> PlantInfo(plant, characteristics, diagnostic) }
+    ) { plant, characteristics, considerations, diagnostic ->
+        PlantInfo(plant, characteristics, considerations, diagnostic) }
 
+    /*
     @OptIn(ExperimentalCoroutinesApi::class)
     private val referenceInfo: Flow<ReferenceInfo> = referenceId.flatMapLatest { id ->
         if (id == null) flowOf(ReferenceInfo())
@@ -94,7 +82,7 @@ class PlantDetailsViewModel @Inject constructor (
             referencesRepository.observePlantReference(id),
             referencesRepository.observePlantConsiderations(id)
         ) { reference, considerations -> ReferenceInfo(reference, considerations) }
-    }
+    }*/
 
     private val plantTask: Flow<Task?> = tasksRepository.observeAllTasks()
         .map { tasks ->
@@ -110,20 +98,19 @@ class PlantDetailsViewModel @Inject constructor (
 
     val state: StateFlow<PlantDetailsState> = combine(
         plantInfo,
-        referenceInfo,
         plantTask,
         history,
         _localState
-    ) { plantGroup, referenceGroup, task, history, local ->
+    ) { plantGroup, task, history, local ->
         if (plantGroup.plant == null) PlantDetailsState.NotFound
         else {
             PlantDetailsState.Content(
                 plant = plantGroup.plant,
-                reference = referenceGroup.reference,
+                reference = null,
                 nextTask = task,
                 characteristics = plantGroup.characteristics,
                 diagnostic = plantGroup.diagnostic,
-                considerations = referenceGroup.considerations,
+                considerations = plantGroup.considerations,
                 history = history,
                 editionMode = local.isEditionModeActive,
                 isMoreOptionsActive = local.areMoreOptionsOpened

@@ -273,63 +273,6 @@ private fun MainPlantPhotoPlaceholder(
 }
 
 @Composable
-private fun PhotoThumbnail(
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(52.dp)
-            .background(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_images),
-            contentDescription = "Fotografía",
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.secondary
-        )
-    }
-}
-
-
-@Composable
-private fun AddPhotoButton(
-    onClick: () -> Unit
-) {
-    val darkGreen = MaterialTheme.colorScheme.primary
-
-    Column(
-        modifier = Modifier
-            .size(52.dp)
-            .background(
-                color = darkGreen.copy(alpha = 0.10f),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_cameraplus),
-            contentDescription = "Añadir fotografía",
-            modifier = Modifier.size(18.dp),
-            tint = darkGreen
-        )
-
-        Text(
-            text = "Añadir",
-            fontSize = 7.sp,
-            color = MaterialTheme.colorScheme.secondary
-        )
-    }
-}
-
-
-@Composable
 private fun PhotoSection(
     draft: RegisterPlantDraft,
     onTakePhotoClick: (String) -> Unit,

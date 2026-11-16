@@ -1,8 +1,6 @@
 package plat.plantcare.app.core.data.plant.general.remote
 
 import kotlinx.coroutines.flow.Flow
-import plat.plantcare.app.core.data.plant.general.domain.Plant
-import java.io.File
 
 interface PlantIdentificationAPI {
     //suspend fun identify(image: File):

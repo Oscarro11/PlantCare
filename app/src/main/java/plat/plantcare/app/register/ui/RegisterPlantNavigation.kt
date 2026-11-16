@@ -1,4 +1,3 @@
-
 package plat.plantcare.app.register.ui
 
 import androidx.compose.runtime.remember

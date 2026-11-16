@@ -1,7 +1,5 @@
 package plat.plantcare.app.core.data.plant.characteristics.domain
 
-import plat.plantcare.app.core.data.plant.characteristics.domain.PlantLightExposure.BAJA
-
 data class PlantCharacteristics(
     val plantId: String,
     val lightExposure: PlantLightExposure,
