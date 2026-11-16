@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -32,14 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import plat.plantcare.app.R
@@ -112,19 +110,20 @@ fun RegisterPlantStep1Screen(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding + PaddingValues(horizontal = 20.dp))
         ) {
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
                     text = "PASO 1 DE 3",
-                    fontSize = 9.sp,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
                     text = "33% completado",
-                    fontSize = 9.sp,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary
                 )
             }
@@ -133,7 +132,7 @@ fun RegisterPlantStep1Screen(
 
             Text(
                 text = "Identidad y Fotografías",
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -209,16 +208,16 @@ fun RegisterPlantStep1Screen(
 fun RegisterProgressBar(
     progress: Float
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
-    val lightGreen = darkGreen.copy(alpha = 0.10f)
+    val primary = MaterialTheme.colorScheme.primary
+    val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(5.dp)
             .background(
-                color = lightGreen,
-                shape = RoundedCornerShape(10.dp)
+                color = trackColor,
+                shape = MaterialTheme.shapes.small
             )
     ) {
         Box(
@@ -226,8 +225,8 @@ fun RegisterProgressBar(
                 .fillMaxWidth(progress)
                 .height(5.dp)
                 .background(
-                    color = darkGreen,
-                    shape = RoundedCornerShape(10.dp)
+                    color = primary,
+                    shape = MaterialTheme.shapes.small
                 )
         )
     }
@@ -244,8 +243,8 @@ private fun MainPlantPhotoPlaceholder(
             .fillMaxWidth()
             .height(190.dp)
             .background(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                shape = RoundedCornerShape(14.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.medium
             )
     ) {
         AsyncImage(
@@ -262,10 +261,10 @@ private fun PhotoThumbnail(
 ) {
     Box(
         modifier = Modifier
-            .size(52.dp)
+            .size(64.dp)
             .background(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                shape = RoundedCornerShape(8.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.extraSmall
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -284,14 +283,14 @@ private fun PhotoThumbnail(
 private fun AddPhotoButton(
     onClick: () -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
-            .size(52.dp)
+            .size(64.dp)
             .background(
-                color = darkGreen.copy(alpha = 0.10f),
-                shape = RoundedCornerShape(8.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.extraSmall
             )
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -301,12 +300,12 @@ private fun AddPhotoButton(
             painter = painterResource(R.drawable.ic_cameraplus),
             contentDescription = "Añadir fotografía",
             modifier = Modifier.size(18.dp),
-            tint = darkGreen
+            tint = primary
         )
 
         Text(
             text = "Añadir",
-            fontSize = 7.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.secondary
         )
     }
@@ -322,14 +321,14 @@ private fun PhotoSection(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
                 text = "Fotografía del espécimen",
-                fontSize = 15.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -350,21 +349,21 @@ private fun PhotoSection(
             PhotoCameraButton(
                 size = 52.dp,
                 photoContent = "plant",
-                textSize = 11.sp,
+                textSize = MaterialTheme.typography.labelMedium.fontSize,
                 textColor = MaterialTheme.colorScheme.onSurface,
                 tintColor = MaterialTheme.colorScheme.onSurface,
                 backgroundColor = MaterialTheme.colorScheme.surface,
-                backgroundShape = RoundedCornerShape(8.dp),
+                backgroundShape = MaterialTheme.shapes.extraSmall,
                 onModelChange = onTakePhotoClick
             )
 
             PhotoGalleryButton(
                 size = 52.dp,
-                textSize = 11.sp,
+                textSize = MaterialTheme.typography.labelMedium.fontSize,
                 textColor = MaterialTheme.colorScheme.onSurface,
                 tintColor = MaterialTheme.colorScheme.onSurface,
                 backgroundColor = MaterialTheme.colorScheme.surface,
-                backgroundShape = RoundedCornerShape(8.dp),
+                backgroundShape = MaterialTheme.shapes.extraSmall,
                 onModelChange = onGalleryClick
             )
         }
@@ -377,14 +376,14 @@ private fun PlantNameField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = darkGreen.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(8.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.extraSmall
             )
             .padding(
                 horizontal = 12.dp,
@@ -406,9 +405,9 @@ private fun PlantNameField(
             onValueChange = onValueChange,
             modifier = Modifier.weight(1f),
             singleLine = true,
-            textStyle = TextStyle(
-                fontSize = 11.sp,
-                color = darkGreen
+            cursorBrush = SolidColor(primary),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                color = MaterialTheme.colorScheme.onSurface
             )
         )
     }
@@ -421,17 +420,17 @@ private fun LocationChip(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
             .background(
                 color = if (selected) {
-                    darkGreen
+                    primary
                 } else {
-                    darkGreen.copy(alpha = 0.10f)
+                    MaterialTheme.colorScheme.surfaceContainerHigh
                 },
-                shape = RoundedCornerShape(20.dp)
+                shape = MaterialTheme.shapes.large
             )
             .clickable(onClick = onClick)
             .padding(
@@ -454,11 +453,11 @@ private fun LocationChip(
 
         Text(
             text = location.name,
-            fontSize = 9.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                darkGreen
+                primary
             }
         )
     }
@@ -471,7 +470,7 @@ private fun LocationSelector(
     onLocationSelected: (String) -> Unit,
     onNewLocationClick: () -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -490,8 +489,8 @@ private fun LocationSelector(
         Box(
             modifier = Modifier
                 .background(
-                    color = darkGreen.copy(alpha = 0.14f),
-                    shape = RoundedCornerShape(20.dp)
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = MaterialTheme.shapes.large
                 )
                 .clickable(onClick = onNewLocationClick)
                 .padding(
@@ -501,8 +500,8 @@ private fun LocationSelector(
         ) {
             Text(
                 text = "+ Nueva estancia",
-                fontSize = 9.sp,
-                color = darkGreen
+                style = MaterialTheme.typography.labelSmall,
+                color = primary
             )
         }
     }
@@ -513,7 +512,7 @@ private fun LocationSelector(
 private fun ArrivalDateSelector(
     onDateClick: () -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     var todaySelected by remember {
         mutableStateOf(false)
@@ -522,7 +521,7 @@ private fun ArrivalDateSelector(
     Column {
         Text(
             text = "Fecha de llegada a casa",
-            fontSize = 9.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.secondary
         )
 
@@ -536,8 +535,8 @@ private fun ArrivalDateSelector(
                 modifier = Modifier
                     .weight(1f)
                     .background(
-                        color = darkGreen.copy(alpha = 0.08f),
-                        shape = RoundedCornerShape(8.dp)
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = MaterialTheme.shapes.extraSmall
                     )
                     .clickable(onClick = onDateClick)
                     .padding(11.dp),
@@ -558,8 +557,8 @@ private fun ArrivalDateSelector(
                     } else {
                         "12 de Octubre, 2024"
                     },
-                    fontSize = 10.sp,
-                    color = darkGreen
+                    style = MaterialTheme.typography.bodySmall,
+                    color = primary
                 )
             }
 
@@ -567,11 +566,11 @@ private fun ArrivalDateSelector(
                 modifier = Modifier
                     .background(
                         color = if (todaySelected) {
-                            darkGreen
+                            primary
                         } else {
-                            darkGreen.copy(alpha = 0.10f)
+                            MaterialTheme.colorScheme.surfaceContainerHigh
                         },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = MaterialTheme.shapes.extraSmall
                     )
                     .clickable {
                         todaySelected = !todaySelected
@@ -584,11 +583,11 @@ private fun ArrivalDateSelector(
             ) {
                 Text(
                     text = "Hoy",
-                    fontSize = 10.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = if (todaySelected) {
                         MaterialTheme.colorScheme.onPrimary
                     } else {
-                        darkGreen
+                        primary
                     }
                 )
             }
@@ -606,14 +605,14 @@ private fun IdentitySection(
     onNewLocationClick: () -> Unit,
     onDateClick: () -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
                 color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(14.dp)
+                shape = MaterialTheme.shapes.medium
             )
             .padding(14.dp)
     ) {
@@ -624,34 +623,35 @@ private fun IdentitySection(
                 painter = painterResource(R.drawable.ic_id),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = darkGreen
+                tint = primary
             )
 
             Spacer(modifier = Modifier.width(6.dp))
 
             Text(
                 text = "Identidad y Origen",
-                fontSize = 15.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = darkGreen
+                color = primary
             )
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = "Apodo o nombre cariñoso",
-                fontSize = 9.sp,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary
             )
 
             Text(
                 text = "Obligatorio",
-                fontSize = 9.sp,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary
             )
         }
@@ -665,19 +665,20 @@ private fun IdentitySection(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = "Ubicación en el hogar",
-                fontSize = 9.sp,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary
             )
 
             Text(
                 text = "Espacio asignado",
-                fontSize = 9.sp,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary
             )
         }
@@ -704,14 +705,14 @@ fun ContinueRegisterButton(
     text: String,
     onClick: () -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = darkGreen,
-                shape = RoundedCornerShape(12.dp)
+                color = primary,
+                shape = MaterialTheme.shapes.medium
             )
             .clickable(onClick = onClick)
             .padding(vertical = 14.dp),
@@ -719,8 +720,7 @@ fun ContinueRegisterButton(
     ) {
         Text(
             text = "$text   →",
-            fontSize = 14.sp,
-            lineHeight = 17.sp,
+            style = MaterialTheme.typography.titleSmall,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onPrimary
@@ -752,7 +752,7 @@ fun DiscardDraftButton(
 
         Text(
             text = "Descartar borrador",
-            fontSize = 9.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.secondary
         )
     }

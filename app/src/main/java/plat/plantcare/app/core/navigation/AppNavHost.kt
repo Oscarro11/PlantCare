@@ -121,8 +121,16 @@ enum class TopLevelDestination(
     )
 }
 
-/** Use the same saved back stacks for tab buttons and shortcuts between tabs. */
+/** Reselecting a tab returns to its root; switching tabs restores their saved history. */
 internal fun NavController.navigateToTopLevelDestination(destination: TopLevelDestination) {
+    val isCurrentGraph = currentDestination?.hierarchy?.any {
+        it.hasRoute(destination.route::class)
+    } == true
+    if (isCurrentGraph) {
+        // Remove this section's details while keeping its initial screen and state.
+        popBackStack(destination.startRoute, inclusive = false)
+        return
+    }
     navigate(destination.route) {
         // Login is removed after authentication; Home remains the main navigation anchor.
         popUpTo<HomeDestination> { saveState = true }
