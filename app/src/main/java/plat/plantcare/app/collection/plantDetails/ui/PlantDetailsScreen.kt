@@ -48,14 +48,14 @@ import plat.plantcare.app.R
 import plat.plantcare.app.collection.plantDetails.data.PlantDetailsEvent
 import plat.plantcare.app.collection.plantDetails.data.PlantDetailsState
 import plat.plantcare.app.collection.plantDetails.data.PlantDetailsViewModel
-import plat.plantcare.app.core.data.models.HealthStatus
+import plat.plantcare.app.diagnosis.domain.HealthStatus
 import plat.plantcare.app.core.data.models.Task
-import plat.plantcare.app.core.data.models.color
+import plat.plantcare.app.diagnosis.ui.color
 import plat.plantcare.app.core.data.models.getAge
-import plat.plantcare.app.core.data.models.getHealthStatus
+import plat.plantcare.app.diagnosis.domain.getHealthStatus
 import plat.plantcare.app.core.data.models.getRemainingDays
-import plat.plantcare.app.core.data.models.icon
-import plat.plantcare.app.core.data.models.label
+import plat.plantcare.app.diagnosis.ui.icon
+import plat.plantcare.app.diagnosis.ui.label
 import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.core.ui.darkenColor
 
@@ -73,7 +73,7 @@ fun NavController.navigateToPlantDetailsDestination(
 
 fun NavGraphBuilder.plantDetailsScreen(
     onBackClick: () -> Unit,
-    onMakeDiagnostic: () -> Unit
+    onMakeDiagnostic: (String) -> Unit
 ) {
     composable<PlantDetailsDestination> {
         PlantDetailsRoute(
@@ -86,7 +86,7 @@ fun NavGraphBuilder.plantDetailsScreen(
 @Composable
 fun PlantDetailsRoute(
     onBackClick: () -> Unit,
-    onMakeDiagnostic: () -> Unit,
+    onMakeDiagnostic: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PlantDetailsViewModel = hiltViewModel()
 ) {
@@ -94,7 +94,7 @@ fun PlantDetailsRoute(
 
     PlantDetailsScreen(
         onBackClick = onBackClick,
-        onMakeDiagnostic = onMakeDiagnostic,
+        onMakeDiagnostic = { (state as? PlantDetailsState.Content)?.plant?.id?.let(onMakeDiagnostic) },
         onEvent = viewModel::onEvent,
         state = state,
         modifier = modifier
@@ -243,10 +243,12 @@ private fun PlantDetailsContent(
                     ) {
                         Text(
                             text = state.plant.name,
+                            modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        StatusChip(state.diagnostic?.getHealthStatus() ?: HealthStatus.MUERTA)
+                        state.diagnostic?.let { StatusChip(it.getHealthStatus()) }
+                            ?: Text("Sin diagnóstico", style = MaterialTheme.typography.labelMedium)
                     }
 
                     Text(
@@ -271,14 +273,15 @@ private fun PlantDetailsContent(
             item {
                 CharacteristicsSection(
                     //TODO: ver que significa parámetros óptimos
-                    description = "6 parámetros óptimos",
+                    description = if (state.characteristics == null) "Sin características registradas" else "Requisitos registrados",
                     characteristics = state.characteristics
                 )
             }
 
+            state.diagnosticError?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.error) } }
             item {
                 DiagnosticSection(
-                    description = "Hace ${state.diagnostic?.date?.getRemainingDays() ?: 0} días",
+                    description = state.diagnostic?.let { "Último análisis: ${it.date}" } ?: "Sin diagnóstico",
                     diagnostic = state.diagnostic,
                     onCreate = onMakeDiagnostic,
                 )

@@ -9,16 +9,17 @@ data class PlantCharacteristics(
     val humidityLevel: PlantHumidity,
     val preferredClimate: String,
     val pot: String,
-    val substrate: String
+    val substrate: String,
+    val wateringDays: Int? = null,
+    val humidityPercent: Int? = null
 )
 
 fun PlantCharacteristics.toFirebaseDTO(): PlantCharacteristicsFirebaseDTO =
     PlantCharacteristicsFirebaseDTO(
         plantId = plantId,
         requiredLight = requiredLight.displayName,
-        //TODO: update
-        wateringFrequencyDays = 0,
-        humidityLevel = 0,
+        wateringFrequencyDays = wateringDays ?: 0,
+        humidityLevel = humidityPercent ?: 0,
         preferredClimate = preferredClimate,
         pot = pot,
         substrate = substrate
@@ -28,6 +29,7 @@ enum class PlantRequiredLight(
     val displayName: String,
     val level: Int
 ) {
+    NO_REGISTRADO("Sin registrar", 0),
     BAJA(
         displayName = "Baja",
         level = 1
@@ -52,6 +54,7 @@ enum class PlantWateringFrequency(
     val condition: (Int) -> Boolean,
     val level: Int
 ) {
+    NO_REGISTRADO("Sin registrar", "", { false }, 0),
     MUY_FRECUENTE(
         displayName = "Muy frecuente",
         dayRange = "Menos de 4 d",
@@ -84,6 +87,7 @@ enum class PlantHumidity(
     val condition: (Int) -> Boolean,
     val level: Int
 ) {
+    NO_REGISTRADO("Sin registrar", "", { false }, 0),
     BAJA(
         displayName = "Baja",
         percentage = "Menos del 30%",

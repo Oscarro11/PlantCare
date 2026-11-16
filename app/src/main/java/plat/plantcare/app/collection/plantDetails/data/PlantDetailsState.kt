@@ -1,6 +1,6 @@
 package plat.plantcare.app.collection.plantDetails.data
 
-import plat.plantcare.app.core.data.models.Diagnostic
+import plat.plantcare.app.diagnosis.domain.Diagnostic
 import plat.plantcare.app.core.data.models.PlantCharacteristics
 import plat.plantcare.app.core.data.models.PlantReference
 import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
@@ -16,6 +16,7 @@ sealed interface PlantDetailsState {
         val nextTask: Task? = null,
         val characteristics: PlantCharacteristics? = null,
         val diagnostic: Diagnostic? = null,
+        val diagnosticError: String? = null,
         val considerations: PlantReferenceConsiderations? = null,
         val history: List<Task>? = emptyList(),
         val editionMode: Boolean = false,

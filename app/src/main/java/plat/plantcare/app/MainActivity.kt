@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import javax.inject.Inject
+import plat.plantcare.app.core.ai.firebase.prepareAiDebug
 import plat.plantcare.app.notifications.TaskRuntime
 import plat.plantcare.app.notifications.WateringNotifications
 import androidx.activity.ComponentActivity
@@ -33,6 +34,7 @@ class PlantCareApp : Application() {
             Firebase.firestore.useEmulator(host, 8080)
             Firebase.storage.useEmulator(host, 9199)
         }
+        prepareAiDebug(this)
         taskRuntime.start()
     }
 }

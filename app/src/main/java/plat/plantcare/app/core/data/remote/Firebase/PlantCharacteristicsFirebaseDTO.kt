@@ -21,12 +21,14 @@ fun PlantCharacteristicsFirebaseDTO.toModel(): PlantCharacteristics =
     PlantCharacteristics(
         plantId = plantId,
         requiredLight = PlantRequiredLight.entries
-            .firstOrNull { it.displayName == preferredClimate } ?: PlantRequiredLight.BAJA,
+            .firstOrNull { it.displayName.equals(requiredLight, true) || it.name.equals(requiredLight, true) } ?: PlantRequiredLight.NO_REGISTRADO,
         wateringFrequencyDays = PlantWateringFrequency.entries
-            .firstOrNull { it.condition(wateringFrequencyDays) } ?: PlantWateringFrequency.ESPACIADO,
+            .firstOrNull { wateringFrequencyDays > 0 && it.condition(wateringFrequencyDays) } ?: PlantWateringFrequency.NO_REGISTRADO,
         humidityLevel = PlantHumidity.entries
-            .firstOrNull { it.condition(humidityLevel) } ?: PlantHumidity.BAJA,
+            .firstOrNull { humidityLevel in 1..100 && it.condition(humidityLevel) } ?: PlantHumidity.NO_REGISTRADO,
         preferredClimate = preferredClimate,
         pot = pot,
-        substrate = substrate
+        substrate = substrate,
+        wateringDays = wateringFrequencyDays.takeIf { it > 0 },
+        humidityPercent = humidityLevel.takeIf { it in 1..100 }
     )

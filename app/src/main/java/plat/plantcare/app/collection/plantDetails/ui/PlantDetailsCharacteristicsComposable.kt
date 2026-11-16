@@ -88,7 +88,7 @@ private fun CharacteristicsContent(
                     label = "Clima",
                     value = characteristics.preferredClimate,
                     //TODO: update
-                    supportingText = "Templado cálido",
+                    supportingText = "",
                     icon = R.drawable.thermostat,
                     modifier = Modifier.weight(1f)
                 )
@@ -104,7 +104,7 @@ private fun CharacteristicsContent(
                 label = "Maceta y tamaño:",
                 value = characteristics.pot,
                 //TODO: update
-                trailingText = "Grande · 26cm"
+                trailingText = ""
             )
         }
     }

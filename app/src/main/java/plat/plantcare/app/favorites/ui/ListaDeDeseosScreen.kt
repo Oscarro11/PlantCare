@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -230,7 +231,7 @@ private fun SearchSection(
             onValueChange = onBusquedaChange,
             modifier = Modifier
                 .weight(1f)
-                .height(62.dp)
+                .heightIn(min = 62.dp)
             ,
             placeholder = {
                 Text("Buscar...", style = MaterialTheme.typography.bodyLarge)
@@ -260,7 +261,8 @@ private fun SearchSection(
             modifier = Modifier.size(62.dp),
             shape = RoundedCornerShape(20.dp),
             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
             )
         ) {
             Icon(
@@ -349,7 +351,7 @@ private fun PlantaDeseadaCard(
                     onClick = onVerCuidados,
                     modifier = Modifier
                         .weight(4f)
-                        .height(45.dp),
+                        .heightIn(min = 48.dp),
                     shape = RoundedCornerShape(
                         topStart = 18.dp,
                         bottomStart = 18.dp,
@@ -378,7 +380,7 @@ private fun PlantaDeseadaCard(
                 FilledTonalIconButton(
                     onClick = onEliminarClick,
                     enabled = enabled,
-                    modifier = Modifier.size(45.dp)
+                    modifier = Modifier.size(48.dp)
                         .weight(1f),
                     shape = RoundedCornerShape(
                         topStart = 6.dp,

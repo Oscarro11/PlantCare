@@ -32,6 +32,26 @@ service cloud.firestore {
       && collection in ['deseadas', 'caracteristicas'];
     }
 
+    match /usuarios/{uid}/plantas/{plantId}/diagnosticos/{diagnosticId} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && exists(/databases/$(database)/documents/usuarios/$(uid)/plantas/$(plantId))
+        && request.resource.data.plantId == plantId
+        && request.resource.data.date is timestamp
+        && request.resource.data.assessment in ['SALUDABLE', 'NECESITA_CUIDADO', 'EN_PELIGRO', 'NO_EVALUABLE']
+        && request.resource.data.summary is string && request.resource.data.summary.size() <= 2000
+        && request.resource.data.foliageState is string && request.resource.data.foliageState.size() <= 2000
+        && request.resource.data.growthVigor is string && request.resource.data.growthVigor.size() <= 2000
+        && request.resource.data.pestControl is string && request.resource.data.pestControl.size() <= 2000
+        && request.resource.data.diseaseSigns is string && request.resource.data.diseaseSigns.size() <= 2000
+        && request.resource.data.model is string && request.resource.data.model.size() <= 200
+        && request.resource.data.recommendations is list && request.resource.data.recommendations.size() in [1,2,3,4,5,6,7,8]
+        && request.resource.data.possibleCauses is list && request.resource.data.possibleCauses.size() <= 8
+        && request.resource.data.limitations is list && request.resource.data.limitations.size() in [1,2,3,4,5,6,7,8];
+      // A repeated save of the identical draft is safe after a connection timeout.
+      allow update: if isOwner(uid) && request.resource.data == resource.data;
+    }
+
     match /referencias/{id}    { allow read: if signedIn(); allow write: if false; }
     match /pautasCuidado/{id}  { allow read: if signedIn(); allow write: if false; }
   }

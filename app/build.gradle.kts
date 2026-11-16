@@ -7,6 +7,11 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val selectedAiProject = providers.gradleProperty("plantcare.aiProject").orElse("plantcare-ia").get()
+require(selectedAiProject in setOf("plantcare-ia", "plantcare")) {
+    "plantcare.aiProject must be plantcare-ia or plantcare; received: $selectedAiProject"
+}
+
 android {
     namespace = "plat.plantcare.app"
     compileSdk {
@@ -15,6 +20,8 @@ android {
 
     defaultConfig {
         applicationId = "plat.plantcare.app"
+        buildConfigField("String", "AI_PROJECT", "\"$selectedAiProject\"")
+        buildConfigField("String", "GEMINI_MODEL", "\"${providers.gradleProperty("plantcare.geminiModel").orElse("gemini-3.8-flash").get()}\"")
         minSdk = 26
         targetSdk = 37
         versionCode = 1
@@ -59,6 +66,9 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.ai)
+    debugImplementation(libs.firebase.appcheck.debug)
+    releaseImplementation(libs.firebase.appcheck.playintegrity)
 
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.annotation)

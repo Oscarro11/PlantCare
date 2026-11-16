@@ -1,5 +1,7 @@
 package plat.plantcare.app.core.navigation
 
+import plat.plantcare.app.diagnosis.ui.DiagnosisDestination
+import plat.plantcare.app.diagnosis.ui.diagnosisScreen
 import plat.plantcare.app.fichaBotanicaScreen
 import androidx.compose.runtime.LaunchedEffect
 import plat.plantcare.app.home.allTasks.ui.navigateToAllTasksDestination
@@ -39,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
@@ -118,6 +121,16 @@ enum class TopLevelDestination(
     )
 }
 
+/** Use the same saved back stacks for tab buttons and shortcuts between tabs. */
+internal fun NavController.navigateToTopLevelDestination(destination: TopLevelDestination) {
+    navigate(destination.route) {
+        // Login is removed after authentication; Home remains the main navigation anchor.
+        popUpTo<HomeDestination> { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTasksOpened: () -> Unit = {}) {
     val navController = rememberNavController()
@@ -161,14 +174,7 @@ fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTask
                 AppBottomBar(
                     selectedDestination = selectedDestination,
                     onDestinationClick = { destination ->
-                        navController.navigate(
-                            destination.route,
-                            navOptions {
-                                popUpTo(0) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        )
+                        navController.navigateToTopLevelDestination(destination)
                     }
                 )
             }
@@ -193,8 +199,7 @@ fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTask
             homeGraph(
                 navController = navController,
 
-                //TODO: update with diagnosis camera screen and add plant screen
-                onDiagnosisClick = {},
+                onDiagnosisClick = { navController.navigate(DiagnosisDestination()) },
                 onAddPlantClick = { navController.navigate(RegisterPlantGraph) }
             )
 
@@ -202,11 +207,11 @@ fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTask
                 navController = navController,
                 //TODO: update
                 onAddPlantClick = { navController.navigate(RegisterPlantGraph) },
-                onMakeDiagnostic = {}
+                onMakeDiagnostic = { plantId -> navController.navigate(DiagnosisDestination(plantId)) }
             )
 
             favoritesGraph(
-                onAgregarClick = { navController.navigate(DiscoverGraph) { launchSingleTop = true } },
+                onAgregarClick = { navController.navigateToTopLevelDestination(TopLevelDestination.DISCOVER) },
                 onFiltrosClick = {},
                 onVerCuidados = { navController.navigateToFichaBotanicaDestination(it) }
             )
@@ -232,6 +237,7 @@ fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTask
                 ) }
             )
 
+            diagnosisScreen(onBack = { navController.popBackStack() }, onAddPlant = { navController.navigate(RegisterPlantGraph) })
             calendarGraph(navController)
             registerPlantGraph(navController)
         }
@@ -323,7 +329,7 @@ fun AppSectionTopBar(
                         contentDescription = null
                     )
 
-                    Image(
+                    Icon(
                         painterResource(id = R.drawable.account_placeholder),
                         contentDescription = null,
                         modifier = Modifier
@@ -358,11 +364,11 @@ fun AppBottomBar(
                 icon = { Icon(painterResource(destination.icon), contentDescription = null) },
                 label = { Text(stringResource(destination.label)) },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = darkenColor(originalColor = MaterialTheme.colorScheme.primary),
+                    indicatorColor = MaterialTheme.colorScheme.primary,
                     selectedIconColor = MaterialTheme.colorScheme.onPrimary,
                     selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
         }

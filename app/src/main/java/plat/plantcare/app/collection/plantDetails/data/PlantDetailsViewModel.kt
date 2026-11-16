@@ -22,8 +22,10 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import plat.plantcare.app.diagnosis.application.ObservePlantDiagnosis
+import plat.plantcare.app.diagnosis.domain.DiagnosisDetails
 import plat.plantcare.app.collection.plantDetails.ui.PlantDetailsDestination
-import plat.plantcare.app.core.data.models.Diagnostic
+import plat.plantcare.app.diagnosis.domain.Diagnostic
 import plat.plantcare.app.core.data.models.PlantCharacteristics
 import plat.plantcare.app.core.data.models.PlantReference
 import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
@@ -48,8 +50,11 @@ sealed interface PlantDetailsEvent{
 private data class PlantInfo(
     val plant: Plant? = null,
     val characteristics: PlantCharacteristics? = null,
-    val diagnostic: Diagnostic? = null
+    val diagnostic: Diagnostic? = null,
+    val diagnosticError: String? = null
 )
+
+private data class DiagnosisObservation(val details: DiagnosisDetails = DiagnosisDetails(), val error: String? = null)
 
 private data class ReferenceInfo(
     val reference: PlantReference? = null,
@@ -67,7 +72,8 @@ class PlantDetailsViewModel @Inject constructor (
     savedStateHandle: SavedStateHandle,
     private val tasksRepository: TaskRepository,
     private val plantRepository: PlantRepository,
-    private val referencesRepository: PlantReferenceRepository
+    private val referencesRepository: PlantReferenceRepository,
+    private val observePlantDiagnosis: ObservePlantDiagnosis
 ): ViewModel() {
 
     private val destination = savedStateHandle.toRoute<PlantDetailsDestination>()
@@ -80,16 +86,13 @@ class PlantDetailsViewModel @Inject constructor (
         .map { it?.referenceId?.takeIf { id -> id.isNotBlank() } }
         .distinctUntilChanged()
 
-    private val testFlow1 = flowOf(null)
-    private val testFlow2 = flowOf(null)
+    private val diagnosis = observePlantDiagnosis(plantId)
+        .map { DiagnosisObservation(it) }
+        .catch { emit(DiagnosisObservation(error = "No se pudieron cargar las características y el diagnóstico. Revisa la conexión.")) }
 
     private val plantInfo: Flow<PlantInfo> = combine(
-        plant,
-        testFlow1,
-        testFlow2
-        //plantRepository.observeCharacteristics(plantId),
-        //plantRepository.observeDiagnostic(plantId)
-    ) { plant, characteristics, diagnostic -> PlantInfo(plant, characteristics, diagnostic) }
+        plant, diagnosis
+    ) { plant, observation -> PlantInfo(plant, observation.details.characteristics?.toPlantCharacteristics(plantId), observation.details.latest, observation.error) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val referenceInfo: Flow<ReferenceInfo> = referenceId.flatMapLatest { id ->
@@ -127,6 +130,7 @@ class PlantDetailsViewModel @Inject constructor (
                 nextTask = task,
                 characteristics = plantGroup.characteristics,
                 diagnostic = plantGroup.diagnostic,
+                diagnosticError = plantGroup.diagnosticError,
                 considerations = referenceGroup.considerations,
                 history = history,
                 editionMode = local.isEditionModeActive,

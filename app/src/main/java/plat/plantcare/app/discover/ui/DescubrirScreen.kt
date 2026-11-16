@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BookmarkAdd
+import androidx.compose.material.icons.outlined.BookmarkRemove
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Button
@@ -296,7 +301,7 @@ private fun PlantaRecomendadaCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(155.dp),
+                    .heightIn(min = 155.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 PlantaImage(
@@ -341,23 +346,25 @@ private fun PlantaImage(
                 .clip(RoundedCornerShape(16.dp)),
         )
 
-        Surface(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(8.dp),
-            shape = RoundedCornerShape(50.dp),
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            Text(
-                text = if (planta.enListaDeseos) "♥ En deseos" else "Catálogo",
-                modifier = Modifier.padding(
-                    horizontal = 10.dp,
-                    vertical = 5.dp
-                ),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        if (planta.enListaDeseos) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp),
+                shape = RoundedCornerShape(50.dp),
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Text(
+                    text = "♥ En deseos",
+                    modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
@@ -368,7 +375,7 @@ private fun PlantaInformation(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.height(155.dp)
+        modifier = modifier.heightIn(min = 155.dp)
     ) {
         Text(
             text = planta.nombre,
@@ -400,6 +407,7 @@ private fun PlantaInformation(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PlantActions(
     enListaDeseos: Boolean,
@@ -407,16 +415,18 @@ private fun PlantActions(
     onToggleListaDeseos: () -> Unit,
     onVerCuidados: () -> Unit
 ) {
-    Row(
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        maxItemsInEachRow = if (LocalDensity.current.fontScale > 1.15f) 1 else 2
     ) {
         FilledTonalButton(
             onClick = onToggleListaDeseos,
             enabled = enabled,
             modifier = Modifier
                 .weight(1f)
-                .height(45.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor =
@@ -426,7 +436,7 @@ private fun PlantActions(
             )
         ) {
             Icon(
-                imageVector = Icons.Outlined.BookmarkAdd,
+                imageVector = if (enListaDeseos) Icons.Outlined.BookmarkRemove else Icons.Outlined.BookmarkAdd,
                 contentDescription = null
             )
 
@@ -434,7 +444,7 @@ private fun PlantActions(
 
             Text(
                 text = if (enListaDeseos) {
-                    "En deseos"
+                    "Quitar de deseos"
                 } else {
                     "+ A deseos"
                 },
@@ -447,7 +457,7 @@ private fun PlantActions(
             onClick = onVerCuidados,
             modifier = Modifier
                 .weight(1f)
-                .height(45.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor =
