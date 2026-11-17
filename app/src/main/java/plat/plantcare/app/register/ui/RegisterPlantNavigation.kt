@@ -1,4 +1,3 @@
-
 package plat.plantcare.app.register.ui
 
 import androidx.compose.runtime.remember
@@ -101,13 +100,13 @@ fun NavGraphBuilder.registerPlantGraph(
 
             RegisterPlantStep3Route(
                 viewModel = vm,
-                onBack = {
+                onBackClick = {
                     navController.popBackStack()
                 },
-                onClose = {
+                onCloseClick = {
                     navController.popBackStack()
                 },
-                onDiscard = {
+                onDiscardClick = {
                     navController.popBackStack(
                         RegisterPlantGraph,
                         inclusive = true

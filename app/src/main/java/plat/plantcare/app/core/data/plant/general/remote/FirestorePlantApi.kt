@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.plant.remote
+package plat.plantcare.app.core.data.plant.general.remote
 
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import plat.plantcare.app.core.data.documentFlow
 import plat.plantcare.app.core.data.models.awaitOrQueued
-import plat.plantcare.app.core.data.plant.domain.Plant
 import plat.plantcare.app.core.data.snapshotFlow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,9 +26,9 @@ class FirestorePlantApi @Inject constructor(
 
     override suspend fun create(
         ownerId: String,
-        plant: Plant
+        plant: PlantDTO
     ) {
-        val dto = plant.toCommonDTO().toFirebaseDTO()
+        val dto = plant.toFirebaseDTO()
 
         if (dto != null) {
             plantReference(ownerId)
@@ -38,34 +37,34 @@ class FirestorePlantApi @Inject constructor(
         }
     }
 
-    override fun observeAll(ownerId: String): Flow<List<Plant>> =
+    override fun observeAll(ownerId: String): Flow<List<PlantDTO>> =
         plantReference(ownerId)
             .snapshotFlow<PlantFirebaseDTO>()
-            .map { dtos -> dtos.map { it.toDomain() } }
+            .map { dtos -> dtos.map { it.toCommonDTO() } }
 
     override fun observe(
         ownerId: String,
         plantId: String
-    ): Flow<Plant?> =
+    ): Flow<PlantDTO?> =
         plantReference(ownerId).document(plantId)
             .documentFlow<PlantFirebaseDTO>()
-            .map { it?.toDomain() }
+            .map { it?.toCommonDTO() }
 
     override suspend fun get(
         ownerId: String,
         plantId: String
-    ): Plant? =
+    ): PlantDTO? =
         plantReference(ownerId)
             .document(plantId)
             .get().await()
             .toObject(PlantFirebaseDTO::class.java)
-            ?.toDomain()
+            ?.toCommonDTO()
 
     override suspend fun update(
         ownerId: String,
-        plant: Plant
+        plant: PlantDTO
     ) {
-        val dto = plant.toCommonDTO().toFirebaseDTO()
+        val dto = plant.toFirebaseDTO()
 
         if (dto != null) {
             plantReference(ownerId).document(plant.id).update(

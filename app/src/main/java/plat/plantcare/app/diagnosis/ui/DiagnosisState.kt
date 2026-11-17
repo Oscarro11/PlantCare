@@ -1,6 +1,6 @@
 package plat.plantcare.app.diagnosis.ui
 
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.diagnosis.domain.Diagnostic
 
 enum class DiagnosisPhase { IDLE, IMPORTING, ANALYZING, SAVING }

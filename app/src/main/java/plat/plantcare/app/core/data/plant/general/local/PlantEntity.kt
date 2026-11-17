@@ -1,8 +1,8 @@
-package plat.plantcare.app.core.data.plant.local
+package plat.plantcare.app.core.data.plant.general.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import java.time.LocalDate
 
 @Entity(tableName = "plants")

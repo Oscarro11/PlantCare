@@ -14,7 +14,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import plat.plantcare.app.collection.plantDetails.ui.DiagnosticSection
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.ui.theme.PlantcareTheme
 
 @RunWith(AndroidJUnit4::class)

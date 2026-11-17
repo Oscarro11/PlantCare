@@ -16,6 +16,14 @@ service cloud.firestore {
       && request.resource.data.name.size() > 0
       && request.resource.data.name.size() <= 60
       && request.resource.data.favorite is bool;
+
+      match /caracteristicas/{docId} {
+        allow read, create, update, delete: if isOwner(uid);
+      }
+
+      match /consideraciones/{docId} {
+        allow read, create, update, delete: if isOwner(uid);
+      }
     }
 
     match /usuarios/{uid}/tareas/{taskId} {

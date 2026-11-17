@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,35 +37,172 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import plat.plantcare.app.R
+import plat.plantcare.app.core.data.plant.characteristics.domain.Climate
+import plat.plantcare.app.core.data.plant.characteristics.domain.Humidity
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantLightExposure
+import plat.plantcare.app.core.data.plant.characteristics.domain.PotSize
 import plat.plantcare.app.core.navigation.AppTopBar
+import plat.plantcare.app.core.ui.CompactEnumSelector
 import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantState
 import plat.plantcare.app.register.data.RegisterPlantViewModel
 import plat.plantcare.app.ui.theme.PlantcareTheme
 
-enum class LightExposure {
-    DIRECT,
-    INDIRECT_HIGH,
-    MEDIUM,
-    LOW
-}
+@Composable
+fun RegisterPlantStep2Route(
+    viewModel: RegisterPlantViewModel,
+    onContinue: () -> Unit,
+    onBack: () -> Unit,
+    onClose: () -> Unit,
+    onDiscard: () -> Unit
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-enum class PotSize {
-    SMALL,
-    MEDIUM,
-    LARGE
+    RegisterPlantStep2Screen(
+        state = state,
+        onEvent = viewModel::handleEvent,
+        onContinueClick = onContinue,
+        onBackClick = onBack,
+        onCloseClick = onClose,
+        onDiscardClick = {
+            viewModel.handleEvent(RegisterPlantEvent.Discard)
+            onDiscard()
+        }
+    )
 }
 
 
 @Composable
-private fun StepTwoHeader() {
+fun RegisterPlantStep2Screen(
+    onBackClick: () -> Unit,
+    onCloseClick: () -> Unit,
+    onContinueClick: () -> Unit,
+    onDiscardClick: () -> Unit,
+    state: RegisterPlantState = RegisterPlantState(),
+    onEvent: (RegisterPlantEvent) -> Unit = {}
+) {
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val draft = state.draft
+
+    Scaffold(
+        topBar = {
+            AppTopBar(
+                title = "Registro Planta Paso 2",
+                onBackClick = onCloseClick,
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor)
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding + PaddingValues(horizontal = 20.dp))
+        ) {
+            StepTwoHeader(plantName = draft.plantName)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ClimateSection(
+                climate = draft.currentClimate,
+                onClimateChange = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(currentClimate = it)
+                        )
+                    )
+                },
+                humidity = draft.humidity,
+                onHumidityChange = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(humidity = it)
+                        )
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LightExposureSection(
+                selectedLight = draft.lightExposure,
+                onLightSelected = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(lightExposure = it)
+                        )
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            PotTypeSection(
+                value = draft.potType,
+                onValueChange = { type ->
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(potType = type)
+                        )
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            PotSizeSection(
+                selectedSize = draft.potSize,
+                onSizeSelected = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(potSize = it)
+                        )
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SubstrateSection(
+                value = draft.substrate,
+                onValueChange = { substrate ->
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(substrate = substrate)
+                        )
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            StepTwoNavigation(
+                onBackClick = onBackClick,
+                onContinueClick = onContinueClick
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            DiscardDraftButton(
+                onClick = onDiscardClick
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun StepTwoHeader(
+    plantName: String
+) {
     val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 shape = MaterialTheme.shapes.medium
             )
             .padding(14.dp)
@@ -77,13 +215,13 @@ private fun StepTwoHeader() {
             Text(
                 text = "PASO 2 DE 3",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.secondary
             )
 
             Text(
                 text = "66% completado",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.secondary
             )
         }
 
@@ -108,9 +246,9 @@ private fun StepTwoHeader() {
             )
 
             Text(
-                text = "🌱 Monstera Monstrita",
+                text = "🌱 $plantName",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.secondary
             )
         }
     }
@@ -135,7 +273,7 @@ private fun LightOptionCard(
                 color = if (selected) {
                     primary
                 } else {
-                    MaterialTheme.colorScheme.surfaceContainerLow
+                    MaterialTheme.colorScheme.surfaceContainerHigh
                 },
                 shape = MaterialTheme.shapes.medium
             )
@@ -149,7 +287,7 @@ private fun LightOptionCard(
             tint = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                MaterialTheme.colorScheme.primary
+                MaterialTheme.colorScheme.secondary
             }
         )
 
@@ -172,7 +310,7 @@ private fun LightOptionCard(
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                MaterialTheme.colorScheme.secondary
             }
         )
     }
@@ -181,8 +319,8 @@ private fun LightOptionCard(
 
 @Composable
 private fun LightExposureSection(
-    selectedLight: LightExposure,
-    onLightSelected: (LightExposure) -> Unit
+    selectedLight: PlantLightExposure,
+    onLightSelected: (PlantLightExposure) -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
 
@@ -195,7 +333,7 @@ private fun LightExposureSection(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = "☀ Exposición a la luz",
+                text = "☀  Exposición a la luz",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = primary
@@ -204,7 +342,7 @@ private fun LightExposureSection(
             Text(
                 text = "Elige 1 opción",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.secondary
             )
         }
 
@@ -218,9 +356,9 @@ private fun LightExposureSection(
                 title = "Directa",
                 description = "+6h de sol puro",
                 icon = R.drawable.ic_filled_sun,
-                selected = selectedLight == LightExposure.DIRECT,
+                selected = selectedLight == PlantLightExposure.BRILLANTE_DIRECTA,
                 onClick = {
-                    onLightSelected(LightExposure.DIRECT)
+                    onLightSelected(PlantLightExposure.BRILLANTE_DIRECTA)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -229,9 +367,9 @@ private fun LightExposureSection(
                 title = "Indirecta alta",
                 description = "Tamizada / Ventanal",
                 icon = R.drawable.ic_sun,
-                selected = selectedLight == LightExposure.INDIRECT_HIGH,
+                selected = selectedLight == PlantLightExposure.BRILLANTE_INDIRECTA,
                 onClick = {
-                    onLightSelected(LightExposure.INDIRECT_HIGH)
+                    onLightSelected(PlantLightExposure.BRILLANTE_INDIRECTA)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -247,9 +385,9 @@ private fun LightExposureSection(
                 title = "Luz media",
                 description = "Interior iluminado",
                 icon = R.drawable.ic_sunset,
-                selected = selectedLight == LightExposure.MEDIUM,
+                selected = selectedLight == PlantLightExposure.MEDIA,
                 onClick = {
-                    onLightSelected(LightExposure.MEDIUM)
+                    onLightSelected(PlantLightExposure.MEDIA)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -258,9 +396,9 @@ private fun LightExposureSection(
                 title = "Baja luz",
                 description = "Rincones o semisombra",
                 icon = R.drawable.ic_moon,
-                selected = selectedLight == LightExposure.LOW,
+                selected = selectedLight == PlantLightExposure.BAJA,
                 onClick = {
-                    onLightSelected(LightExposure.LOW)
+                    onLightSelected(PlantLightExposure.BAJA)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -271,7 +409,8 @@ private fun LightExposureSection(
 
 @Composable
 private fun PotTypeSection(
-    onClick: () -> Unit
+    value: String,
+    onValueChange: (String) -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
 
@@ -292,7 +431,6 @@ private fun PotTypeSection(
                     color = MaterialTheme.colorScheme.surface,
                     shape = MaterialTheme.shapes.small
                 )
-                .clickable(onClick = onClick)
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -300,22 +438,19 @@ private fun PotTypeSection(
                 painter = painterResource(R.drawable.ic_pot3),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.secondary
             )
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Text(
-                text = "Terracota transpirable (con plato)",
-                style = MaterialTheme.typography.bodySmall,
-                color = primary,
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.secondary
+                ),
                 modifier = Modifier.weight(1f)
-            )
-
-            Text(
-                text = "⌄",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -381,7 +516,7 @@ private fun PotSizeSection(
             Text(
                 text = "Diámetro estimado",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.secondary
             )
         }
 
@@ -391,65 +526,36 @@ private fun PotSizeSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     shape = MaterialTheme.shapes.large
                 )
                 .padding(3.dp)
         ) {
             PotSizeOption(
                 text = "Pequeño (S)",
-                selected = selectedSize == PotSize.SMALL,
+                selected = selectedSize == PotSize.PEQUENA,
                 onClick = {
-                    onSizeSelected(PotSize.SMALL)
+                    onSizeSelected(PotSize.PEQUENA)
                 },
                 modifier = Modifier.weight(1f)
             )
 
             PotSizeOption(
                 text = "Mediano (M)",
-                selected = selectedSize == PotSize.MEDIUM,
+                selected = selectedSize == PotSize.MEDIANA,
                 onClick = {
-                    onSizeSelected(PotSize.MEDIUM)
+                    onSizeSelected(PotSize.MEDIANA)
                 },
                 modifier = Modifier.weight(1f)
             )
 
             PotSizeOption(
                 text = "Grande (L)",
-                selected = selectedSize == PotSize.LARGE,
+                selected = selectedSize == PotSize.GRANDE,
                 onClick = {
-                    onSizeSelected(PotSize.LARGE)
+                    onSizeSelected(PotSize.GRANDE)
                 },
                 modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    shape = MaterialTheme.shapes.extraSmall
-                )
-                .padding(9.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_info),
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.width(6.dp))
-
-            Text(
-                text = "Recomendado: 18–22 cm de diámetro para dar " +
-                        "espacio a raíces secundarias.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -458,8 +564,8 @@ private fun PotSizeSection(
 
 @Composable
 private fun SubstrateSection(
-    onEditClick: () -> Unit,
-    onRemoveClick: () -> Unit
+    value: String,
+    onValueChange: (String) -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
 
@@ -480,7 +586,6 @@ private fun SubstrateSection(
                     color = MaterialTheme.colorScheme.surface,
                     shape = MaterialTheme.shapes.small
                 )
-                .clickable(onClick = onEditClick)
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -488,25 +593,72 @@ private fun SubstrateSection(
                 painter = painterResource(R.drawable.ic_substratum),
                 contentDescription = null,
                 modifier = Modifier.size(17.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.secondary
             )
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Text(
-                text = "Sustrato tropical aireado (corteza + perlita)",
-                style = MaterialTheme.typography.labelSmall,
-                color = primary,
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.secondary
+                ),
                 modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ClimateSection(
+    climate: Climate,
+    onClimateChange: (Climate) -> Unit,
+    humidity: Humidity,
+    onHumidityChange: (Humidity) -> Unit
+) {
+    val primary = MaterialTheme.colorScheme.primary
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_temperature),
+                contentDescription = null
             )
 
             Text(
-                text = "×",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .clickable(onClick = onRemoveClick)
-                    .padding(4.dp)
+                text = "  Clima y humedad",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = primary
+            )
+        }
+
+        Spacer(Modifier.width(4.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CompactEnumSelector(
+                title = "Clima",
+                selectedValue = climate,
+                onValueChange = onClimateChange,
+                modifier = Modifier.weight(1f)
+            )
+
+            CompactEnumSelector(
+                title = "Humedad",
+                selectedValue = humidity,
+                onValueChange = onHumidityChange,
+                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -527,7 +679,7 @@ private fun StepTwoNavigation(
         Box(
             modifier = Modifier
                 .background(
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     shape = MaterialTheme.shapes.small
                 )
                 .clickable(onClick = onBackClick)
@@ -566,124 +718,6 @@ private fun StepTwoNavigation(
     }
 }
 
-
-@Composable
-fun RegisterPlantStep2Route(
-    viewModel: RegisterPlantViewModel,
-    onContinue: () -> Unit,
-    onBack: () -> Unit,
-    onClose: () -> Unit,
-    onDiscard: () -> Unit
-) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-
-    RegisterPlantStep2Screen(
-        state = state,
-        onEvent = viewModel::handleEvent,
-        onContinueClick = onContinue,
-        onBackClick = onBack,
-        onCloseClick = onClose,
-        onDiscardClick = {
-            viewModel.handleEvent(RegisterPlantEvent.Discard)
-            onDiscard()
-        }
-    )
-}
-
-
-@Composable
-fun RegisterPlantStep2Screen(
-    onCloseClick: () -> Unit = {},
-    onPotTypeClick: () -> Unit = {},
-    onSubstrateClick: () -> Unit = {},
-    onRemoveSubstrateClick: () -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onContinueClick: () -> Unit = {},
-    onDiscardClick: () -> Unit = {},
-    state: RegisterPlantState = RegisterPlantState(),
-    onEvent: (RegisterPlantEvent) -> Unit = {}
-) {
-    val backgroundColor = MaterialTheme.colorScheme.background
-    val draft = state.draft
-
-    val selectedLight = draft.lightExposure
-    val selectedSize = draft.potSize
-
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                title = "Registro Planta Paso 2",
-                onBackClick = onCloseClick,
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-                .verticalScroll(rememberScrollState())
-                .padding(innerPadding + PaddingValues(horizontal = 20.dp))
-        ) {
-            StepTwoHeader()
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LightExposureSection(
-                selectedLight = selectedLight,
-                onLightSelected = {
-                    onEvent(
-                        RegisterPlantEvent.ChangeDraft(
-                            draft.copy(lightExposure = it)
-                        )
-                    )
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            PotTypeSection(
-                onClick = onPotTypeClick
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            PotSizeSection(
-                selectedSize = selectedSize,
-                onSizeSelected = {
-                    onEvent(
-                        RegisterPlantEvent.ChangeDraft(
-                            draft.copy(potSize = it)
-                        )
-                    )
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            SubstrateSection(
-                onEditClick = onSubstrateClick,
-                onRemoveClick = onRemoveSubstrateClick
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            StepTwoNavigation(
-                onBackClick = onBackClick,
-                onContinueClick = onContinueClick
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            DiscardDraftButton(
-                onClick = onDiscardClick
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-}
-
-
 @Preview(
     showBackground = true,
     showSystemUi = true
@@ -691,6 +725,11 @@ fun RegisterPlantStep2Screen(
 @Composable
 private fun RegisterPlantStep2ScreenPreview() {
     PlantcareTheme {
-        RegisterPlantStep2Screen()
+        RegisterPlantStep2Screen(
+            onBackClick = {},
+            onContinueClick = {},
+            onCloseClick = {},
+            onDiscardClick = {}
+        )
     }
 }

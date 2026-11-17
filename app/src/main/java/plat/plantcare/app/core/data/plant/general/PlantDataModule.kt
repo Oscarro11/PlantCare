@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.plant
+package plat.plantcare.app.core.data.plant.general
 
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -6,9 +6,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import plat.plantcare.app.core.data.AppDatabase
-import plat.plantcare.app.core.data.plant.local.PlantDAO
-import plat.plantcare.app.core.data.plant.remote.FirestorePlantApi
-import plat.plantcare.app.core.data.plant.remote.PlantDataSourceApi
+import plat.plantcare.app.core.data.plant.general.local.PlantDAO
+import plat.plantcare.app.core.data.plant.general.remote.FirestorePlantApi
+import plat.plantcare.app.core.data.plant.general.remote.PlantDataSourceApi
 import javax.inject.Singleton
 
 @Module

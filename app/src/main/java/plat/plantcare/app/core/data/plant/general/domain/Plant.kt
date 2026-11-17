@@ -1,4 +1,4 @@
-package plat.plantcare.app.core.data.plant.domain
+package plat.plantcare.app.core.data.plant.general.domain
 
 import java.time.LocalDate
 

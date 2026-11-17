@@ -8,6 +8,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -26,16 +28,25 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,9 +62,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import plat.plantcare.app.R
 import java.io.File
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 @Composable
 fun TextFieldWithTitle(
@@ -389,3 +404,122 @@ private fun createCameraImageUri(context: Context, type: String): Uri {
         file
     )
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LocalDatePickerDialog(
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+    initialDate: LocalDate? = null,
+    maxDate: LocalDate? = LocalDate.now(),
+) {
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate?.toPickerMillis(),
+        selectableDates = remember(maxDate) { UpToDate(maxDate) }
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                enabled = state.selectedDateMillis != null,
+                onClick = {
+                    state.selectedDateMillis?.let { onDateSelected(it.toLocalDateFromPicker()) }
+                }
+            ) { Text("Aceptar") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    ) {
+        DatePicker(state = state)
+    }
+}
+
+@Composable
+fun <T : Enum<T>> CompactEnumSelector(
+    title: String,
+    selectedValue: T,
+    onValueChange: (T) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val colors = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(10.dp)
+
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            fontSize = 12.sp,
+            color = colors.primary
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        Box {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(42.dp)
+                    .background(colors.surface, shape)
+                    .border(1.dp, colors.secondary, shape)
+                    .clickable { expanded = true }
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = selectedValue.displayLabel(),
+                    fontSize = 12.sp,
+                    color = colors.onSurface
+                )
+                Text("⌄", fontSize = 16.sp, color = colors.secondary)
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                enumValuesFor(selectedValue).forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(option.displayLabel(), fontSize = 12.sp)
+                        },
+                        onClick = {
+                            onValueChange(option)
+                            expanded = false
+                        },
+                        modifier = Modifier.height(40.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+private class UpToDate(private val max: LocalDate?) : SelectableDates {
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+        max == null || utcTimeMillis.toLocalDateFromPicker() <= max
+
+    override fun isSelectableYear(year: Int): Boolean =
+        max == null || year <= max.year
+}
+
+private fun Long.toLocalDateFromPicker(): LocalDate =
+    Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()
+
+private fun LocalDate.toPickerMillis(): Long =
+    atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+@Suppress("UNCHECKED_CAST")
+private fun <T : Enum<T>> enumValuesFor(value: T): List<T> {
+    val valueClass = value.javaClass
+    val enumClass = if (valueClass.isEnum) valueClass else valueClass.superclass
+    val constants = enumClass.enumConstants ?: return emptyList()
+    return constants.map { it as T }
+}
+
+private fun Enum<*>.displayLabel(): String =
+    name.lowercase().replace('_', ' ').replaceFirstChar { it.titlecase() }

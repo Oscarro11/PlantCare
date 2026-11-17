@@ -1,6 +1,6 @@
 package plat.plantcare.app.diagnosis.application
 
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.diagnosis.domain.DiagnosisDraft
 import plat.plantcare.app.diagnosis.domain.DiagnosisPhotos
 import plat.plantcare.app.diagnosis.domain.DiagnosisRepository

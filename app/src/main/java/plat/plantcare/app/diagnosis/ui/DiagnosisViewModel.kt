@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import plat.plantcare.app.diagnosis.domain.Diagnostic
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.diagnosis.domain.DiagnosisDraft
 import plat.plantcare.app.diagnosis.domain.DiagnosisPhotos
 import plat.plantcare.app.diagnosis.application.AnalyzePlant

@@ -1,8 +1,8 @@
-package plat.plantcare.app.core.data.plant.remote
+package plat.plantcare.app.core.data.plant.general.remote
 
 import kotlinx.serialization.Serializable
 import plat.plantcare.app.core.data.models.toLocalDate
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 
 @Serializable
 data class PlantDTO(

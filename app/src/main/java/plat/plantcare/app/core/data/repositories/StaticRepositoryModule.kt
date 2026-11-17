@@ -17,9 +17,5 @@ abstract class StaticRepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindPlantReferenceRepository(impl: FakePlantReferenceRepository): PlantReferenceRepository
-
-    @Binds
-    @Singleton
     abstract fun bindWeatherRepository(impl: FakeWeatherRepository): WeatherRepository
 }

@@ -1,6 +1,5 @@
 package plat.plantcare.app.register.ui
 
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -33,39 +32,32 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import plat.plantcare.app.R
+import plat.plantcare.app.core.data.plant.characteristics.domain.AttentionLevel
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantLightExposure
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantWateringFrequency
+import plat.plantcare.app.core.data.plant.characteristics.domain.PotSize
 import plat.plantcare.app.core.navigation.AppTopBar
 import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantState
 import plat.plantcare.app.register.data.RegisterPlantViewModel
 import plat.plantcare.app.ui.theme.PlantcareTheme
-
-
-enum class WateringFrequency {
-    DAILY,
-    WEEKLY,
-    BIWEEKLY,
-    THREE_WEEKS
-}
-
-enum class AttentionLevel {
-    EASY,
-    MODERATE,
-    DEMANDING
-}
+import kotlin.math.roundToInt
 
 @Composable
 fun RegisterPlantStep3Route(
     viewModel: RegisterPlantViewModel,
-    onBack: () -> Unit,
-    onClose: () -> Unit,
-    onDiscard: () -> Unit,
+    onBackClick: () -> Unit,
+    onCloseClick: () -> Unit,
+    onDiscardClick: () -> Unit,
     onSaved: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -79,19 +71,123 @@ fun RegisterPlantStep3Route(
     RegisterPlantStep3Screen(
         state = state,
         onEvent = viewModel::handleEvent,
-        onBackClick = onBack,
-        onCloseClick = onClose,
+        onBackClick = onBackClick,
+        onCloseClick = onCloseClick,
         onSaveClick = {
-            Log.i("Registration", "Registration button was clicked")
             viewModel.handleEvent(RegisterPlantEvent.Save)
         },
         onDiscardClick = {
             viewModel.handleEvent(RegisterPlantEvent.Discard)
-            onDiscard()
+            onDiscardClick()
         }
     )
 }
 
+@Composable
+fun RegisterPlantStep3Screen(
+    onCloseClick: () -> Unit = {},
+    onSaveClick: () -> Unit = {},
+    onBackClick: () -> Unit = {},
+    onDiscardClick: () -> Unit = {},
+    state: RegisterPlantState = RegisterPlantState(),
+    onEvent: (RegisterPlantEvent) -> Unit = {}
+) {
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val draft = state.draft
+    val context = LocalContext.current
+
+    LaunchedEffect(state.error) {
+        if (state.error != null) {
+            Toast.makeText(
+                context,
+                state.error,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            AppTopBar(
+                title = "Registro Planta Paso 3",
+                onBackClick = onCloseClick,
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor)
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding + PaddingValues(horizontal = 20.dp))
+        ) {
+            StepThreeHeader()
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            PlantRegisterSummary(
+                plantImage = draft.imageUrl ?: "",
+                plantName = draft.plantName,
+                lightExposure = draft.lightExposure,
+                potSize = draft.potSize
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            WateringRoutineSection(
+                selectedFrequency = draft.wateringFrequency,
+                onFrequencySelected = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(wateringFrequency = it)
+                        )
+                    )
+                },
+                waterVolume = draft.waterVolume,
+                onWaterVolumeChange = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(waterVolume = it)
+                        )
+                    )
+                },
+            )
+
+            Spacer(modifier = Modifier.height(22.dp))
+
+            AttentionLevelSection(
+                selectedLevel = draft.attentionLevel,
+                onLevelSelected = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(attentionLevel = it)
+                        )
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            SavePlantButton(
+                onClick = onSaveClick
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            BackToStepTwoButton(
+                onClick = onBackClick
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            DiscardDraftButton(
+                onClick = onDiscardClick
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
 
 @Composable
 private fun StepThreeHeader() {
@@ -108,7 +204,7 @@ private fun StepThreeHeader() {
             Text(
                 text = "PASO 3 DE 3",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.secondary
             )
 
             Text(
@@ -129,7 +225,12 @@ private fun StepThreeHeader() {
 
 
 @Composable
-private fun PlantRegisterSummary() {
+private fun PlantRegisterSummary(
+    plantImage: String,
+    plantName: String,
+    lightExposure: PlantLightExposure,
+    potSize: PotSize
+) {
     val primary = MaterialTheme.colorScheme.primary
 
     Row(
@@ -146,16 +247,15 @@ private fun PlantRegisterSummary() {
             modifier = Modifier
                 .size(54.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     shape = MaterialTheme.shapes.small
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_plant),
+            AsyncImage(
+                model = plantImage,
                 contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.primary
+                contentScale = ContentScale.Inside
             )
         }
 
@@ -168,7 +268,7 @@ private fun PlantRegisterSummary() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Monstera Monstrita",
+                    text = plantName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = primary
@@ -180,14 +280,14 @@ private fun PlantRegisterSummary() {
                     painter = painterResource(R.drawable.ic_leaf_filled),
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.secondary
                 )
             }
 
             Text(
-                text = "Indirecta alta · Maceta M",
+                text = "${lightExposure.displayName} · Maceta ${potSize.displayName.lowercase()}",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.secondary
             )
         }
 
@@ -195,11 +295,10 @@ private fun PlantRegisterSummary() {
             painter = painterResource(R.drawable.ic_check),
             contentDescription = "Completado",
             modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.outline
+            tint = MaterialTheme.colorScheme.secondary
         )
     }
 }
-
 
 @Composable
 private fun WateringHeader() {
@@ -213,7 +312,7 @@ private fun WateringHeader() {
             modifier = Modifier
                 .size(38.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -222,7 +321,7 @@ private fun WateringHeader() {
                 painter = painterResource(R.drawable.ic_water_filled),
                 contentDescription = null,
                 modifier = Modifier.size(19.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.secondary
             )
         }
 
@@ -239,28 +338,9 @@ private fun WateringHeader() {
             )
 
             Text(
-                text = "Recomendada para esta temporada",
+                text = "En base al volumen de agua de cada riego",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.background,
-                    shape = MaterialTheme.shapes.small
-                )
-                .padding(
-                    horizontal = 10.dp,
-                    vertical = 8.dp
-                )
-        ) {
-            Text(
-                text = "Cada 7\ndías",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = primary
+                color = MaterialTheme.colorScheme.secondary
             )
         }
     }
@@ -283,7 +363,7 @@ private fun WateringFrequencyOption(
                 color = if (selected) {
                     primary
                 } else {
-                    MaterialTheme.colorScheme.background
+                    MaterialTheme.colorScheme.surfaceContainerHigh
                 },
                 shape = MaterialTheme.shapes.small
             )
@@ -308,7 +388,7 @@ private fun WateringFrequencyOption(
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                MaterialTheme.colorScheme.secondary
             }
         )
     }
@@ -317,49 +397,49 @@ private fun WateringFrequencyOption(
 
 @Composable
 private fun WateringFrequencySelector(
-    selectedFrequency: WateringFrequency,
-    onFrequencySelected: (WateringFrequency) -> Unit
+    selectedFrequency: PlantWateringFrequency,
+    onFrequencySelected: (PlantWateringFrequency) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         WateringFrequencyOption(
-            title = "Diario",
-            subtitle = "1d",
-            selected = selectedFrequency == WateringFrequency.DAILY,
+            title = "Muy Frecuente",
+            subtitle = "Menos de 1 d",
+            selected = selectedFrequency == PlantWateringFrequency.MUY_FRECUENTE,
             onClick = {
-                onFrequencySelected(WateringFrequency.DAILY)
+                onFrequencySelected(PlantWateringFrequency.MUY_FRECUENTE)
             },
             modifier = Modifier.weight(1f)
         )
 
         WateringFrequencyOption(
-            title = "Semanal",
-            subtitle = "7d",
-            selected = selectedFrequency == WateringFrequency.WEEKLY,
+            title = "Frecuente",
+            subtitle = "2-7 d",
+            selected = selectedFrequency == PlantWateringFrequency.FRECUENTE,
             onClick = {
-                onFrequencySelected(WateringFrequency.WEEKLY)
+                onFrequencySelected(PlantWateringFrequency.FRECUENTE)
             },
             modifier = Modifier.weight(1f)
         )
 
         WateringFrequencyOption(
-            title = "Quincenal",
-            subtitle = "14d",
-            selected = selectedFrequency == WateringFrequency.BIWEEKLY,
+            title = "Moderado",
+            subtitle = "8-14 d",
+            selected = selectedFrequency == PlantWateringFrequency.MODERADO,
             onClick = {
-                onFrequencySelected(WateringFrequency.BIWEEKLY)
+                onFrequencySelected(PlantWateringFrequency.MODERADO)
             },
             modifier = Modifier.weight(1f)
         )
 
         WateringFrequencyOption(
-            title = "3 sem.",
-            subtitle = "21d",
-            selected = selectedFrequency == WateringFrequency.THREE_WEEKS,
+            title = "Espaciado",
+            subtitle = "Más de 14 d",
+            selected = selectedFrequency == PlantWateringFrequency.ESPACIADO,
             onClick = {
-                onFrequencySelected(WateringFrequency.THREE_WEEKS)
+                onFrequencySelected(PlantWateringFrequency.ESPACIADO)
             },
             modifier = Modifier.weight(1f)
         )
@@ -368,14 +448,16 @@ private fun WateringFrequencySelector(
 
 
 @Composable
-private fun WaterVolumeRow() {
+private fun WaterVolumeRow(
+    waterVolume: Int
+) {
     val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.background,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 shape = MaterialTheme.shapes.small
             )
             .padding(10.dp),
@@ -385,7 +467,7 @@ private fun WaterVolumeRow() {
             painter = painterResource(R.drawable.ic_water_outline),
             contentDescription = null,
             modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.primary
+            tint = MaterialTheme.colorScheme.secondary
         )
 
         Spacer(modifier = Modifier.width(7.dp))
@@ -398,7 +480,7 @@ private fun WaterVolumeRow() {
         )
 
         Text(
-            text = "300 - 350 ml",
+            text = "$waterVolume ml",
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
             color = primary,
@@ -418,10 +500,10 @@ private fun WaterVolumeRow() {
 
 @Composable
 private fun WateringRoutineSection(
-    selectedFrequency: WateringFrequency,
-    onFrequencySelected: (WateringFrequency) -> Unit,
-    waterAmount: Float,
-    onWaterAmountChange: (Float) -> Unit
+    selectedFrequency: PlantWateringFrequency,
+    onFrequencySelected: (PlantWateringFrequency) -> Unit,
+    waterVolume: Int,
+    onWaterVolumeChange: (Int) -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
 
@@ -436,21 +518,6 @@ private fun WateringRoutineSection(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = primary
-            )
-
-            Text(
-                text = "Primavera / Verano",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .background(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = MaterialTheme.shapes.large
-                    )
-                    .padding(
-                        horizontal = 10.dp,
-                        vertical = 4.dp
-                    )
             )
         }
 
@@ -469,9 +536,14 @@ private fun WateringRoutineSection(
 
             Spacer(modifier = Modifier.height(14.dp))
 
+            val sliderValue = waterVolumeToProgress(waterVolume)
+
             Slider(
-                value = waterAmount,
-                onValueChange = onWaterAmountChange
+                value = sliderValue,
+                onValueChange = { progress ->
+                    onWaterVolumeChange(progressToWaterVolume(progress))
+                },
+                valueRange = 0f..1f
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -483,9 +555,19 @@ private fun WateringRoutineSection(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            WaterVolumeRow()
+            WaterVolumeRow(
+                waterVolume = waterVolume
+            )
         }
     }
+}
+
+private fun waterVolumeToProgress(volume: Int): Float =
+    (volume.coerceIn(100, 2000) - 100) / 1900f
+
+private fun progressToWaterVolume(progress: Float): Int {
+    val volume = 100f + progress.coerceIn(0f, 1f) * 1900f
+    return ((volume / 50f).roundToInt() * 50)
 }
 
 
@@ -521,7 +603,7 @@ private fun AttentionOption(
             tint = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                MaterialTheme.colorScheme.primary
+                MaterialTheme.colorScheme.secondary
             }
         )
 
@@ -562,153 +644,37 @@ private fun AttentionLevelSection(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AttentionOption(
-                text = "Fácil",
+                text = "Poca",
                 icon = R.drawable.ic_happy,
-                selected = selectedLevel == AttentionLevel.EASY,
+                selected = selectedLevel == AttentionLevel.POCO,
                 onClick = {
-                    onLevelSelected(AttentionLevel.EASY)
+                    onLevelSelected(AttentionLevel.POCO)
                 },
                 modifier = Modifier.weight(1f)
             )
 
             AttentionOption(
-                text = "Moderado",
+                text = "Media",
                 icon = R.drawable.ic_pot2,
-                selected = selectedLevel == AttentionLevel.MODERATE,
+                selected = selectedLevel == AttentionLevel.MEDIO,
                 onClick = {
-                    onLevelSelected(AttentionLevel.MODERATE)
+                    onLevelSelected(AttentionLevel.MEDIO)
                 },
                 modifier = Modifier.weight(1f)
             )
 
             AttentionOption(
-                text = "Exigente",
+                text = "Demandante",
                 icon = R.drawable.ic_complex,
-                selected = selectedLevel == AttentionLevel.DEMANDING,
+                selected = selectedLevel == AttentionLevel.DEMANDANTE,
                 onClick = {
-                    onLevelSelected(AttentionLevel.DEMANDING)
+                    onLevelSelected(AttentionLevel.DEMANDANTE)
                 },
                 modifier = Modifier.weight(1f)
             )
         }
     }
 }
-
-
-@Composable
-private fun AttributeChip(
-    text: String,
-    @DrawableRes icon: Int,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    Row(
-        modifier = Modifier
-            .background(
-                color = if (selected) {
-                    primary
-                } else {
-                    MaterialTheme.colorScheme.surface
-                },
-                shape = MaterialTheme.shapes.large
-            )
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = 11.dp,
-                vertical = 7.dp
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(5.dp)
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            modifier = Modifier.size(15.dp),
-            tint = if (selected) {
-                MaterialTheme.colorScheme.onPrimary
-            } else {
-                MaterialTheme.colorScheme.primary
-            }
-        )
-
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            color = if (selected) {
-                MaterialTheme.colorScheme.onPrimary
-            } else {
-                primary
-            }
-        )
-
-        if (selected) {
-            Text(
-                text = "✓",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-    }
-}
-
-
-@Composable
-private fun PlantAttributesSection(
-    easyCare: Boolean,
-    airPurifier: Boolean,
-    ownCutting: Boolean,
-    onEasyCareChange: (Boolean) -> Unit,
-    onAirPurifierChange: (Boolean) -> Unit,
-    onOwnCuttingChange: (Boolean) -> Unit
-) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    Column {
-        Text(
-            text = "Atributos y Etiquetas",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = primary
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            AttributeChip(
-                text = "Fácil de cuidar",
-                icon = R.drawable.ic_leaf2,
-                selected = easyCare,
-                onClick = {
-                    onEasyCareChange(!easyCare)
-                }
-            )
-
-            AttributeChip(
-                text = "Purificadora de aire",
-                icon = R.drawable.ic_wind2,
-                selected = airPurifier,
-                onClick = {
-                    onAirPurifierChange(!airPurifier)
-                }
-            )
-
-            AttributeChip(
-                text = "Esqueje propio",
-                icon = R.drawable.ic_scissors,
-                selected = ownCutting,
-                onClick = {
-                    onOwnCuttingChange(!ownCutting)
-                }
-            )
-        }
-    }
-}
-
 
 @Composable
 private fun SavePlantButton(
@@ -756,7 +722,7 @@ private fun BackToStepTwoButton(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 shape = MaterialTheme.shapes.medium
             )
             .clickable(onClick = onClick)
@@ -769,144 +735,6 @@ private fun BackToStepTwoButton(
             fontWeight = FontWeight.Medium,
             color = primary
         )
-    }
-}
-
-
-@Composable
-fun RegisterPlantStep3Screen(
-    onCloseClick: () -> Unit = {},
-    onSaveClick: () -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onDiscardClick: () -> Unit = {},
-    state: RegisterPlantState = RegisterPlantState(),
-    onEvent: (RegisterPlantEvent) -> Unit = {}
-) {
-    val backgroundColor = MaterialTheme.colorScheme.background
-    val draft = state.draft
-
-    val selectedFrequency = draft.wateringFrequency
-    val waterAmount = draft.waterAmount
-    val selectedLevel = draft.attentionLevel
-    val easyCare = draft.easyCare
-    val airPurifier = draft.airPurifier
-    val ownCutting = draft.ownCutting
-    val context = LocalContext.current
-
-    LaunchedEffect(state.error) {
-        if (state.error != null) {
-            Toast.makeText(
-                context,
-                state.error,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                title = "Registro Planta Paso 3",
-                onBackClick = onCloseClick,
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-                .verticalScroll(rememberScrollState())
-                .padding(innerPadding + PaddingValues(horizontal = 20.dp))
-        ) {
-            StepThreeHeader()
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            PlantRegisterSummary()
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            WateringRoutineSection(
-                selectedFrequency = selectedFrequency,
-                onFrequencySelected = {
-                    onEvent(
-                        RegisterPlantEvent.ChangeDraft(
-                            draft.copy(wateringFrequency = it)
-                        )
-                    )
-                },
-                waterAmount = waterAmount,
-                onWaterAmountChange = {
-                    onEvent(
-                        RegisterPlantEvent.ChangeDraft(
-                            draft.copy(waterAmount = it)
-                        )
-                    )
-                }
-            )
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            AttentionLevelSection(
-                selectedLevel = selectedLevel,
-                onLevelSelected = {
-                    onEvent(
-                        RegisterPlantEvent.ChangeDraft(
-                            draft.copy(attentionLevel = it)
-                        )
-                    )
-                }
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            PlantAttributesSection(
-                easyCare = easyCare,
-                airPurifier = airPurifier,
-                ownCutting = ownCutting,
-                onEasyCareChange = {
-                    onEvent(
-                        RegisterPlantEvent.ChangeDraft(
-                            draft.copy(easyCare = it)
-                        )
-                    )
-                },
-                onAirPurifierChange = {
-                    onEvent(
-                        RegisterPlantEvent.ChangeDraft(
-                            draft.copy(airPurifier = it)
-                        )
-                    )
-                },
-                onOwnCuttingChange = {
-                    onEvent(
-                        RegisterPlantEvent.ChangeDraft(
-                            draft.copy(ownCutting = it)
-                        )
-                    )
-                }
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            SavePlantButton(
-                onClick = onSaveClick
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            BackToStepTwoButton(
-                onClick = onBackClick
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            DiscardDraftButton(
-                onClick = onDiscardClick
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-        }
     }
 }
 

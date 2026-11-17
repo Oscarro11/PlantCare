@@ -1,6 +1,6 @@
 package plat.plantcare.app.diagnosis.domain
 
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 
 /** Registered requirements, not measurements of the plant's current environment. */
 data class DiagnosisRequirements(
@@ -9,7 +9,9 @@ data class DiagnosisRequirements(
     val humidityLevel: Int?,
     val preferredClimate: String,
     val pot: String,
-    val substrate: String
+    val substrate: String,
+    val wateringRange: String? = null,
+    val humidityRange: String? = null
 )
 
 data class DiagnosisContext(

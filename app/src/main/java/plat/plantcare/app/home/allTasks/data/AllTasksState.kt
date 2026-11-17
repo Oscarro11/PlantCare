@@ -1,6 +1,6 @@
 package plat.plantcare.app.home.allTasks.data
 
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.home.home.data.HomeTaskCardUiState
 
 data class AllTasksState(

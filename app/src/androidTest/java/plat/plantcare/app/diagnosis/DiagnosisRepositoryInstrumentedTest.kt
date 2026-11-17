@@ -20,7 +20,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import plat.plantcare.app.authentication.AuthRepository
 import plat.plantcare.app.authentication.domain.AuthUser
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import java.util.UUID
 
 /** Tests local Firestore, not the external Gemini service. No image leaves the device. */

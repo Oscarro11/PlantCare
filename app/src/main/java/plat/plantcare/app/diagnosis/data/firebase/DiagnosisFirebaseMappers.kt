@@ -1,5 +1,7 @@
 package plat.plantcare.app.diagnosis.data.firebase
 
+import plat.plantcare.app.core.data.plant.characteristics.remote.toCommonDTO
+import plat.plantcare.app.core.data.plant.characteristics.remote.toDomain
 import com.google.firebase.Timestamp
 import java.time.ZoneId
 import java.util.Date
@@ -29,3 +31,17 @@ internal fun PlantCharacteristicsFirebaseDTO.toDiagnosisRequirements() = Diagnos
     requiredLight, wateringFrequencyDays.takeIf { it > 0 }, humidityLevel.takeIf { it in 1..100 },
     preferredClimate, pot, substrate
 )
+
+internal fun plat.plantcare.app.core.data.plant.characteristics.remote.PlantCharacteristicsFirebaseDTO.toDiagnosisRequirements(): DiagnosisRequirements {
+    val model = toCommonDTO().toDomain()
+    return DiagnosisRequirements(
+        requiredLight = if (lightExposure > 0) model.lightExposure.displayName else "",
+        wateringFrequencyDays = null,
+        humidityLevel = null,
+        preferredClimate = if (currentClimate > 0) model.currentClimate.displayName else "",
+        pot = listOf(potType, if (potSize > 0) model.potSize.displayName else "").filter { it.isNotBlank() }.joinToString(" · "),
+        substrate = substrate,
+        wateringRange = model.wateringFrequencyDays.dayRange.takeIf { wateringFrequencyDays > 0 },
+        humidityRange = model.humidityLevel.percentage.takeIf { humidityLevel > 0 }
+    )
+}

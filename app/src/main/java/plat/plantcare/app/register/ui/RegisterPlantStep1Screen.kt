@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import plat.plantcare.app.R
 import plat.plantcare.app.core.navigation.AppTopBar
+import plat.plantcare.app.core.ui.LocalDatePickerDialog
 import plat.plantcare.app.core.ui.PhotoCameraButton
 import plat.plantcare.app.core.ui.PhotoGalleryButton
 import plat.plantcare.app.register.data.RegisterPlantDraft
@@ -49,6 +50,7 @@ import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantState
 import plat.plantcare.app.register.data.RegisterPlantViewModel
 import plat.plantcare.app.ui.theme.PlantcareTheme
+import java.time.LocalDate
 
 data class PlantLocation(
     val name: String,
@@ -183,7 +185,21 @@ fun RegisterPlantStep1Screen(
                     )
                 },
                 onNewLocationClick = {},
-                onDateClick = {}
+                arrivalDate = draft.arrivalDate,
+                onArrivalDateChange = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(arrivalDate = it)
+                        )
+                    )
+                },
+                onArrivalDateDismiss = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(arrivalDate = LocalDate.now())
+                        )
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -254,63 +270,6 @@ private fun MainPlantPhotoPlaceholder(
         )
     }
 }
-
-@Composable
-private fun PhotoThumbnail(
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(64.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                shape = MaterialTheme.shapes.extraSmall
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_images),
-            contentDescription = "Fotografía",
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.secondary
-        )
-    }
-}
-
-
-@Composable
-private fun AddPhotoButton(
-    onClick: () -> Unit
-) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    Column(
-        modifier = Modifier
-            .size(64.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                shape = MaterialTheme.shapes.extraSmall
-            )
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_cameraplus),
-            contentDescription = "Añadir fotografía",
-            modifier = Modifier.size(18.dp),
-            tint = primary
-        )
-
-        Text(
-            text = "Añadir",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.secondary
-        )
-    }
-}
-
 
 @Composable
 private fun PhotoSection(
@@ -507,16 +466,14 @@ private fun LocationSelector(
     }
 }
 
-
 @Composable
 private fun ArrivalDateSelector(
-    onDateClick: () -> Unit
+    date: LocalDate,
+    onDateClick: () -> Unit,
+    onTodayClick: () -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
-
-    var todaySelected by remember {
-        mutableStateOf(false)
-    }
+    val todaySelected = date == LocalDate.now()
 
     Column {
         Text(
@@ -552,11 +509,7 @@ private fun ArrivalDateSelector(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = if (todaySelected) {
-                        "Hoy"
-                    } else {
-                        "12 de Octubre, 2024"
-                    },
+                    text = date.toString(),
                     style = MaterialTheme.typography.bodySmall,
                     color = primary
                 )
@@ -573,7 +526,7 @@ private fun ArrivalDateSelector(
                         shape = MaterialTheme.shapes.extraSmall
                     )
                     .clickable {
-                        todaySelected = !todaySelected
+                        onTodayClick()
                     }
                     .padding(
                         horizontal = 16.dp,
@@ -595,6 +548,34 @@ private fun ArrivalDateSelector(
     }
 }
 
+@Composable
+private fun ArrivalDateSection(
+    arrivalDate: LocalDate,
+    onArrivalDateChange: (LocalDate) -> Unit,
+    onArrivalDateDismiss: () -> Unit
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    ArrivalDateSelector(
+        date = arrivalDate,
+        onDateClick = { showDatePicker = true },
+        onTodayClick = onArrivalDateDismiss
+    )
+
+    if (showDatePicker) {
+        LocalDatePickerDialog(
+            initialDate = arrivalDate,
+            onDateSelected = {
+                onArrivalDateChange(it)
+                showDatePicker = false
+            },
+            onDismiss = {
+                onArrivalDateDismiss()
+                showDatePicker = false
+            }
+        )
+    }
+}
 
 @Composable
 private fun IdentitySection(
@@ -603,7 +584,9 @@ private fun IdentitySection(
     selectedLocation: String,
     onLocationSelected: (String) -> Unit,
     onNewLocationClick: () -> Unit,
-    onDateClick: () -> Unit
+    arrivalDate: LocalDate,
+    onArrivalDateChange: (LocalDate) -> Unit,
+    onArrivalDateDismiss: () -> Unit,
 ) {
     val primary = MaterialTheme.colorScheme.primary
 
@@ -693,8 +676,10 @@ private fun IdentitySection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ArrivalDateSelector(
-            onDateClick = onDateClick
+        ArrivalDateSection(
+            arrivalDate = arrivalDate,
+            onArrivalDateChange = onArrivalDateChange,
+            onArrivalDateDismiss = onArrivalDateDismiss
         )
     }
 }
