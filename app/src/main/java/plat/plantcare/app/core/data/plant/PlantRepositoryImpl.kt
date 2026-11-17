@@ -1,15 +1,18 @@
 package plat.plantcare.app.core.data.plant
 
 import android.util.Log
+import android.util.Log.e
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import plat.plantcare.app.authentication.SessionProvider
 import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
 import plat.plantcare.app.core.data.plant.characteristics.local.PlantCharacteristicsDAO
@@ -33,17 +36,20 @@ import plat.plantcare.app.core.data.plant.general.local.toDomain
 import plat.plantcare.app.core.data.plant.general.local.toEntity
 import plat.plantcare.app.core.data.plant.general.remote.PlantDataSourceApi
 import plat.plantcare.app.core.data.plant.general.remote.toCommonDTO
+import plat.plantcare.app.core.network.NetworkMonitor
 import plat.plantcare.app.core.photos.local.LocalImageStorage
 import plat.plantcare.app.core.photos.local.isRemoteImage
 import plat.plantcare.app.core.photos.remote.OnlineImageStorage
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
 
 class PlantImageException(cause: Throwable) : Exception("No se pudo subir la foto", cause)
 
 @Singleton
 class PlantRepositoryImpl @Inject constructor(
     private val session: SessionProvider,
+    private val network: NetworkMonitor,
     private val remoteImages: OnlineImageStorage,
     private val localImages: LocalImageStorage,
     private val plantApi: PlantDataSourceApi,
@@ -103,44 +109,38 @@ class PlantRepositoryImpl @Inject constructor(
 
         val ownerId = requireOwnerId()
         val id = plantApi.newId(ownerId)
+        val ownCharacteristics = characteristics.copy(plantId = id)
 
+        //Local storage, whether device is online or not
         val localImage = newPlant.imageUrl.localImageOrNull()
-        val uploadedUrl = localImage?.let { uploadImage(ownerId, id, it) }
-
+        val keptImage = localImage?.let { localImages.keep(it) }
         val plant = Plant(
             id = id,
             ownerId = ownerId,
             name = newPlant.name.trim(),
-            imageUrl = uploadedUrl ?: newPlant.imageUrl.takeIf { it.isNotBlank() },
+            imageUrl = keptImage ?: newPlant.imageUrl.takeIf { it.isNotBlank() },
             location = newPlant.location.trim(),
             birthDate = newPlant.birthDate,
             referenceId = null,
             favorite = false
         )
-
-        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.create(ownerId, plant.toCommonDTO()) }
         plantDao.updateOrInsertPlant(plant.toEntity())
+        plantCharacteristicsDao.updateOrInsertPlantCharacteristics(ownCharacteristics.toEntity())
 
-        plantCharacteristicsApi.addToPlant(ownerId, id, characteristics.toCommonDTO())
-        plantCharacteristicsDao.updateOrInsertPlantCharacteristics(characteristics.copy( plantId = id ).toEntity())
+        //Online features, they are skipped if device is offline
+        if (network.isOnline()) {
+            val photo = keptImage?.let { localImages.readForUpload(it) }
 
-        if (localImage != null) {
-            val considerations = plantConsiderationsAiApi.generateConsiderations(
-                speciesName = null,
-                photo = localImages.readForUpload(localImage)
-            )
+            remote("plant", PUSH_TIMEOUT_MS) {
+                pushNewPlant(ownerId, plant, ownCharacteristics, photo, keptImage)
+            }
 
-            plantConsiderationsStorageApi.addToPlant(ownerId, id, considerations.toCommonDTO())
-            plantConsiderationsDao.updateOrInsertPlantConsiderations(
-                considerations
-                    .toCommonDTO()
-                    .copy(plantId = id)
-                    .toDomain()
-                    .toEntity()
-            )
+            if (photo != null) {
+                remote("considerations", AI_TIMEOUT_MS) {
+                    addConsiderations(ownerId, id, photo)
+                }
+            }
         }
-
-        localImage?.let { localImages.delete(it) }
         return id
     }
 
@@ -148,35 +148,92 @@ class PlantRepositoryImpl @Inject constructor(
         val ownerId = requireOwnerId()
         val previousUrl = plantDao.observePlant(plant.id).first()?.toDomain()?.imageUrl
 
+        //Local storage
         val localImage = plant.imageUrl.localImageOrNull()
-        val uploadedUrl = localImage?.let { uploadImage(ownerId, plant.id, it) }
-        val updated = plant.copy(
-            imageUrl = uploadedUrl ?: plant.imageUrl?.takeIf { it.isNotBlank() }
-        )
+        val keptImage = localImage?.let { localImages.keep(it) }
 
-        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.update(ownerId, updated.toCommonDTO()) }
+        val updated = plant.copy(
+            imageUrl = keptImage ?: plant.imageUrl?.takeIf { it.isNotBlank() }
+        )
         plantDao.updateOrInsertPlant(updated.toEntity())
 
-        if (previousUrl != null && previousUrl != updated.imageUrl && previousUrl.isRemoteImage()) {
-            bestEffort { remoteImages.delete(previousUrl) }
+        if (previousUrl != null && previousUrl != updated.imageUrl && !previousUrl.isRemoteImage()) {
+            localImages.delete(previousUrl)
         }
-        localImage?.let { localImages.delete(it) }
+
+        //Online storage
+        if (network.isOnline()) {
+            remote("update plant", PUSH_TIMEOUT_MS) { pushUpdate(ownerId, updated, previousUrl) }
+        }
     }
 
     override suspend fun setFavorite(plantId: String, favorite: Boolean) {
         val ownerId = requireOwnerId()
 
-        plantDao.togglePlantFavorite(plantId)
-        try {
-            plantApi.setFavorite(ownerId, plantId, favorite)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            withContext(NonCancellable) { plantDao.togglePlantFavorite(plantId) }
-            throw e
+        plantDao.setPlantFavorite(plantId, favorite)
+        if (network.isOnline()) {
+            remote("favorite", REMOTE_TIMEOUT_MS) {
+                plantApi.setFavorite(ownerId, plantId, favorite)
+            }
         }
     }
 
+    //--------Cloud functions---------------
+    private suspend fun pushNewPlant(
+        ownerId: String,
+        plant: Plant,
+        characteristics: PlantCharacteristics,
+        photo: ByteArray?,
+        keptImage: String?
+    ) {
+        val uploadedUrl = photo?.let { uploadImage(ownerId, plant.id, it) }
+        val remotePlant = plant.copy(imageUrl = uploadedUrl ?: plant.imageUrl)
+        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.create(ownerId, remotePlant.toCommonDTO()) }
+
+        plantDao.updateOrInsertPlant(remotePlant.toEntity())
+        keptImage?.let { localImages.delete(it) }
+
+        remote("characteristics", REMOTE_TIMEOUT_MS) {
+            plantCharacteristicsApi.addToPlant(ownerId, plant.id, characteristics.toCommonDTO())
+        }
+    }
+
+    private suspend fun pushUpdate(ownerId: String, updated: Plant, previousUrl: String?) {
+        val localImage = updated.imageUrl.localImageOrNull()
+        val uploadedUrl = localImage?.let {
+            uploadImage(ownerId, updated.id, localImages.readForUpload(it))
+        }
+        val remotePlant = updated.copy(imageUrl = uploadedUrl ?: updated.imageUrl)
+        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.update(ownerId, remotePlant.toCommonDTO()) }
+
+        plantDao.updateOrInsertPlant(remotePlant.toEntity())
+        localImage?.let { localImages.delete(it) }
+
+        if (previousUrl != null && previousUrl != remotePlant.imageUrl && previousUrl.isRemoteImage()) {
+            bestEffort { remoteImages.delete(previousUrl) }
+        }
+    }
+
+    private suspend fun addConsiderations(ownerId: String, plantId: String, photo: ByteArray) {
+        val considerations = plantConsiderationsAiApi.generateConsiderations(
+            speciesName = null,
+            photo = photo
+        )
+
+        plantConsiderationsDao.updateOrInsertPlantConsiderations(
+            considerations
+                .toCommonDTO()
+                .copy(plantId = plantId)
+                .toDomain()
+                .toEntity()
+        )
+        remote("considerations upload", REMOTE_TIMEOUT_MS) {
+            plantConsiderationsStorageApi.addToPlant(ownerId, plantId, considerations.toCommonDTO())
+        }
+    }
+
+
+    //--------Helper functions---------------
     private suspend fun requireOwnerId(): String =
         session.sessionUid.first()?.takeIf { it.isNotBlank() }
             ?: error("No hay usuario con sesión iniciada")
@@ -184,9 +241,8 @@ class PlantRepositoryImpl @Inject constructor(
     private fun String?.localImageOrNull(): String? =
         this?.takeIf { it.isNotBlank() && !it.isRemoteImage() }
 
-    private suspend fun uploadImage(ownerId: String, plantId: String, localImage: String): String =
+    private suspend fun uploadImage(ownerId: String, plantId: String, bytes: ByteArray): String =
         try {
-            val bytes = localImages.readForUpload(localImage)
             remoteImages.upload(
                 path = "usuarios/$ownerId/plantas/$plantId-${System.currentTimeMillis()}.jpg",
                 bytes = bytes
@@ -195,6 +251,20 @@ class PlantRepositoryImpl @Inject constructor(
             throw e
         } catch (e: Exception) {
             throw PlantImageException(e)
+        }
+
+    private suspend fun remote(operation: String, timeoutMs: Long, block: suspend () -> Unit): Boolean =
+        try {
+            withTimeout(timeoutMs.milliseconds) { block() }
+            true
+        } catch (e: TimeoutCancellationException) {
+            Log.w(TAG, "Cloud step timed out, keeping local data: $operation")
+            false
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Cloud step failed, keeping local data: $operation", e)
+            false
         }
 
     private suspend fun deleteUploadedPhotoIfFails(uploadedUrl: String?, block: suspend () -> Unit) {
@@ -222,5 +292,8 @@ class PlantRepositoryImpl @Inject constructor(
 
     private companion object {
         const val TAG = "PlantRepository"
+        const val REMOTE_TIMEOUT_MS = 10_000L
+        const val PUSH_TIMEOUT_MS = 30_000L
+        const val AI_TIMEOUT_MS = 30_000L
     }
 }

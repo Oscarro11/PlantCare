@@ -18,7 +18,7 @@ import plat.plantcare.app.core.data.user.local.UserEntity
         PlantCharacteristicsEntity::class,
         PlantConsiderationsEntity::class
     ],
-    version = 10
+    version = 11
 )
 abstract class AppDatabase: RoomDatabase() {
     abstract fun userDAO(): UserDAO

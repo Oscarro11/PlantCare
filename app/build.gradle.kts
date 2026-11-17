@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.ai)
+    implementation(libs.firebase.appcheck)
 
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.annotation)

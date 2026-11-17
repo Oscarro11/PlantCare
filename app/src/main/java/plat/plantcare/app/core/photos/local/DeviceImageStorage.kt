@@ -24,6 +24,8 @@ class DeviceImageStorage @Inject constructor(
 
     private val importDir get() = File(context.filesDir, "plant_imports").apply { mkdirs() }
 
+    private val keepDir get() = File(context.filesDir, "plant_photos").apply { mkdirs() }
+
     private val cameraDir get() = File(context.cacheDir, "photos")
     private val cameraAuthority get() = "${context.packageName}.fileprovider"
 
@@ -61,6 +63,21 @@ class DeviceImageStorage @Inject constructor(
                     runCatching { context.contentResolver.delete(image.toUri(), null, null) }
                 else -> Unit
             }
+        }
+    }
+
+    override suspend fun keep(image: String): String {
+        val imported = if (ownedPath(image) != null) image else importImage(image)
+
+        return withContext(Dispatchers.IO) {
+            val source = File(requireNotNull(ownedPath(imported)))
+            if (source.parentFile?.canonicalPath == keepDir.canonicalPath) return@withContext imported
+            val target = File(keepDir, source.name)
+            if (!source.renameTo(target)) {
+                source.copyTo(target, overwrite = true)
+                source.delete()
+            }
+            Uri.fromFile(target).toString()
         }
     }
 

@@ -20,8 +20,8 @@ interface PlantDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateOrInsertPlant(plant: PlantEntity)
 
-    @Query("UPDATE plants SET favorite = NOT favorite WHERE id = :id")
-    suspend fun togglePlantFavorite(id: String)
+    @Query("UPDATE plants SET favorite = :favorite WHERE id = :id")
+    suspend fun setPlantFavorite(id: String, favorite: Boolean)
 
     @Query("DELETE FROM plants WHERE id = :id")
     suspend fun deletePlant(id: String)

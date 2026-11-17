@@ -1,5 +1,6 @@
 package plat.plantcare.app.core.network
 
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,4 +15,13 @@ object AppNetworkModule {
     @Provides @Singleton
     fun providePlantNetHttpClient(): HttpClient =
         HttpClientFactory.create(Service.PLANT_NET)
+
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class AppNetworkModule2 {
+
+    @Binds @Singleton
+    abstract fun bindNetworkMonitor(impl: AndroidNetworkMonitor): NetworkMonitor
 }
