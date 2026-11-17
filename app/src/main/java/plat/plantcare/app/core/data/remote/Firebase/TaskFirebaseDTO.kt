@@ -2,36 +2,25 @@ package plat.plantcare.app.core.data.remote.Firebase
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.IgnoreExtraProperties
 import plat.plantcare.app.core.data.models.Task
 import plat.plantcare.app.core.data.models.TaskAction
 import plat.plantcare.app.core.data.models.toLocalDate
+import java.time.LocalDate
 import java.time.ZoneId
 
+@IgnoreExtraProperties
 data class TaskFirebaseDTO(
-    @DocumentId val id: String = "",
-    val plantId: String = "",
-    val dueDate: String? = null,      // Fecha límite (es un string de YYYY-MM-DD, mas facil de manejar)
-    val action: String = "",             // Stored as String so unknown values don't crash
-    val description: String = "",
-    val completed: Boolean = false,
-    val completedAt: Timestamp? = null
-    // `urgency` is intentionally NOT stored: it is derived from dueDate
+    @DocumentId val id: String = "", val plantId: String = "", val dueDate: String? = null,
+    val action: String = "", val description: String = "", val completed: Boolean = false,
+    val completedAt: Timestamp? = null, val completedOn: String? = null,
+    val recurrenceDays: Int? = null, val parentTaskId: String? = null,
+    val plantName: String = "", val plantImageUrl: String = "", val plantLocation: String = ""
 )
-
-/**
- * Returns null when the document has no due date, so callers can use `mapNotNull`.
- * Pass [zone] explicitly in tests; it defaults to the device zone.
- */
 fun TaskFirebaseDTO.toModel(zone: ZoneId = ZoneId.systemDefault()): Task? {
-    if (dueDate == null) return null
-    val completionDate = completedAt?.toLocalDate(zone)
-    return Task(
-        id = id,
-        plantId = plantId,
-        dueDate = dueDate.toLocalDate(),
-        action = TaskAction.fromName(action),
-        description = description,
-        completed = completed,
-        completedAt = completionDate
-    )
+    val due = runCatching { LocalDate.parse(dueDate) }.getOrNull() ?: return null
+    val completion = completedOn?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        ?: completedAt?.toLocalDate(zone)
+    return Task(id, plantId, due, TaskAction.fromName(action), description, completed,
+        completion, recurrenceDays?.takeIf { it > 0 }, parentTaskId, plantName, plantImageUrl, plantLocation)
 }

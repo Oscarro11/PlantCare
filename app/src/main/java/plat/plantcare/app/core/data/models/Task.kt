@@ -17,7 +17,13 @@ data class Task(
     val action: TaskAction,
     val description: String,
     val completed: Boolean,
-    val completedAt: LocalDate?
+    val completedAt: LocalDate?,
+    val recurrenceDays: Int? = null,
+    val parentTaskId: String? = null,
+    val plantName: String = "",
+    val plantImageUrl: String = "",
+    val plantLocation: String = "",
+    val isSynced: Boolean = true
 ) {
     /** Derived, never stored. Pass [today] to make it testable. */
     fun urgency(today: LocalDate = LocalDate.now()): TaskUrgency = dueDate.toUrgency(today)
@@ -30,7 +36,12 @@ fun Task.toFirebaseDTO(zone: ZoneId = ZoneId.systemDefault()): TaskFirebaseDTO =
         dueDate = dueDate.toString(),
         action = action.name,
         description = description,
-        completed = completed
+        completed = completed,
+        completedAt = completedAt?.toTimestamp(zone),
+        completedOn = completedAt?.toString(),
+        recurrenceDays = recurrenceDays,
+        parentTaskId = parentTaskId,
+        plantName = plantName, plantImageUrl = plantImageUrl, plantLocation = plantLocation
     )
 
 enum class TaskUrgency {

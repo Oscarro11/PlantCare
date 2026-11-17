@@ -7,19 +7,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +38,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import plat.plantcare.app.R
@@ -191,26 +191,27 @@ fun RegisterPlantStep3Screen(
 
 @Composable
 private fun StepThreeHeader() {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = "PASO 3 DE 3",
-                fontSize = 9.sp,
-                color = MaterialTheme.colorScheme.secondary
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
                 text = "Rutina de Cuidados",
-                fontSize = 9.sp,
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Medium,
-                color = darkGreen
+                color = primary
             )
         }
 
@@ -230,14 +231,14 @@ private fun PlantRegisterSummary(
     lightExposure: PlantLightExposure,
     potSize: PotSize
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(
                 color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(14.dp)
+                shape = MaterialTheme.shapes.medium
             )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -246,8 +247,8 @@ private fun PlantRegisterSummary(
             modifier = Modifier
                 .size(54.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(10.dp)
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = MaterialTheme.shapes.small
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -268,9 +269,9 @@ private fun PlantRegisterSummary(
             ) {
                 Text(
                     text = plantName,
-                    fontSize = 15.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = darkGreen
+                    color = primary
                 )
 
                 Spacer(modifier = Modifier.width(5.dp))
@@ -279,14 +280,14 @@ private fun PlantRegisterSummary(
                     painter = painterResource(R.drawable.ic_leaf_filled),
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.secondary
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
 
             Text(
                 text = "${lightExposure.displayName} · Maceta ${potSize.displayName.lowercase()}",
-                fontSize = 9.sp,
-                color = MaterialTheme.colorScheme.secondary
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -294,14 +295,14 @@ private fun PlantRegisterSummary(
             painter = painterResource(R.drawable.ic_check),
             contentDescription = "Completado",
             modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.secondary
+            tint = MaterialTheme.colorScheme.outline
         )
     }
 }
 
 @Composable
 private fun WateringHeader() {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -311,7 +312,7 @@ private fun WateringHeader() {
             modifier = Modifier
                 .size(38.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                    color = MaterialTheme.colorScheme.primaryContainer,
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -320,7 +321,7 @@ private fun WateringHeader() {
                 painter = painterResource(R.drawable.ic_water_filled),
                 contentDescription = null,
                 modifier = Modifier.size(19.dp),
-                tint = MaterialTheme.colorScheme.secondary
+                tint = MaterialTheme.colorScheme.primary
             )
         }
 
@@ -331,15 +332,15 @@ private fun WateringHeader() {
         ) {
             Text(
                 text = "Frecuencia de riego",
-                fontSize = 15.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = darkGreen
+                color = primary
             )
 
             Text(
                 text = "En base al volumen de agua de cada riego",
-                fontSize = 9.sp,
-                color = MaterialTheme.colorScheme.secondary
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -354,17 +355,17 @@ private fun WateringFrequencyOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = modifier
             .background(
                 color = if (selected) {
-                    darkGreen
+                    primary
                 } else {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                    MaterialTheme.colorScheme.background
                 },
-                shape = RoundedCornerShape(9.dp)
+                shape = MaterialTheme.shapes.small
             )
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp),
@@ -372,22 +373,22 @@ private fun WateringFrequencyOption(
     ) {
         Text(
             text = title,
-            fontSize = 9.sp,
+            style = MaterialTheme.typography.labelSmall,
             maxLines = 1,
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                darkGreen
+                primary
             }
         )
 
         Text(
             text = subtitle,
-            fontSize = 8.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
             } else {
-                MaterialTheme.colorScheme.secondary
+                MaterialTheme.colorScheme.onSurfaceVariant
             }
         )
     }
@@ -450,14 +451,14 @@ private fun WateringFrequencySelector(
 private fun WaterVolumeRow(
     waterVolume: Int
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(10.dp)
+                color = MaterialTheme.colorScheme.background,
+                shape = MaterialTheme.shapes.small
             )
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -466,27 +467,27 @@ private fun WaterVolumeRow(
             painter = painterResource(R.drawable.ic_water_outline),
             contentDescription = null,
             modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.secondary
+            tint = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.width(7.dp))
 
         Text(
             text = "Volumen aprox. estimado:",
-            fontSize = 9.sp,
-            color = darkGreen,
+            style = MaterialTheme.typography.labelSmall,
+            color = primary,
             modifier = Modifier.weight(1f)
         )
 
         Text(
             text = "$waterVolume ml",
-            fontSize = 10.sp,
+            style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = darkGreen,
+            color = primary,
             modifier = Modifier
                 .background(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(20.dp)
+                    shape = MaterialTheme.shapes.large
                 )
                 .padding(
                     horizontal = 10.dp,
@@ -504,19 +505,19 @@ private fun WateringRoutineSection(
     waterVolume: Int,
     onWaterVolumeChange: (Int) -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
                 text = "Rutina de Cuidados",
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = darkGreen
+                color = primary
             )
         }
 
@@ -527,7 +528,7 @@ private fun WateringRoutineSection(
                 .fillMaxWidth()
                 .background(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(14.dp)
+                    shape = MaterialTheme.shapes.medium
                 )
                 .padding(14.dp)
         ) {
@@ -578,18 +579,18 @@ private fun AttentionOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = modifier
-            .height(72.dp)
+            .heightIn(min = 80.dp)
             .background(
                 color = if (selected) {
-                    darkGreen
+                    primary
                 } else {
                     MaterialTheme.colorScheme.surface
                 },
-                shape = RoundedCornerShape(12.dp)
+                shape = MaterialTheme.shapes.medium
             )
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -602,7 +603,7 @@ private fun AttentionOption(
             tint = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                MaterialTheme.colorScheme.secondary
+                MaterialTheme.colorScheme.primary
             }
         )
 
@@ -610,11 +611,11 @@ private fun AttentionOption(
 
         Text(
             text = text,
-            fontSize = 10.sp,
+            style = MaterialTheme.typography.bodySmall,
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                darkGreen
+                primary
             }
         )
     }
@@ -626,14 +627,14 @@ private fun AttentionLevelSection(
     selectedLevel: AttentionLevel,
     onLevelSelected: (AttentionLevel) -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column {
         Text(
             text = "Nivel de atención",
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = darkGreen
+            color = primary
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -679,14 +680,14 @@ private fun AttentionLevelSection(
 private fun SavePlantButton(
     onClick: () -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = darkGreen,
-                shape = RoundedCornerShape(12.dp)
+                color = primary,
+                shape = MaterialTheme.shapes.medium
             )
             .clickable(onClick = onClick)
             .padding(vertical = 15.dp),
@@ -695,7 +696,7 @@ private fun SavePlantButton(
     ) {
         Text(
             text = "✓",
-            fontSize = 17.sp,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onPrimary
         )
 
@@ -703,7 +704,7 @@ private fun SavePlantButton(
 
         Text(
             text = "Guardar y Añadir a Mi Colección",
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onPrimary
         )
@@ -715,14 +716,14 @@ private fun SavePlantButton(
 private fun BackToStepTwoButton(
     onClick: () -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(12.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shape = MaterialTheme.shapes.medium
             )
             .clickable(onClick = onClick)
             .padding(vertical = 14.dp),
@@ -730,9 +731,9 @@ private fun BackToStepTwoButton(
     ) {
         Text(
             text = "←  Volver al Paso 2",
-            fontSize = 13.sp,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Medium,
-            color = darkGreen
+            color = primary
         )
     }
 }

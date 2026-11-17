@@ -50,6 +50,7 @@ ksp {
 }
 
 dependencies {
+    implementation(libs.androidx.work.runtime)
     implementation(platform(libs.androidx.compose.bom))
 
     implementation(platform(libs.firebase.bom))
@@ -59,7 +60,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.ai)
-    implementation(libs.firebase.appcheck)
+    debugImplementation(libs.firebase.appcheck.debug)
+    releaseImplementation(libs.firebase.appcheck.playintegrity)
 
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.annotation)

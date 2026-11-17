@@ -6,18 +6,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -197,31 +198,32 @@ fun RegisterPlantStep2Screen(
 private fun StepTwoHeader(
     plantName: String
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = darkGreen.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(14.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shape = MaterialTheme.shapes.medium
             )
             .padding(14.dp)
     ) {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = "PASO 2 DE 3",
-                fontSize = 9.sp,
-                color = MaterialTheme.colorScheme.secondary
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
                 text = "66% completado",
-                fontSize = 9.sp,
-                color = MaterialTheme.colorScheme.secondary
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -233,23 +235,22 @@ private fun StepTwoHeader(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = "Requerimientos\nAmbientales",
-                fontSize = 17.sp,
-                lineHeight = 18.sp,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = darkGreen
+                color = primary
             )
 
             Text(
                 text = "🌱 $plantName",
-                fontSize = 8.sp,
-                color = MaterialTheme.colorScheme.secondary
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -265,18 +266,18 @@ private fun LightOptionCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = modifier
-            .height(100.dp)
+            .heightIn(min = 120.dp)
             .background(
                 color = if (selected) {
-                    darkGreen
+                    primary
                 } else {
-                    darkGreen.copy(alpha = 0.10f)
+                    MaterialTheme.colorScheme.surfaceContainerLow
                 },
-                shape = RoundedCornerShape(12.dp)
+                shape = MaterialTheme.shapes.medium
             )
             .clickable(onClick = onClick)
             .padding(12.dp)
@@ -288,7 +289,7 @@ private fun LightOptionCard(
             tint = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                MaterialTheme.colorScheme.secondary
+                MaterialTheme.colorScheme.primary
             }
         )
 
@@ -296,22 +297,22 @@ private fun LightOptionCard(
 
         Text(
             text = title,
-            fontSize = 11.sp,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                darkGreen
+                primary
             }
         )
 
         Text(
             text = description,
-            fontSize = 8.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
             } else {
-                MaterialTheme.colorScheme.secondary
+                MaterialTheme.colorScheme.onSurfaceVariant
             }
         )
     }
@@ -323,26 +324,27 @@ private fun LightExposureSection(
     selectedLight: PlantLightExposure,
     onLightSelected: (PlantLightExposure) -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = "☀  Exposición a la luz",
-                fontSize = 14.sp,
+                text = "☀ Exposición a la luz",
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = darkGreen
+                color = primary
             )
 
             Text(
                 text = "Elige 1 opción",
-                fontSize = 9.sp,
-                color = MaterialTheme.colorScheme.secondary
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -412,14 +414,14 @@ private fun PotTypeSection(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column {
         Text(
             text = "Tipo de maceta",
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = darkGreen
+            color = primary
         )
 
         Spacer(modifier = Modifier.height(7.dp))
@@ -429,7 +431,7 @@ private fun PotTypeSection(
                 .fillMaxWidth()
                 .background(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(10.dp)
+                    shape = MaterialTheme.shapes.small
                 )
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -438,7 +440,7 @@ private fun PotTypeSection(
                 painter = painterResource(R.drawable.ic_pot3),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.secondary
+                tint = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -447,10 +449,7 @@ private fun PotTypeSection(
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = true,
-                textStyle = TextStyle(
-                    fontSize = 10.sp,
-                    color = MaterialTheme.colorScheme.secondary
-                ),
+                textStyle = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -465,17 +464,17 @@ private fun PotSizeOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = modifier
             .background(
                 color = if (selected) {
-                    darkGreen
+                    primary
                 } else {
                     Color.Transparent
                 },
-                shape = RoundedCornerShape(18.dp)
+                shape = MaterialTheme.shapes.large
             )
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp),
@@ -483,11 +482,11 @@ private fun PotSizeOption(
     ) {
         Text(
             text = text,
-            fontSize = 9.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                darkGreen
+                primary
             }
         )
     }
@@ -499,24 +498,25 @@ private fun PotSizeSection(
     selectedSize: PotSize,
     onSizeSelected: (PotSize) -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = "Tamaño de maceta",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = darkGreen
+                color = primary
             )
 
             Text(
                 text = "Diámetro estimado",
-                fontSize = 8.sp,
-                color = MaterialTheme.colorScheme.secondary
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -526,8 +526,8 @@ private fun PotSizeSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = darkGreen.copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(20.dp)
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = MaterialTheme.shapes.large
                 )
                 .padding(3.dp)
         ) {
@@ -567,14 +567,14 @@ private fun SubstrateSection(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Column {
         Text(
             text = "Mezcla de sustrato",
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = darkGreen
+            color = primary
         )
 
         Spacer(modifier = Modifier.height(7.dp))
@@ -584,7 +584,7 @@ private fun SubstrateSection(
                 .fillMaxWidth()
                 .background(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(10.dp)
+                    shape = MaterialTheme.shapes.small
                 )
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -593,7 +593,7 @@ private fun SubstrateSection(
                 painter = painterResource(R.drawable.ic_substratum),
                 contentDescription = null,
                 modifier = Modifier.size(17.dp),
-                tint = MaterialTheme.colorScheme.secondary
+                tint = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -602,10 +602,7 @@ private fun SubstrateSection(
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = true,
-                textStyle = TextStyle(
-                    fontSize = 10.sp,
-                    color = MaterialTheme.colorScheme.secondary
-                ),
+                textStyle = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -671,7 +668,7 @@ private fun StepTwoNavigation(
     onBackClick: () -> Unit,
     onContinueClick: () -> Unit
 ) {
-    val darkGreen = MaterialTheme.colorScheme.primary
+    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -680,8 +677,8 @@ private fun StepTwoNavigation(
         Box(
             modifier = Modifier
                 .background(
-                    color = darkGreen.copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(10.dp)
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = MaterialTheme.shapes.small
                 )
                 .clickable(onClick = onBackClick)
                 .padding(
@@ -692,8 +689,8 @@ private fun StepTwoNavigation(
         ) {
             Text(
                 text = "← Atrás",
-                fontSize = 11.sp,
-                color = darkGreen
+                style = MaterialTheme.typography.labelMedium,
+                color = primary
             )
         }
 
@@ -701,8 +698,8 @@ private fun StepTwoNavigation(
             modifier = Modifier
                 .weight(1f)
                 .background(
-                    color = darkGreen,
-                    shape = RoundedCornerShape(10.dp)
+                    color = primary,
+                    shape = MaterialTheme.shapes.small
                 )
                 .clickable(onClick = onContinueClick)
                 .padding(vertical = 12.dp),
@@ -711,8 +708,7 @@ private fun StepTwoNavigation(
             Text(
                 text = "Continuar a Cuidados\n(Paso 3)      →",
                 textAlign = TextAlign.Center,
-                fontSize = 11.sp,
-                lineHeight = 13.sp,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onPrimary
             )

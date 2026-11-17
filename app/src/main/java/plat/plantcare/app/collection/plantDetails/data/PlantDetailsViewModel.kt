@@ -17,8 +17,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import plat.plantcare.app.diagnosis.application.ObservePlantDiagnosis
+import plat.plantcare.app.diagnosis.domain.DiagnosisDetails
 import plat.plantcare.app.collection.plantDetails.ui.PlantDetailsDestination
-import plat.plantcare.app.core.data.models.Diagnostic
+import plat.plantcare.app.diagnosis.domain.Diagnostic
+import plat.plantcare.app.core.data.models.PlantCharacteristics
+import plat.plantcare.app.core.data.models.PlantReference
+import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
 import plat.plantcare.app.core.data.models.Task
 import plat.plantcare.app.core.data.plant.PlantRepository
 import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
@@ -41,7 +46,13 @@ private data class PlantInfo(
     val plant: Plant? = null,
     val characteristics: PlantCharacteristics? = null,
     val considerations: PlantConsiderations? = null,
-    val diagnostic: Diagnostic? = null
+    val diagnostic: Diagnostic? = null,
+    val diagnosticError: String? = null
+)
+
+private data class DiagnosisObservation(
+    val details: DiagnosisDetails = DiagnosisDetails(),
+    val error: String? = null
 )
 
 private data class PlantDetailsLocalState(
@@ -54,7 +65,8 @@ private data class PlantDetailsLocalState(
 class PlantDetailsViewModel @Inject constructor (
     savedStateHandle: SavedStateHandle,
     private val tasksRepository: TaskRepository,
-    private val plantRepository: PlantRepository
+    private val plantRepository: PlantRepository,
+    private val observePlantDiagnosis: ObservePlantDiagnosis
 ): ViewModel() {
 
     private val destination = savedStateHandle.toRoute<PlantDetailsDestination>()
@@ -63,26 +75,18 @@ class PlantDetailsViewModel @Inject constructor (
     private val _localState = MutableStateFlow(PlantDetailsLocalState())
     private val plant: Flow<Plant?> = plantRepository.observePlant(plantId)
 
-    private val testFlow2 = flowOf(null)
+    private val diagnosis = observePlantDiagnosis(plantId)
+        .map { DiagnosisObservation(it) }
+        .catch { emit(DiagnosisObservation(error = "No se pudieron cargar las características y el diagnóstico. Revisa la conexión.")) }
 
     private val plantInfo: Flow<PlantInfo> = combine(
         plant,
         plantRepository.observeCharacteristics(plantId),
         plantRepository.observeConsiderations(plantId),
-        testFlow2
+        diagnosis
         //plantRepository.observeDiagnostic(plantId)
     ) { plant, characteristics, considerations, diagnostic ->
         PlantInfo(plant, characteristics, considerations, diagnostic) }
-
-    /*
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val referenceInfo: Flow<ReferenceInfo> = referenceId.flatMapLatest { id ->
-        if (id == null) flowOf(ReferenceInfo())
-        else combine(
-            referencesRepository.observePlantReference(id),
-            referencesRepository.observePlantConsiderations(id)
-        ) { reference, considerations -> ReferenceInfo(reference, considerations) }
-    }*/
 
     private val plantTask: Flow<Task?> = tasksRepository.observeAllTasks()
         .map { tasks ->
@@ -93,7 +97,7 @@ class PlantDetailsViewModel @Inject constructor (
     private val history: Flow<List<Task>?> = tasksRepository.observeAllTasks()
         .map { tasks ->
             tasks.filter { it.plantId == plantId && it.completed }
-                .sortedBy { it.dueDate }
+                .sortedBy { it.completedAt }
         }
 
     val state: StateFlow<PlantDetailsState> = combine(
@@ -111,6 +115,7 @@ class PlantDetailsViewModel @Inject constructor (
                 characteristics = plantGroup.characteristics,
                 diagnostic = plantGroup.diagnostic,
                 considerations = plantGroup.considerations,
+                diagnosticError = plantGroup.diagnosticError,
                 history = history,
                 editionMode = local.isEditionModeActive,
                 isMoreOptionsActive = local.areMoreOptionsOpened
@@ -143,7 +148,7 @@ class PlantDetailsViewModel @Inject constructor (
 
     private fun completeTask(id: String) {
         viewModelScope.launch {
-            tasksRepository.setTaskCompleted(id, true)
+            tasksRepository.completeTask(id)
         }
     }
 

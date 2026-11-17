@@ -2,6 +2,14 @@ package plat.plantcare.app
 
 import android.app.Application
 import android.os.Bundle
+import android.content.Intent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import javax.inject.Inject
+import plat.plantcare.app.core.ai.firebase.prepareAiDebug
+import plat.plantcare.app.notifications.TaskRuntime
+import plat.plantcare.app.notifications.WateringNotifications
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,6 +27,7 @@ import plat.plantcare.app.ui.theme.PlantcareTheme
 
 @HiltAndroidApp
 class PlantCareApp : Application() {
+    @Inject lateinit var taskRuntime: TaskRuntime
     override fun onCreate() {
         super.onCreate()
 
@@ -32,18 +41,27 @@ class PlantCareApp : Application() {
                 DebugAppCheckProviderFactory.getInstance()
             )
         }
+        prepareAiDebug(this)
+        taskRuntime.start()
     }
 }
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private var openTasks by mutableStateOf(false)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        openTasks = intent.getBooleanExtra(WateringNotifications.OPEN_TASKS, false)
         enableEdgeToEdge()
         setContent {
             PlantcareTheme {
-                AppNavHost()
+                AppNavHost(openTasks = openTasks, onTasksOpened = { openTasks = false })
             }
         }
+    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        openTasks = intent.getBooleanExtra(WateringNotifications.OPEN_TASKS, false)
     }
 }

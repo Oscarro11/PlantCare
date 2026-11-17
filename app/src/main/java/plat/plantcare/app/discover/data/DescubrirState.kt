@@ -1,43 +1,24 @@
 package plat.plantcare.app.discover.data
 
-import androidx.annotation.DrawableRes
-import plat.plantcare.app.R
-
 data class PlantaRecomendada(
     val id: String,
-    @DrawableRes val imagen: Int,
+    val imageUrl: String,
     val nombre: String,
     val nombreAlternativo: String,
     val caracteristica: String,
-    val match: Int,
     val enListaDeseos: Boolean = false
 )
 
 data class DescubrirState(
-    val plantasRecomendadas: List<PlantaRecomendada> = listOf(
-        PlantaRecomendada(
-            id = "zamioculcas",
-            imagen = R.drawable.ic_launcher_background,
-            nombre = "Zamioculcas Zamiifolia",
-            nombreAlternativo = "ZZ Plant",
-            caracteristica = "RESISTENCIA EXTREMA",
-            match = 98
-        ),
-        PlantaRecomendada(
-            id = "maranta",
-            imagen = R.drawable.ic_launcher_background,
-            nombre = "Maranta Leuconeura",
-            nombreAlternativo = "Planta de la oración",
-            caracteristica = "MOVIMIENTO FOLIAR",
-            match = 94
-        ),
-        PlantaRecomendada(
-            id = "monstera-adansonii",
-            imagen = R.drawable.ic_launcher_background,
-            nombre = "Monstera Adansonii",
-            nombreAlternativo = "Monkey Mask",
-            caracteristica = "TREPADORA / COLGANTE",
-            match = 91
-        )
-    )
-)
+    val plantasRecomendadas: List<PlantaRecomendada> = emptyList(),
+    val busqueda: String = "",
+    val soloDeseadas: Boolean = false,
+    val isLoading: Boolean = true,
+    val error: String? = null,
+    val pendingIds: Set<String> = emptySet()
+) {
+    val plantasFiltradas: List<PlantaRecomendada> get() = plantasRecomendadas.filter {
+        (!soloDeseadas || it.enListaDeseos) &&
+            (it.nombre.contains(busqueda.trim(), true) || it.nombreAlternativo.contains(busqueda.trim(), true))
+    }
+}

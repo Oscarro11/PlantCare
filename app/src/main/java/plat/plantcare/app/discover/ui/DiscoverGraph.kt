@@ -32,10 +32,5 @@ fun NavGraphBuilder.discoverGraph(
             onFiltrosClick = onFiltrosClick
         )
 
-        fichaBotanicaScreen(
-            onBackClick = { navController.popBackStack() },
-            //TODO: update
-            onShareClick = {}
-        )
     }
 }

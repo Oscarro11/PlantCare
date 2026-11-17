@@ -1,6 +1,16 @@
 package plat.plantcare.app
 
 
+import android.Manifest
+import android.app.TimePickerDialog
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,15 +80,20 @@ fun AjustesRoute(
     viewModel: AjustesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        viewModel.onEvent(AjustesEvent.ChangeRecordatorios(granted))
+        if (!granted) Toast.makeText(context, "Permite las notificaciones para recibir el resumen de riegos.", Toast.LENGTH_LONG).show()
+    }
 
     AjustesScreen(
         state = state,
         onBackClick = onBackClick,
         onCerrarSesion = { viewModel.logOut(onCerrarSesion) },
         onRecordatoriosChange = { enabled ->
-            viewModel.onEvent(
-                AjustesEvent.ChangeRecordatorios(enabled)
-            )
+            if (enabled && Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+                permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            else viewModel.onEvent(AjustesEvent.ChangeRecordatorios(enabled))
         },
         onAlertasChange = { enabled ->
             viewModel.onEvent(
@@ -89,6 +104,10 @@ fun AjustesRoute(
             viewModel.onEvent(
                 AjustesEvent.ChangeVistaColeccion(layout)
             )
+        },
+        onHoraClick = {
+            val time = java.time.LocalTime.parse(state.horaAviso)
+            TimePickerDialog(context, { _, hour, minute -> viewModel.onEvent(AjustesEvent.ChangeReminderTime(hour, minute)) }, time.hour, time.minute, true).show()
         },
         modifier = modifier
     )
@@ -102,6 +121,7 @@ private fun AjustesScreen(
     onRecordatoriosChange: (Boolean) -> Unit,
     onAlertasChange: (Boolean) -> Unit,
     onVistaColeccionChange: (CollectionLayout) -> Unit,
+    onHoraClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -149,7 +169,8 @@ private fun AjustesScreen(
                 alertasClimaticas = state.alertasClimaticas,
                 horaAviso = state.horaAviso,
                 onRecordatoriosChange = onRecordatoriosChange,
-                onAlertasChange = onAlertasChange
+                onAlertasChange = onAlertasChange,
+                onHoraClick = onHoraClick
             )
 
             Spacer(Modifier.height(20.dp))
@@ -369,7 +390,8 @@ private fun NotificationsCard(
     alertasClimaticas: Boolean,
     horaAviso: String,
     onRecordatoriosChange: (Boolean) -> Unit,
-    onAlertasChange: (Boolean) -> Unit
+    onAlertasChange: (Boolean) -> Unit,
+    onHoraClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -388,13 +410,13 @@ private fun NotificationsCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Recordatorios inteligentes",
+                        text = "Resumen diario de riegos",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
 
                     Text(
-                        text = "Ajustados según el clima y la humedad local",
+                        text = "Riegos de hoy y atrasados. Android puede retrasar el aviso por ahorro de batería.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -424,11 +446,12 @@ private fun NotificationsCard(
                 )
 
                 Surface(
+                    modifier = Modifier.clickable(onClick = onHoraClick),
                     shape = RoundedCornerShape(20.dp),
                     color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Text(
-                        text = "09:00 AM ›",
+                        text = "$horaAviso ›",
                         modifier = Modifier.padding(
                             horizontal = 14.dp,
                             vertical = 6.dp
