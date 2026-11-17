@@ -51,7 +51,8 @@ data class CatalogSnapshot(
 @Singleton
 class DiscoverRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: AuthRepository
+    private val auth: AuthRepository,
+    private val emulatorCatalog: EmulatorCatalogInitializer
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
     fun observeCatalog(): Flow<CatalogSnapshot> = auth.sessionUid.flatMapLatest { uid ->
@@ -70,7 +71,10 @@ class DiscoverRepository @Inject constructor(
             }
         ) { plants, wishedIds, care ->
             CatalogSnapshot(plants.sortedBy { it.displayName.lowercase() }, wishedIds, care, isLoading = false)
-        }.onStart { emit(CatalogSnapshot()) }
+        }.onStart {
+            emit(CatalogSnapshot())
+            emulatorCatalog.ensureCatalog()
+        }
     }
 
     suspend fun setWished(referenceId: String, wished: Boolean) {

@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -61,9 +63,11 @@ fun RegisterPlantStep3Route(
     onSaved: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(state.saved) {
         if (state.saved) {
+            state.warning?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
             onSaved()
         }
     }
@@ -168,9 +172,8 @@ fun RegisterPlantStep3Screen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            SavePlantButton(
-                onClick = onSaveClick
-            )
+            SavePlantButton(onClick = onSaveClick, isSaving = state.isSaving,
+                enabled = !state.isSaving && !state.saved)
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -677,40 +680,17 @@ private fun AttentionLevelSection(
 }
 
 @Composable
-private fun SavePlantButton(
-    onClick: () -> Unit
-) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                color = primary,
-                shape = MaterialTheme.shapes.medium
-            )
-            .clickable(onClick = onClick)
-            .padding(vertical = 15.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "✓",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Text(
-            text = "Guardar y Añadir a Mi Colección",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
+private fun SavePlantButton(onClick: () -> Unit, isSaving: Boolean = false, enabled: Boolean = true) {
+    Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp)) {
+        if (isSaving) {
+            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(if (isSaving) "Guardando planta…" else "Guardar y añadir a mi colección",
+            style = MaterialTheme.typography.labelLarge)
     }
 }
-
 
 @Composable
 private fun BackToStepTwoButton(

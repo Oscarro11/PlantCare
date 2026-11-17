@@ -14,5 +14,6 @@ data class AjustesState(
 
     val ubicacion: String = "Madrid, España (Templado-seco)",
 
+    val preferencesError: String? = null,
     val vistaColeccion: CollectionLayout = CollectionLayout.GRID
 )

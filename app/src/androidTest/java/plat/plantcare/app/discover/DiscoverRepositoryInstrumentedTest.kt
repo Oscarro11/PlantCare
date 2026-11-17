@@ -48,10 +48,11 @@ class DiscoverRepositoryInstrumentedTest {
         try {
             val user = withTimeout(15_000) { firebaseAuth.signInAnonymously().await().user!! }
             session.sessionUid.value = user.uid
-            val repository = DiscoverRepository(firestore, session)
+            val repository = DiscoverRepository(firestore, session, plat.plantcare.app.discover.data.EmulatorCatalogInitializer(firestore))
             val states = repository.observeCatalog().stateIn(scope, SharingStarted.Eagerly, CatalogSnapshot())
             withTimeout(15_000) { states.first { !it.isLoading } }
             assertFalse(states.value.wishedIds.contains(referenceId))
+            assertTrue(states.value.plants.isNotEmpty())
             repeat(3) {
                 withTimeout(15_000) { repository.setWished(referenceId, true) }
                 withTimeout(15_000) { states.first { referenceId in it.wishedIds } }

@@ -1,5 +1,6 @@
 package plat.plantcare.app.core.data.plant
 
+import plat.plantcare.app.core.data.plant.general.domain.PlantSaveResult
 import kotlinx.coroutines.flow.Flow
 import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
 import plat.plantcare.app.core.data.plant.considerations.domain.PlantConsiderations
@@ -12,7 +13,7 @@ interface PlantRepository {
     fun observeCharacteristics(plantId: String): Flow<PlantCharacteristics?>
     fun observeConsiderations(plantId: String): Flow<PlantConsiderations?>
 
-    suspend fun addPlant(newPlant: NewPlant, characteristics: PlantCharacteristics): String
+    suspend fun addPlant(newPlant: NewPlant, characteristics: PlantCharacteristics, plantId: String? = null): PlantSaveResult
 
     suspend fun updatePlant(plant: Plant)
 

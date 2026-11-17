@@ -29,6 +29,7 @@ data class CollectionState(
     val todayClimate: String = "",
     val healthPercentage: Float = 0f,
     val searchQuery: String = "",
+    val preferencesError: String? = null,
     val selectedLayout: CollectionLayout = CollectionLayout.GRID,
     val plantList: List<CollectionCardInfo> = emptyList(),
 )

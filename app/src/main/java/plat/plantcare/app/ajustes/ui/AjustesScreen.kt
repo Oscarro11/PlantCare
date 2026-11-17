@@ -59,6 +59,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -195,6 +197,12 @@ private fun AjustesScreen(
                 vistaColeccion = state.vistaColeccion,
                 onVistaColeccionChange = onVistaColeccionChange
             )
+
+            state.preferencesError?.let { message ->
+                Text(text = message, color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
+            }
 
             Spacer(Modifier.height(28.dp))
 
@@ -423,6 +431,7 @@ private fun NotificationsCard(
                 }
 
                 Switch(
+                    modifier = Modifier.semantics { contentDescription = "Resumen diario de riegos" },
                     checked = recordatoriosInteligentes,
                     onCheckedChange = onRecordatoriosChange
                 )
@@ -486,6 +495,7 @@ private fun NotificationsCard(
                 }
 
                 Switch(
+                    modifier = Modifier.semantics { contentDescription = "Alertas climáticas extremas" },
                     checked = alertasClimaticas,
                     onCheckedChange = onAlertasChange
                 )

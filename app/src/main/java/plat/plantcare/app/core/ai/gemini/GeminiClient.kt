@@ -1,5 +1,8 @@
 package plat.plantcare.app.core.ai.gemini
 
+import com.google.firebase.appcheck.FirebaseAppCheck
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.tasks.await
 import android.content.Context
 import com.google.firebase.ai.FirebaseAI
 import com.google.firebase.ai.GenerativeModel
@@ -21,7 +24,18 @@ class GeminiClient @Inject constructor(@ApplicationContext private val context: 
             generationConfig = config
         )
 
+    suspend fun requireAiAccess() {
+        try {
+            FirebaseAppCheck.getInstance(FirebaseAiApp.get(context)).getAppCheckToken(false).await()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            throw AiAuthorizationException(error)
+        }
+    }
+
     suspend fun generateImageText(model: GenerativeModel, image: ByteArray, mimeType: String, prompt: String): String {
+        requireAiAccess()
         require(mimeType.startsWith("image/")) { "El archivo debe ser una imagen." }
         val response = model.generateContent(content {
             inlineData(image, mimeType)
@@ -30,3 +44,5 @@ class GeminiClient @Inject constructor(@ApplicationContext private val context: 
         return requireNotNull(response.text) { "No se recibió una respuesta del modelo. Vuelve a intentarlo." }
     }
 }
+
+class AiAuthorizationException(cause: Throwable) : Exception("El servicio de IA no está autorizado para esta instalación.", cause)

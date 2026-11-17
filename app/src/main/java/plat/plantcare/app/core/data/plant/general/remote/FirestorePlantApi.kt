@@ -1,5 +1,7 @@
 package plat.plantcare.app.core.data.plant.general.remote
 
+import plat.plantcare.app.core.data.plant.characteristics.remote.PlantCharacteristicsDTO
+import plat.plantcare.app.core.data.plant.characteristics.remote.toFirebaseDTO
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
@@ -24,17 +26,13 @@ class FirestorePlantApi @Inject constructor(
 
     override fun newId(ownerId: String): String = plantReference(ownerId).document().id
 
-    override suspend fun create(
-        ownerId: String,
-        plant: PlantDTO
-    ) {
-        val dto = plant.toFirebaseDTO()
-
-        if (dto != null) {
-            plantReference(ownerId)
-                .document(plant.id)
-                .set(dto).awaitOrQueued()
-        }
+    override suspend fun create(ownerId: String, plant: PlantDTO, characteristics: PlantCharacteristicsDTO) {
+        val reference = plantReference(ownerId).document(plant.id)
+        // A registration is one acknowledged write, never a plant without its characteristics.
+        firestore.batch()
+            .set(reference, plant.toFirebaseDTO())
+            .set(reference.collection("caracteristicas").document("principal"), characteristics.toFirebaseDTO())
+            .commit().await()
     }
 
     override fun observeAll(ownerId: String): Flow<List<PlantDTO>> =

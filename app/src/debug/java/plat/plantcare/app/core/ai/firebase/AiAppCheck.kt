@@ -14,10 +14,13 @@ internal fun configureAiAppCheck(app: FirebaseApp) {
 internal fun prepareAiDebug(context: Context) {
     runCatching {
         val app = FirebaseAiApp.get(context)
-        FirebaseAppCheck.getInstance(app).getAppCheckToken(false)
+        FirebaseAppCheck.getInstance(app).getAppCheckToken(true)
             .addOnSuccessListener { Log.i("FirebaseAiSetup", "App Check autorizado para esta instalación en "+app.options.projectId+".") }
-            .addOnFailureListener {
-                Log.i("FirebaseAiSetup", "Revisa DebugAppCheckProvider en Logcat y registra su token en App Check del proyecto "+app.options.projectId+".")
+            .addOnFailureListener { error ->
+                val reason = error.message.orEmpty()
+                    .replace(Regex("AIza[0-9A-Za-z_-]+"), "[clave omitida]")
+                    .replace(Regex("[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"), "[token omitido]")
+                Log.w("FirebaseAiSetup", "No se pudo renovar App Check en ${app.options.projectId}: $reason")
             }
     }.onFailure { Log.w("FirebaseAiSetup", "No se pudo preparar App Check para el proyecto de IA seleccionado.", it) }
 }

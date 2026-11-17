@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-val selectedAiProject = providers.gradleProperty("plantcare.aiProject").orElse("plantcare-ia").get()
+val selectedAiProject = providers.gradleProperty("plantcare.aiProject").orElse("plantcare").get()
 require(selectedAiProject in setOf("plantcare-ia", "plantcare")) {
     "plantcare.aiProject must be plantcare-ia or plantcare; received: $selectedAiProject"
 }

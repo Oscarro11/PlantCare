@@ -1,6 +1,15 @@
 package plat.plantcare.app.core.data.plant
 
 import android.util.Log
+import plat.plantcare.app.core.data.plant.general.domain.PlantSaveResult
+import plat.plantcare.app.core.data.plant.general.remote.toDomain
+import plat.plantcare.app.core.data.plant.characteristics.remote.toDomain
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
@@ -61,7 +70,12 @@ class PlantRepositoryImpl @Inject constructor(
             if (uid.isNullOrBlank()) {
                 flowOf(emptyList())
             } else {
-                plantDao.observeUserPlants(uid).map { list -> list.map { it.toDomain() } }
+                syncedCache(
+                    local = plantDao.observeUserPlants(uid).map { list -> list.map { it.toDomain() } },
+                    remote = plantApi.observeAll(uid)
+                ) { plants ->
+                    plants.forEach { plant -> plantDao.updateOrInsertPlant(plant.toDomain().copy(ownerId = uid).toEntity()) }
+                }
             }
         }
 
@@ -71,7 +85,10 @@ class PlantRepositoryImpl @Inject constructor(
             if (uid.isNullOrBlank()) {
                 flowOf(null)
             } else {
-                plantDao.observePlant(id).map { entity -> entity?.toDomain() }
+                syncedCache(
+                    local = plantDao.observePlant(id).map { entity -> entity?.takeIf { it.ownerId == uid }?.toDomain() },
+                    remote = plantApi.observe(uid, id)
+                ) { plant -> plant?.let { plantDao.updateOrInsertPlant(it.toDomain().copy(ownerId = uid).toEntity()) } }
             }
         }
 
@@ -81,8 +98,14 @@ class PlantRepositoryImpl @Inject constructor(
             if (uid.isNullOrBlank()) {
                 flowOf(null)
             } else {
-                plantCharacteristicsDao.observePlantCharacteristics(plantId)
-                    .map { entity -> entity?.toDomain() }
+                syncedCache(
+                    local = combine(plantDao.observePlant(plantId), plantCharacteristicsDao.observePlantCharacteristics(plantId)) {
+                        plant, details -> details?.takeIf { plant?.ownerId == uid }?.toDomain()
+                    },
+                    remote = plantCharacteristicsApi.observeCharacteristics(uid, plantId)
+                ) { details -> details?.let {
+                    plantCharacteristicsDao.updateOrInsertPlantCharacteristics(it.toDomain().copy(plantId = plantId).toEntity())
+                } }
             }
         }
 
@@ -92,20 +115,27 @@ class PlantRepositoryImpl @Inject constructor(
             if (uid.isNullOrBlank()) {
                 flowOf(null)
             } else {
-                plantConsiderationsDao.observePlantConsiderations(plantId)
-                    .map { entity -> entity?.toDomain() }
+                syncedCache(
+                    local = combine(plantDao.observePlant(plantId), plantConsiderationsDao.observePlantConsiderations(plantId)) {
+                        plant, details -> details?.takeIf { plant?.ownerId == uid }?.toDomain()
+                    },
+                    remote = plantConsiderationsStorageApi.observeConsiderations(uid, plantId)
+                ) { details -> details?.let {
+                    plantConsiderationsDao.updateOrInsertPlantConsiderations(it.toDomain().copy(plantId = plantId).toEntity())
+                } }
             }
         }
 
-    override suspend fun addPlant(newPlant: NewPlant, characteristics: PlantCharacteristics): String {
+    override suspend fun addPlant(newPlant: NewPlant, characteristics: PlantCharacteristics, plantId: String?): PlantSaveResult {
         val errors = newPlant.validate()
         require(errors.isEmpty()) { "Planta invalida: $errors" }
 
         val ownerId = requireOwnerId()
-        val id = plantApi.newId(ownerId)
+        val id = plantId ?: plantApi.newId(ownerId)
+        require(id.isNotBlank() && !id.contains("/"))
 
         val localImage = newPlant.imageUrl.localImageOrNull()
-        val uploadedUrl = localImage?.let { uploadImage(ownerId, id, it) }
+        val uploadedUrl = localImage?.let { uploadImage(ownerId, id, it, version = "registration") }
 
         val plant = Plant(
             id = id,
@@ -118,30 +148,29 @@ class PlantRepositoryImpl @Inject constructor(
             favorite = false
         )
 
-        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.create(ownerId, plant.toCommonDTO()) }
+        plantApi.create(ownerId, plant.toCommonDTO(), characteristics.copy(plantId = id).toCommonDTO())
         plantDao.updateOrInsertPlant(plant.toEntity())
 
-        plantCharacteristicsApi.addToPlant(ownerId, id, characteristics.toCommonDTO())
         plantCharacteristicsDao.updateOrInsertPlantCharacteristics(characteristics.copy( plantId = id ).toEntity())
 
+        var careUnavailable = false
         if (localImage != null) {
-            val considerations = plantConsiderationsAiApi.generateConsiderations(
-                speciesName = null,
-                photo = localImages.readForUpload(localImage)
-            )
-
-            plantConsiderationsStorageApi.addToPlant(ownerId, id, considerations.toCommonDTO())
-            plantConsiderationsDao.updateOrInsertPlantConsiderations(
-                considerations
-                    .toCommonDTO()
-                    .copy(plantId = id)
-                    .toDomain()
-                    .toEntity()
-            )
+            try {
+                val considerations = plantConsiderationsAiApi.generateConsiderations(
+                    speciesName = null, photo = localImages.readForUpload(localImage)
+                ).toCommonDTO().copy(plantId = id)
+                plantConsiderationsStorageApi.addToPlant(ownerId, id, considerations)
+                plantConsiderationsDao.updateOrInsertPlantConsiderations(considerations.toDomain().toEntity())
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                // The acknowledged registration must remain a success when optional AI is unavailable.
+                careUnavailable = true
+                Log.w(TAG, "Planta guardada; no se pudieron generar las pautas de cuidado.", error)
+            }
         }
-
-        localImage?.let { localImages.delete(it) }
-        return id
+        localImage?.let { bestEffort { localImages.delete(it) } }
+        return PlantSaveResult(id, careUnavailable)
     }
 
     override suspend fun updatePlant(plant: Plant) {
@@ -184,11 +213,11 @@ class PlantRepositoryImpl @Inject constructor(
     private fun String?.localImageOrNull(): String? =
         this?.takeIf { it.isNotBlank() && !it.isRemoteImage() }
 
-    private suspend fun uploadImage(ownerId: String, plantId: String, localImage: String): String =
+    private suspend fun uploadImage(ownerId: String, plantId: String, localImage: String, version: String = System.currentTimeMillis().toString()): String =
         try {
             val bytes = localImages.readForUpload(localImage)
             remoteImages.upload(
-                path = "usuarios/$ownerId/plantas/$plantId-${System.currentTimeMillis()}.jpg",
+                path = "usuarios/$ownerId/plantas/$plantId-$version.jpg",
                 bytes = bytes
             )
         } catch (e: CancellationException) {
@@ -217,6 +246,15 @@ class PlantRepositoryImpl @Inject constructor(
             throw e
         } catch (e: Exception) {
             Log.w(TAG, "Cleanup failed, leaving an orphan file", e)
+        }
+    }
+
+    private fun <T, R> syncedCache(local: Flow<T>, remote: Flow<R>, persist: suspend (R) -> Unit): Flow<T> = channelFlow {
+        launch { local.collect { send(it) } }
+        launch {
+            remote.onEach { persist(it) }
+                .catch { Log.w(TAG, "No se pudo actualizar la colección; se conservan los datos locales.", it) }
+                .collect()
         }
     }
 

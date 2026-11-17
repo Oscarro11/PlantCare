@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import plat.plantcare.app.core.data.plant.PlantRepository
 import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
 import plat.plantcare.app.core.data.plant.general.domain.NewPlant
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -18,6 +19,7 @@ class RegisterPlantViewModel @Inject constructor(
     private val plantRepository: PlantRepository
 ) : ViewModel() {
 
+    private var registrationId = UUID.randomUUID().toString()
     private val _state = MutableStateFlow(RegisterPlantState())
     val state = _state.asStateFlow()
 
@@ -25,15 +27,20 @@ class RegisterPlantViewModel @Inject constructor(
         when (event) {
             is RegisterPlantEvent.ChangeDraft -> changeDraft(event.draft)
             RegisterPlantEvent.Save -> savePlant()
-            RegisterPlantEvent.Discard -> _state.value = RegisterPlantState()
+            RegisterPlantEvent.Discard -> if (!_state.value.isSaving) {
+                registrationId = UUID.randomUUID().toString()
+                _state.value = RegisterPlantState()
+            }
         }
     }
 
     private fun changeDraft(draft: RegisterPlantDraft) {
+        if (_state.value.isSaving || _state.value.saved) return
         _state.update { it.copy(draft = draft, error = null, saved = false) }
     }
 
     private fun savePlant() {
+        if (_state.value.isSaving || _state.value.saved) return
         val draft = _state.value.draft
 
         if (!draft.isValid) {
@@ -45,7 +52,8 @@ class RegisterPlantViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                plantRepository.addPlant(
+                val result = plantRepository.addPlant(
+                    plantId = registrationId,
                     newPlant = NewPlant(
                         name = draft.plantName,
                         imageUrl = draft.imageUrl.orEmpty(),
@@ -66,7 +74,8 @@ class RegisterPlantViewModel @Inject constructor(
                     )
                 )
 
-                _state.update { it.copy(isSaving = false, saved = true, error = null) }
+                _state.update { it.copy(isSaving = false, saved = true, error = null,
+                    warning = if (result.careUnavailable) "Planta guardada. Las pautas de cuidado con IA no están disponibles por ahora." else null) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -74,7 +83,7 @@ class RegisterPlantViewModel @Inject constructor(
                     it.copy(
                         isSaving = false,
                         saved = false,
-                        error = e.message ?: "Error al guardar la planta"
+                        error = "No se pudo confirmar el guardado. Revisa la conexión y vuelve a intentarlo; no se duplicará la planta."
                     )
                 }
             }

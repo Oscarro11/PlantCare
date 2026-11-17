@@ -14,6 +14,14 @@ import plat.plantcare.app.core.data.models.TaskAction
 import plat.plantcare.app.core.data.plant.PlantRepository
 import plat.plantcare.app.core.data.repositories.TaskRepository
 import plat.plantcare.app.core.data.repositories.WeatherRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import plat.plantcare.app.authentication.AuthRepository
+import plat.plantcare.app.core.preferences.AppSettings
+import plat.plantcare.app.core.preferences.DataStorePreferences
 import javax.inject.Inject
 
 sealed interface CollectionEvent{
@@ -25,24 +33,36 @@ sealed interface CollectionEvent{
 
 private data class CollectionLocalState(
     val searchQuery: String = "",
-    val collectionLayout: CollectionLayout = CollectionLayout.GRID
+    val preferencesError: String? = null
 )
 
 @HiltViewModel
 class CollectionViewModel @Inject constructor (
     private val tasksRepository: TaskRepository,
     private val plantRepository: PlantRepository,
-    private val weatherRepository: WeatherRepository
+    private val weatherRepository: WeatherRepository,
+    private val authRepository: AuthRepository,
+    private val preferences: DataStorePreferences
 ) : ViewModel() {
 
     private val _localState = MutableStateFlow(CollectionLocalState())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val appSettings = authRepository.sessionUid.flatMapLatest { uid ->
+        if (uid == null) flowOf(AppSettings())
+        else preferences.observeAppSettings(uid).catch {
+            _localState.update { it.copy(preferencesError = "No se pudo cargar tu vista de Colección.") }
+            emit(AppSettings())
+        }
+    }
 
     val state: StateFlow<CollectionState> = combine(
         tasksRepository.observeAllTasks(),
         plantRepository.observePlants(),
         weatherRepository.getTodayClimate(),
-        _localState
-    ) { tasks, plants, weather, local ->
+        _localState,
+        appSettings
+    ) { tasks, plants, weather, local, settings ->
         val query = local.searchQuery.trim()
         val tasksByPlant = tasks.groupBy { it.plantId }
         val visiblePlants = if (query.isEmpty()) plants
@@ -69,7 +89,8 @@ class CollectionViewModel @Inject constructor (
                 )
             },
             searchQuery = local.searchQuery,
-            selectedLayout = local.collectionLayout
+            preferencesError = local.preferencesError,
+            selectedLayout = CollectionLayout.valueOf(settings.collectionLayout.name)
         )
     }
         .catch {  }
@@ -87,11 +108,18 @@ class CollectionViewModel @Inject constructor (
     }
 
     private fun changeToggle() {
-        _localState.update {
-            it.copy(
-                collectionLayout = if (it.collectionLayout == CollectionLayout.GRID)
-                    CollectionLayout.LIST else CollectionLayout.GRID
-            )
+        val uid = authRepository.currentUid ?: return
+        viewModelScope.launch {
+            try {
+                preferences.toggleCollectionLayout(uid)
+                if (authRepository.currentUid == uid) _localState.update { it.copy(preferencesError = null) }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                if (authRepository.currentUid == uid) _localState.update {
+                    it.copy(preferencesError = "No se pudo guardar la vista de Colección. Inténtalo de nuevo.")
+                }
+            }
         }
     }
 

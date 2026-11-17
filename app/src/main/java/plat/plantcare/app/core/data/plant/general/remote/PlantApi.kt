@@ -1,5 +1,6 @@
 package plat.plantcare.app.core.data.plant.general.remote
 
+import plat.plantcare.app.core.data.plant.characteristics.remote.PlantCharacteristicsDTO
 import kotlinx.coroutines.flow.Flow
 
 interface PlantIdentificationAPI {
@@ -9,7 +10,7 @@ interface PlantIdentificationAPI {
 interface PlantDataSourceApi {
     fun newId(ownerId: String): String
 
-    suspend fun create(ownerId: String, plant: PlantDTO)
+    suspend fun create(ownerId: String, plant: PlantDTO, characteristics: PlantCharacteristicsDTO)
 
     fun observeAll(ownerId: String): Flow<List<PlantDTO>>
 
