@@ -12,6 +12,8 @@ internal fun DiagnosisContext.toGeminiPrompt(): String = buildJsonObject {
         put("requisitosRegistrados", characteristics?.let { c -> buildJsonObject {
             put("luz", c.requiredLight.take(200).ifBlank { null })
             put("intervaloRiegoDias", c.wateringFrequencyDays?.takeIf { it > 0 })
+            put("intervaloRiegoRegistrado", c.wateringRange)
+            put("rangoHumedadRegistrado", c.humidityRange)
             put("humedadPorcentaje", c.humidityLevel?.takeIf { it in 1..100 })
             put("clima", c.preferredClimate.take(500).ifBlank { null })
             put("maceta", c.pot.take(500).ifBlank { null })

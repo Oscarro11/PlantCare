@@ -1,7 +1,15 @@
 package plat.plantcare.app.core.data.plant
 
 import android.util.Log
-import android.util.Log.e
+import plat.plantcare.app.core.data.plant.general.domain.PlantSaveResult
+import plat.plantcare.app.core.data.plant.general.remote.toDomain
+import plat.plantcare.app.core.data.plant.characteristics.remote.toDomain
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
@@ -67,7 +75,12 @@ class PlantRepositoryImpl @Inject constructor(
             if (uid.isNullOrBlank()) {
                 flowOf(emptyList())
             } else {
-                plantDao.observeUserPlants(uid).map { list -> list.map { it.toDomain() } }
+                syncedCache(
+                    local = plantDao.observeUserPlants(uid).map { list -> list.map { it.toDomain() } },
+                    remote = plantApi.observeAll(uid)
+                ) { plants ->
+                    plants.forEach { plant -> plantDao.updateOrInsertPlant(plant.toDomain().copy(ownerId = uid).toEntity()) }
+                }
             }
         }
 
@@ -77,7 +90,10 @@ class PlantRepositoryImpl @Inject constructor(
             if (uid.isNullOrBlank()) {
                 flowOf(null)
             } else {
-                plantDao.observePlant(id).map { entity -> entity?.toDomain() }
+                syncedCache(
+                    local = plantDao.observePlant(id).map { entity -> entity?.takeIf { it.ownerId == uid }?.toDomain() },
+                    remote = plantApi.observe(uid, id)
+                ) { plant -> plant?.let { plantDao.updateOrInsertPlant(it.toDomain().copy(ownerId = uid).toEntity()) } }
             }
         }
 
@@ -87,8 +103,14 @@ class PlantRepositoryImpl @Inject constructor(
             if (uid.isNullOrBlank()) {
                 flowOf(null)
             } else {
-                plantCharacteristicsDao.observePlantCharacteristics(plantId)
-                    .map { entity -> entity?.toDomain() }
+                syncedCache(
+                    local = combine(plantDao.observePlant(plantId), plantCharacteristicsDao.observePlantCharacteristics(plantId)) {
+                        plant, details -> details?.takeIf { plant?.ownerId == uid }?.toDomain()
+                    },
+                    remote = plantCharacteristicsApi.observeCharacteristics(uid, plantId)
+                ) { details -> details?.let {
+                    plantCharacteristicsDao.updateOrInsertPlantCharacteristics(it.toDomain().copy(plantId = plantId).toEntity())
+                } }
             }
         }
 
@@ -98,17 +120,24 @@ class PlantRepositoryImpl @Inject constructor(
             if (uid.isNullOrBlank()) {
                 flowOf(null)
             } else {
-                plantConsiderationsDao.observePlantConsiderations(plantId)
-                    .map { entity -> entity?.toDomain() }
+                syncedCache(
+                    local = combine(plantDao.observePlant(plantId), plantConsiderationsDao.observePlantConsiderations(plantId)) {
+                        plant, details -> details?.takeIf { plant?.ownerId == uid }?.toDomain()
+                    },
+                    remote = plantConsiderationsStorageApi.observeConsiderations(uid, plantId)
+                ) { details -> details?.let {
+                    plantConsiderationsDao.updateOrInsertPlantConsiderations(it.toDomain().copy(plantId = plantId).toEntity())
+                } }
             }
         }
 
-    override suspend fun addPlant(newPlant: NewPlant, characteristics: PlantCharacteristics): String {
+    override suspend fun addPlant(newPlant: NewPlant, characteristics: PlantCharacteristics, plantId: String?): PlantSaveResult {
         val errors = newPlant.validate()
         require(errors.isEmpty()) { "Planta invalida: $errors" }
 
         val ownerId = requireOwnerId()
-        val id = plantApi.newId(ownerId)
+        val id = plantId ?: plantApi.newId(ownerId)
+        require(id.isNotBlank() && !id.contains("/"))
         val ownCharacteristics = characteristics.copy(plantId = id)
 
         //Local storage, whether device is online or not
@@ -141,7 +170,7 @@ class PlantRepositoryImpl @Inject constructor(
                 }
             }
         }
-        return id
+        return PlantSaveResult(id, careUnavailable = localImage != null && plantConsiderationsDao.observePlantConsiderations(id).first() == null)
     }
 
     override suspend fun updatePlant(plant: Plant) {
@@ -188,7 +217,7 @@ class PlantRepositoryImpl @Inject constructor(
     ) {
         val uploadedUrl = photo?.let { uploadImage(ownerId, plant.id, it) }
         val remotePlant = plant.copy(imageUrl = uploadedUrl ?: plant.imageUrl)
-        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.create(ownerId, remotePlant.toCommonDTO()) }
+        deleteUploadedPhotoIfFails(uploadedUrl) { plantApi.create(ownerId, remotePlant.toCommonDTO(), characteristics.toCommonDTO()) }
 
         plantDao.updateOrInsertPlant(remotePlant.toEntity())
         keptImage?.let { localImages.delete(it) }
@@ -241,10 +270,10 @@ class PlantRepositoryImpl @Inject constructor(
     private fun String?.localImageOrNull(): String? =
         this?.takeIf { it.isNotBlank() && !it.isRemoteImage() }
 
-    private suspend fun uploadImage(ownerId: String, plantId: String, bytes: ByteArray): String =
+    private suspend fun uploadImage(ownerId: String, plantId: String, bytes: ByteArray, version: String = System.currentTimeMillis().toString()): String =
         try {
             remoteImages.upload(
-                path = "usuarios/$ownerId/plantas/$plantId-${System.currentTimeMillis()}.jpg",
+                path = "usuarios/$ownerId/plantas/$plantId-$version.jpg",
                 bytes = bytes
             )
         } catch (e: CancellationException) {
@@ -287,6 +316,15 @@ class PlantRepositoryImpl @Inject constructor(
             throw e
         } catch (e: Exception) {
             Log.w(TAG, "Cleanup failed, leaving an orphan file", e)
+        }
+    }
+
+    private fun <T, R> syncedCache(local: Flow<T>, remote: Flow<R>, persist: suspend (R) -> Unit): Flow<T> = channelFlow {
+        launch { local.collect { send(it) } }
+        launch {
+            remote.onEach { persist(it) }
+                .catch { Log.w(TAG, "No se pudo actualizar la colección; se conservan los datos locales.", it) }
+                .collect()
         }
     }
 

@@ -61,47 +61,47 @@ enum class TaskAction(
         displayName = "Regar"
     ),
     MIST(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.ic_humidity,
         displayName = "Atomizar"
     ),
     CLEAN_LEAVES(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.brush,
         displayName = "Limpiar hojas"
     ),
     PRUNE(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.ic_scissors,
         displayName = "Quitar excedentes"
     ),
     FERTILIZE(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.ic_nutrition,
         displayName = "Fertilizar"
     ),
     ROTATE(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.ic_rotation,
         displayName = "Rotar"
     ),
     REPOT(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.ic_pot,
         displayName = "Cambiar de maceta"
     ),
     CHECK_SOIL_MOISTURE(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.ic_substratum,
         displayName = "Revisar sustrato"
     ),
     CHECK_FOR_PESTS(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.bug,
         displayName = "Revisar pestes"
     ),
     TREAT_FOR_PESTS(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.ic_shield,
         displayName = "Tratar pestes"
     ),
     PROPAGATE(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.ic_growth,
         displayName = "Propagar"
     ),
     OTHER(
-        iconId = R.drawable.water_drop,
+        iconId = R.drawable.checklist,
         displayName = "Otro"
     );
 

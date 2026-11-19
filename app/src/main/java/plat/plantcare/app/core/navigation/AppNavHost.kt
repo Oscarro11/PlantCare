@@ -167,6 +167,7 @@ fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTask
             if (usesTopAppBar != null) {
                 AppSectionTopBar(
                     section = stringResource(usesTopAppBar.label),
+                    onNotificationsClick = { navController.navigateToAllTasksDestination(navOptions { launchSingleTop = true }) },
                     onProfileClick = {
                         navController.navigateToAjustesGraph(
                             navOptions {
@@ -281,6 +282,7 @@ fun AppTopBar(
 @Composable
 fun AppSectionTopBar(
     section: String,
+    onNotificationsClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -332,20 +334,13 @@ fun AppSectionTopBar(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        painterResource(id = R.drawable.notification),
-                        contentDescription = null
-                    )
+                    IconButton(onClick = onNotificationsClick) {
+                        Icon(painterResource(R.drawable.notification), contentDescription = "Ver tareas y recordatorios")
+                    }
 
-                    Icon(
-                        painterResource(id = R.drawable.account_placeholder),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .clip(shape = CircleShape)
-                            .clickable(
-                                onClick = onProfileClick
-                            )
-                    )
+                    IconButton(onClick = onProfileClick) {
+                        Icon(painterResource(R.drawable.account_placeholder), contentDescription = "Abrir ajustes de perfil")
+                    }
                 }
             }
         }

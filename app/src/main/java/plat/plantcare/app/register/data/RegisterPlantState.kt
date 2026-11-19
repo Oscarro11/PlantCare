@@ -12,6 +12,7 @@ data class RegisterPlantState(
     val saved: Boolean = false,
     val isSaving: Boolean = false,
     val error: String? = null,
+    val warning: String? = null,
     val draft: RegisterPlantDraft = RegisterPlantDraft()
 )
 

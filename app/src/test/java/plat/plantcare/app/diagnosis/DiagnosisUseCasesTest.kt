@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.diagnosis.application.AnalyzePlant
 import plat.plantcare.app.diagnosis.application.SaveDiagnosis
 import plat.plantcare.app.diagnosis.domain.*

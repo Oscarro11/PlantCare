@@ -38,10 +38,10 @@ class FirestorePlantCharacteristicsApi @Inject constructor(
     override fun observeCharacteristics(
         ownerId: String,
         plantId: String
-    ): Flow<PlantCharacteristicsDTO> =
+    ): Flow<PlantCharacteristicsDTO?> =
         characteristicsReference(ownerId, plantId)
             .documentFlow<PlantCharacteristicsFirebaseDTO>()
-            .map { it!!.toCommonDTO() }
+            .map { it?.toCommonDTO() }
 
     override suspend fun getCharacteristics(
         ownerId: String,

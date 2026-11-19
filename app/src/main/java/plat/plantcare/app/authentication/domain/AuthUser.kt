@@ -5,4 +5,3 @@ data class AuthUser(
     val email: String?,
     val isEmailVerified: Boolean
 )
-

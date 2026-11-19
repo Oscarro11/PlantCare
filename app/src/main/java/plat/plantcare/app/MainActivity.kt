@@ -14,8 +14,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.google.firebase.Firebase
-import com.google.firebase.appcheck.appCheck
-import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.initialize
@@ -37,9 +35,6 @@ class PlantCareApp : Application() {
             Firebase.firestore.useEmulator(host, 8080)
             Firebase.storage.useEmulator(host, 9199)
             Firebase.initialize(context = this)
-            Firebase.appCheck.installAppCheckProviderFactory(
-                DebugAppCheckProviderFactory.getInstance()
-            )
         }
         prepareAiDebug(this)
         taskRuntime.start()

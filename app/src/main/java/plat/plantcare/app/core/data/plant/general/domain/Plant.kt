@@ -38,3 +38,5 @@ fun NewPlant.validate(today: LocalDate = LocalDate.now()): Set<PlantFormError> =
     if (location.trim().length > MAX_PLANT_LOCATION_LENGTH) add(PlantFormError.LOCATION_TOO_LONG)
     if (birthDate != null && birthDate.isAfter(today)) add(PlantFormError.DATE_IN_FUTURE)
 }
+/** A saved plant remains usable when optional AI care is unavailable. */
+data class PlantSaveResult(val id: String, val careUnavailable: Boolean = false)

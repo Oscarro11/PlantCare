@@ -2,12 +2,12 @@
 
 ## Selección del proyecto de IA
 
-Las dos configuraciones están disponibles. El proyecto que procesa las solicitudes
+El proyecto principal PlantCare es la selección actual. Las dos configuraciones están disponibles. El proyecto que procesa las solicitudes
 a Gemini se selecciona al compilar mediante `plantcare.aiProject`:
 
 ```properties
 # Valor actual en gradle.properties:
-plantcare.aiProject=plantcare-ia
+plantcare.aiProject=plantcare
 ```
 
 - `plantcare-ia`: proyecto separado PlantCare IA, plan Spark y cuota gratuita disponible.
@@ -24,7 +24,7 @@ Para cambiar explícitamente en una compilación:
 
 Cambiar esta opción exige recompilar y reiniciar la app. No se cambia de proyecto
 automáticamente cuando hay un error o se agota la cuota. Una opción inválida hace fallar
-la compilación; una configuración ausente o incorrecta no recurre al proyecto de pago.
+la compilación. La selección predeterminada es `plantcare`.
 
 ## Datos de la app
 
@@ -32,7 +32,7 @@ Authentication, Firestore y Storage siguen siempre en el Firebase principal Plan
 con sus emuladores locales en debug. La selección anterior solo afecta a la IA.
 No reemplazar `app/google-services.json` con el archivo del proyecto de IA.
 
-Características: `usuarios/{uid}/caracteristicas/{plantId}`.
+Características: `usuarios/{uid}/plantas/{plantId}/caracteristicas/principal` (también se leen los documentos antiguos de `usuarios/{uid}/caracteristicas/{plantId}`).
 Resultados: `usuarios/{uid}/plantas/{plantId}/diagnosticos/{diagnosticId}`.
 La foto se envía al proveedor al pulsar Analizar. El resultado se guarda al pulsar Guardar diagnóstico.
 Los reintentos mantienen ID y fecha para evitar duplicados.

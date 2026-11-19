@@ -17,12 +17,13 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import plat.plantcare.app.diagnosis.domain.Diagnostic
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.diagnosis.domain.DiagnosisDraft
 import plat.plantcare.app.diagnosis.domain.DiagnosisPhotos
 import plat.plantcare.app.diagnosis.application.AnalyzePlant
 import plat.plantcare.app.diagnosis.application.SaveDiagnosis
 import plat.plantcare.app.diagnosis.application.ObservePlantsForDiagnosis
+import plat.plantcare.app.core.ai.gemini.AiAuthorizationException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -96,6 +97,7 @@ class DiagnosisViewModel @Inject constructor(
             } catch (e: TimeoutCancellationException) { fail("El análisis tardó demasiado. Revisa la conexión y vuelve a intentarlo.", e) }
             catch (e: CancellationException) { throw e }
             catch (e: IllegalArgumentException) { fail(e.message ?: "La foto no se pudo evaluar. Prueba con otra.", e) }
+            catch (e: AiAuthorizationException) { fail("El servicio de IA no está autorizado en este dispositivo. Tu planta sigue guardada.", e) }
             catch (e: Exception) { fail("No se pudo completar el análisis. Comprueba la conexión. Si persiste, el servicio puede no estar disponible.", e) }
             finally { mutable.update { it.copy(phase = DiagnosisPhase.IDLE) } }
         }

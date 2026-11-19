@@ -7,6 +7,11 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val selectedAiProject = providers.gradleProperty("plantcare.aiProject").orElse("plantcare").get()
+require(selectedAiProject in setOf("plantcare-ia", "plantcare")) {
+    "plantcare.aiProject must be plantcare-ia or plantcare; received: $selectedAiProject"
+}
+
 android {
     namespace = "plat.plantcare.app"
     compileSdk {
@@ -19,6 +24,8 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "GEMINI_MODEL", "\"${providers.gradleProperty("plantcare.geminiModel").orElse("gemini-3.8-flash").get()}\"")
+        buildConfigField("String", "AI_PROJECT", "\"$selectedAiProject\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -34,8 +41,8 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("boolean", "USE_EMULATOR", "true")
-            buildConfigField("String", "EMULATOR_HOST", "\"localhost\"")
+            buildConfigField("boolean", "USE_EMULATOR", providers.gradleProperty("plantcare.useEmulator").orElse("false").get())
+            buildConfigField("String", "EMULATOR_HOST", "\"${providers.gradleProperty("plantcare.emulatorHost").orElse("10.0.2.2").get()}\"")
         }
         release {
             buildConfigField("boolean", "USE_EMULATOR", "false")

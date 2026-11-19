@@ -1,5 +1,6 @@
 package plat.plantcare.app.collection.plantDetails.data
 
+import kotlinx.coroutines.CancellationException
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,22 +18,20 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import plat.plantcare.app.diagnosis.application.ObservePlantDiagnosis
-import plat.plantcare.app.diagnosis.domain.DiagnosisDetails
 import plat.plantcare.app.collection.plantDetails.ui.PlantDetailsDestination
 import plat.plantcare.app.diagnosis.domain.Diagnostic
-import plat.plantcare.app.core.data.models.PlantCharacteristics
-import plat.plantcare.app.core.data.models.PlantReference
-import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
 import plat.plantcare.app.core.data.models.Task
 import plat.plantcare.app.core.data.plant.PlantRepository
 import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
 import plat.plantcare.app.core.data.plant.considerations.domain.PlantConsiderations
 import plat.plantcare.app.core.data.plant.general.domain.Plant
 import plat.plantcare.app.core.data.repositories.TaskRepository
+import plat.plantcare.app.diagnosis.application.ObservePlantDiagnosis
+import plat.plantcare.app.diagnosis.domain.DiagnosisDetails
 import javax.inject.Inject
 
 sealed interface PlantDetailsEvent{
+    data class SavePlant(val name: String, val location: String) : PlantDetailsEvent
     data object ToggleFavorite: PlantDetailsEvent
     data object ToggleEditionMode: PlantDetailsEvent
     data object ClickMoreOptions: PlantDetailsEvent
@@ -50,14 +49,13 @@ private data class PlantInfo(
     val diagnosticError: String? = null
 )
 
-private data class DiagnosisObservation(
-    val details: DiagnosisDetails = DiagnosisDetails(),
-    val error: String? = null
-)
+private data class DiagnosisObservation(val details: DiagnosisDetails = DiagnosisDetails(), val error: String? = null)
 
 private data class PlantDetailsLocalState(
     //TODO: see what to do on edition mode, and more options
     val isEditionModeActive: Boolean = false,
+    val saving: Boolean = false,
+    val error: String? = null,
     val areMoreOptionsOpened: Boolean = false
 )
 
@@ -77,16 +75,16 @@ class PlantDetailsViewModel @Inject constructor (
 
     private val diagnosis = observePlantDiagnosis(plantId)
         .map { DiagnosisObservation(it) }
-        .catch { emit(DiagnosisObservation(error = "No se pudieron cargar las características y el diagnóstico. Revisa la conexión.")) }
+        .catch { emit(DiagnosisObservation(error = "No se pudo cargar el diagnóstico. Revisa la conexión.")) }
 
     private val plantInfo: Flow<PlantInfo> = combine(
         plant,
         plantRepository.observeCharacteristics(plantId),
         plantRepository.observeConsiderations(plantId),
         diagnosis
-        //plantRepository.observeDiagnostic(plantId)
-    ) { plant, characteristics, considerations, diagnostic ->
-        PlantInfo(plant, characteristics, considerations, diagnostic) }
+    ) { plant, characteristics, considerations, observation ->
+        PlantInfo(plant, characteristics, considerations, observation.details.latest, observation.error) }
+
 
     private val plantTask: Flow<Task?> = tasksRepository.observeAllTasks()
         .map { tasks ->
@@ -97,7 +95,7 @@ class PlantDetailsViewModel @Inject constructor (
     private val history: Flow<List<Task>?> = tasksRepository.observeAllTasks()
         .map { tasks ->
             tasks.filter { it.plantId == plantId && it.completed }
-                .sortedBy { it.completedAt }
+                .sortedBy { it.dueDate }
         }
 
     val state: StateFlow<PlantDetailsState> = combine(
@@ -114,10 +112,11 @@ class PlantDetailsViewModel @Inject constructor (
                 nextTask = task,
                 characteristics = plantGroup.characteristics,
                 diagnostic = plantGroup.diagnostic,
-                considerations = plantGroup.considerations,
                 diagnosticError = plantGroup.diagnosticError,
+                considerations = plantGroup.considerations,
                 history = history,
                 editionMode = local.isEditionModeActive,
+                saving = local.saving, error = local.error,
                 isMoreOptionsActive = local.areMoreOptionsOpened
             )
         }
@@ -131,6 +130,7 @@ class PlantDetailsViewModel @Inject constructor (
 
     fun onEvent(event: PlantDetailsEvent) {
         when (event) {
+            is PlantDetailsEvent.SavePlant -> savePlant(event.name, event.location)
             is PlantDetailsEvent.ToggleFavorite -> changeFavorite()
             is PlantDetailsEvent.CompleteTask -> completeTask(event.id)
             is PlantDetailsEvent.ClickMoreOptions -> clickMoreOptions()
@@ -142,13 +142,17 @@ class PlantDetailsViewModel @Inject constructor (
         viewModelScope.launch {
             val plant = plant.first()
 
-            plantRepository.setFavorite(plantId, if (plant != null) !plant.favorite else false)
+            try { plantRepository.setFavorite(plantId, if (plant != null) !plant.favorite else false) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { _localState.update { it.copy(error = "No se pudo guardar el favorito.") } }
         }
     }
 
     private fun completeTask(id: String) {
         viewModelScope.launch {
-            tasksRepository.completeTask(id)
+            try { tasksRepository.completeTask(id) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { _localState.update { it.copy(error = "No se pudo completar la tarea.") } }
         }
     }
 
@@ -160,7 +164,24 @@ class PlantDetailsViewModel @Inject constructor (
         }
     }
 
+    private fun savePlant(name: String, location: String) {
+        if (_localState.value.saving) return
+        if (name.isBlank() || name.trim().length > 60 || location.trim().length > 60) {
+            _localState.update { it.copy(error = "Escribe un nombre y usa un máximo de 60 caracteres por campo.") }; return
+        }
+        val current = (state.value as? PlantDetailsState.Content)?.plant ?: return
+        _localState.update { it.copy(saving = true, error = null) }
+        viewModelScope.launch {
+            try {
+                plantRepository.updatePlant(current.copy(name = name.trim(), location = location.trim()))
+                _localState.update { it.copy(saving = false, isEditionModeActive = false) }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { _localState.update { it.copy(saving = false, error = "No se pudieron guardar los cambios.") } }
+        }
+    }
+
     private fun toggleEditionMode() {
+        if (_localState.value.saving) return
         _localState.update { state ->
             state.copy(
                 isEditionModeActive = !state.isEditionModeActive

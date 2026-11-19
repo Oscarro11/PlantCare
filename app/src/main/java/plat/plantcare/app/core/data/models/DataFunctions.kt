@@ -42,7 +42,7 @@ fun LocalDate.getAge(today: LocalDate = LocalDate.now()): String {
     val years = if (age.years == 1) "año" else "años"
     val months = if (age.months == 1) "mes" else "meses"
 
-    return "${age.years} $years and ${age.months} $months"
+    return "${age.years} $years y ${age.months} $months"
 }
 
 fun String.toLocalDate(): LocalDate = LocalDate.parse(this)

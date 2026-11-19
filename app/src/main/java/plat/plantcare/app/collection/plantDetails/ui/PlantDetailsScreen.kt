@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -182,6 +185,7 @@ private fun PlantDetailsContent(
     state: PlantDetailsState.Content,
     modifier: Modifier = Modifier
 ) {
+    if (state.editionMode) EditPlantDialog(state, onEvent)
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -195,7 +199,7 @@ private fun PlantDetailsContent(
                         Icon(
                             painter = painterResource(
                                 if (state.plant.favorite) R.drawable.favorites_full else R.drawable.favorites),
-                            contentDescription = null
+                            contentDescription = "Marcar como favorita"
                         )
                     }
 
@@ -204,17 +208,22 @@ private fun PlantDetailsContent(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.edit),
-                            contentDescription = null
+                            contentDescription = "Editar planta"
                         )
                     }
 
-                    IconButton(
-                        onClick = { onEvent(PlantDetailsEvent.ClickMoreOptions)}
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.vertical_dots),
-                            contentDescription = null
-                        )
+                    Box {
+                        IconButton(onClick = { onEvent(PlantDetailsEvent.ClickMoreOptions) }) {
+                            Icon(painterResource(R.drawable.vertical_dots), "Más opciones")
+                        }
+                        DropdownMenu(expanded = state.isMoreOptionsActive, onDismissRequest = { onEvent(PlantDetailsEvent.ClickMoreOptions) }) {
+                            DropdownMenuItem(text = { Text("Editar planta") }, onClick = {
+                                onEvent(PlantDetailsEvent.ClickMoreOptions); onEvent(PlantDetailsEvent.ToggleEditionMode)
+                            })
+                            DropdownMenuItem(text = { Text("Crear diagnóstico") }, onClick = {
+                                onEvent(PlantDetailsEvent.ClickMoreOptions); onMakeDiagnostic()
+                            })
+                        }
                     }
                 }
             )
@@ -232,6 +241,7 @@ private fun PlantDetailsContent(
                 bottom = 32.dp
             )
         ) {
+            state.error?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.error) } }
             item {
                 Column(
                     modifier = Modifier.padding(bottom = 16.dp),
@@ -296,7 +306,7 @@ private fun PlantDetailsContent(
 
             item {
                 HistorySection(
-                    description = "5 eventos completados este mes",
+                    description = "${state.history.orEmpty().size} cuidados completados",
                     history = state.history
                 )
             }
@@ -463,4 +473,22 @@ private fun InfoChip(icon: Int, text: String) {
         )
         Text(text, style = MaterialTheme.typography.labelMedium)
     }
+}
+@Composable
+private fun EditPlantDialog(state: PlantDetailsState.Content, onEvent: (PlantDetailsEvent) -> Unit) {
+    var name by rememberSaveable(state.plant.id) { mutableStateOf(state.plant.name) }
+    var location by rememberSaveable(state.plant.id) { mutableStateOf(state.plant.location) }
+    AlertDialog(onDismissRequest = { if (!state.saving) onEvent(PlantDetailsEvent.ToggleEditionMode) },
+        title = { Text("Editar planta") }, text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(name, { name = it }, label = { Text("Nombre") }, singleLine = true, enabled = !state.saving,
+                    isError = name.isBlank() || name.trim().length > 60)
+                OutlinedTextField(location, { location = it }, label = { Text("Ubicación") }, singleLine = true, enabled = !state.saving,
+                    isError = location.trim().length > 60)
+                state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+        }, confirmButton = { TextButton(onClick = { onEvent(PlantDetailsEvent.SavePlant(name, location)) },
+            enabled = !state.saving && name.isNotBlank() && name.trim().length <= 60 && location.trim().length <= 60) {
+            Text(if (state.saving) "Guardando…" else "Guardar")
+        } }, dismissButton = { TextButton(onClick = { onEvent(PlantDetailsEvent.ToggleEditionMode) }, enabled = !state.saving) { Text("Cancelar") } })
 }

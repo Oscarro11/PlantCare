@@ -1,5 +1,6 @@
 package plat.plantcare.app.core.data.plant.considerations
 
+import plat.plantcare.app.core.ai.gemini.GeminiClient
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -32,10 +33,10 @@ object PlantConsiderationsModule {
     @Provides @Singleton
     fun providePlantConsiderationsStorageApi(firestore: FirebaseFirestore): PlantConsiderationsStorageApi =
         FirestorePlantConsiderationsApi(firestore)
-    
+
     @Provides @Singleton @PlantConsiderationsModel
-    fun providePlantConsiderationsModel(): GenerativeModel =
-        AiModelFactory.create(
+    fun providePlantConsiderationsModel(factory: AiModelFactory): GenerativeModel =
+        factory.create(
             schema = considerationsSchema,
             instructions = "Eres un experto en botánica. Recibes la imagen de una planta junto con" +
                     " su especie, y respondes solo con las consideraciones de cuidado" +
@@ -43,7 +44,6 @@ object PlantConsiderationsModule {
         )
 
     @Provides @Singleton
-    fun providePlantConsiderationsAiApi(@PlantConsiderationsModel model: GenerativeModel): PlantConsiderationsAiApi =
-        GeminiPlantConsiderationsApi(model)
+    fun providePlantConsiderationsAiApi(@PlantConsiderationsModel model: GenerativeModel, client: GeminiClient): PlantConsiderationsAiApi =
+        GeminiPlantConsiderationsApi(model, client)
 }
-

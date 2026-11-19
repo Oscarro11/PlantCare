@@ -16,3 +16,5 @@ local.properties
 
 firebase/.firebase/
 firebase/*-debug.log
+/.idea/
+/.kotlin/

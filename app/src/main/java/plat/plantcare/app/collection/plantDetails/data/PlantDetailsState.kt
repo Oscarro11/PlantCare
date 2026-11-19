@@ -20,6 +20,8 @@ sealed interface PlantDetailsState {
         val considerations: PlantConsiderations? = null,
         val history: List<Task>? = emptyList(),
         val editionMode: Boolean = false,
+        val saving: Boolean = false,
+        val error: String? = null,
         val isMoreOptionsActive: Boolean = false
     ) : PlantDetailsState
 }

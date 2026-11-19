@@ -52,6 +52,7 @@ class DiscoverRepositoryInstrumentedTest {
             val states = repository.observeCatalog().stateIn(scope, SharingStarted.Eagerly, CatalogSnapshot())
             withTimeout(15_000) { states.first { !it.isLoading } }
             assertFalse(states.value.wishedIds.contains(referenceId))
+
             repeat(3) {
                 withTimeout(15_000) { repository.setWished(referenceId, true) }
                 withTimeout(15_000) { states.first { referenceId in it.wishedIds } }

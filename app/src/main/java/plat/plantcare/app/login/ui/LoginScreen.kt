@@ -71,7 +71,7 @@ import plat.plantcare.app.login.data.LoginViewModel
 @Serializable data object LoginDestination
 
 fun NavController.navigateToLoginDestination(navOptions: NavOptions? = null){
-    navigate(LoginDestination)
+    navigate(LoginDestination, navOptions)
 }
 
 fun NavGraphBuilder.loginScreen(

@@ -9,19 +9,9 @@ import plat.plantcare.app.core.navigation.TopLevelRoute
 
 @Serializable data object CalendarGraph : TopLevelRoute
 @Serializable data object CalendarMonthDestination
-@Serializable data object CalendarWeekDestination
 
 fun NavGraphBuilder.calendarGraph(navController: NavController) {
     navigation<CalendarGraph>(startDestination = CalendarMonthDestination) {
-        composable<CalendarMonthDestination> {
-            CalendarMonthRoute(onWeekViewClick = {
-                navController.navigate(CalendarWeekDestination)
-            })
-        }
-        composable<CalendarWeekDestination> {
-            CalendarWeekRoute(onMonthViewClick = {
-                navController.popBackStack()
-            })
-        }
+        composable<CalendarMonthDestination> { CalendarRoute() }
     }
 }

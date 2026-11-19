@@ -27,4 +27,3 @@ fun UserEntity.toFirebaseDTO(): UserFirebaseDTO =
         streakDays = streakDays,
         lastStreakDate = lastStreakDate
     )
-

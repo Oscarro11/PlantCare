@@ -1,7 +1,7 @@
 package plat.plantcare.app.diagnosis.domain
 
 import kotlinx.coroutines.flow.Flow
-import plat.plantcare.app.core.data.plant.domain.Plant
+import plat.plantcare.app.core.data.plant.general.domain.Plant
 
 interface DiagnosisRepository {
     fun observeDetails(plantId: String): Flow<DiagnosisDetails>

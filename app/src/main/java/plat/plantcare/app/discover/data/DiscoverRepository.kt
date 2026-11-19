@@ -65,12 +65,14 @@ class DiscoverRepository @Inject constructor(
             },
             firestore.collection("pautasCuidado").listen { snapshot ->
                 snapshot.documents.mapNotNull { document ->
-                    document.toObject(PlantReferenceConsiderationsFirebaseDTO::class.java)?.let { document.id to it }
+                    document.toObject(PlantReferenceConsiderationsFirebaseDTO::class.java)?.let { document.id to it.copy(referenceId = document.id) }
                 }.toMap()
             }
         ) { plants, wishedIds, care ->
             CatalogSnapshot(plants.sortedBy { it.displayName.lowercase() }, wishedIds, care, isLoading = false)
-        }.onStart { emit(CatalogSnapshot()) }
+        }.onStart {
+            emit(CatalogSnapshot())
+        }
     }
 
     suspend fun setWished(referenceId: String, wished: Boolean) {

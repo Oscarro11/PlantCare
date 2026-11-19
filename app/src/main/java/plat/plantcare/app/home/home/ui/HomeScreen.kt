@@ -127,7 +127,7 @@ private fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "¡Buenos días, ${state.userName}!",
+                    text = if (state.userName.isBlank()) "¡Bienvenido a tu jardín!" else "¡Hola, ${state.userName}!",
                     modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
@@ -202,7 +202,7 @@ private fun HeaderSummary(
             tintColor = MaterialTheme.colorScheme.onBackground
         ) {
             Text(
-                text = "${state.plantTotal} plantas activas",
+                text = if (state.plantTotal == 1) "1 planta activa" else "${state.plantTotal} plantas activas",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -373,7 +373,7 @@ fun TaskCard(
                 )
 
                 Text(
-                    text = "${state.action.displayName} - ${state.description}",
+                    text = if (state.description.isBlank() || state.description.equals(state.action.displayName, ignoreCase = true)) state.action.displayName else "${state.action.displayName} · ${state.description}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = size ?: Int.MAX_VALUE

@@ -2,6 +2,8 @@ package plat.plantcare.app.home.allTasks.ui
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -61,18 +63,19 @@ fun AllTasksRoute(onBackClick: () -> Unit, modifier: Modifier = Modifier, viewMo
 }
 
 @Composable
-private fun NewTaskDialog(state: AllTasksState, onDismiss: () -> Unit,
-    onSave: (String, TaskAction, LocalDate, String, String) -> Unit) {
+fun NewTaskDialog(state: AllTasksState, onDismiss: () -> Unit,
+    onSave: (String, TaskAction, LocalDate, String, String) -> Unit,
+    initialDue: LocalDate = LocalDate.now()) {
     var plantId by remember { mutableStateOf(state.plants.firstOrNull()?.id.orEmpty()) }
     var action by remember { mutableStateOf(TaskAction.WATER) }
-    var due by remember { mutableStateOf(LocalDate.now()) }
+    var due by remember { mutableStateOf(initialDue) }
     var interval by remember { mutableStateOf("7") }
     var description by remember { mutableStateOf("") }
     var plantMenu by remember { mutableStateOf(false) }
     var actionMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
     AlertDialog(onDismissRequest = onDismiss, title = { Text("Nueva tarea") }, text = {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (state.plants.isEmpty()) Text("Agrega una planta a tu colección antes de crear una tarea.")
             Box {
                 TextButton(onClick = { plantMenu = true }, enabled = !state.saving) { Text(state.plants.firstOrNull { it.id == plantId }?.name ?: "Selecciona una planta") }
