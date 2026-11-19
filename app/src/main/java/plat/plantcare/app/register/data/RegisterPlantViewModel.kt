@@ -3,13 +3,14 @@ package plat.plantcare.app.register.data
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import plat.plantcare.app.core.data.models.Plant
-import plat.plantcare.app.core.data.repositories.PlantRepository
-import java.time.LocalDate
+import plat.plantcare.app.core.data.plant.PlantRepository
+import plat.plantcare.app.core.data.plant.characteristics.domain.PlantCharacteristics
+import plat.plantcare.app.core.data.plant.general.domain.NewPlant
 import java.util.UUID
 import javax.inject.Inject
 
@@ -18,99 +19,71 @@ class RegisterPlantViewModel @Inject constructor(
     private val plantRepository: PlantRepository
 ) : ViewModel() {
 
+    private var registrationId = UUID.randomUUID().toString()
     private val _state = MutableStateFlow(RegisterPlantState())
     val state = _state.asStateFlow()
 
-    fun onEvent(event: RegisterPlantEvent) {
+    fun handleEvent(event: RegisterPlantEvent) {
         when (event) {
+            is RegisterPlantEvent.ChangeDraft -> changeDraft(event.draft)
             RegisterPlantEvent.Save -> savePlant()
-
-            RegisterPlantEvent.Discard -> {
+            RegisterPlantEvent.Discard -> if (!_state.value.isSaving) {
+                registrationId = UUID.randomUUID().toString()
                 _state.value = RegisterPlantState()
-            }
-
-            else -> {
-                _state.update { current ->
-                    when (event) {
-                        is RegisterPlantEvent.ChangeName ->
-                            current.copy(plantName = event.value, error = null)
-
-                        is RegisterPlantEvent.SelectLocation ->
-                            current.copy(location = event.value)
-
-                        is RegisterPlantEvent.ChangeArrivalDate ->
-                            current.copy(arrivalDate = event.value)
-
-                        is RegisterPlantEvent.SelectLight ->
-                            current.copy(lightExposure = event.value)
-
-                        is RegisterPlantEvent.SelectPotSize ->
-                            current.copy(potSize = event.value)
-
-                        is RegisterPlantEvent.ChangePotType ->
-                            current.copy(potType = event.value)
-
-                        is RegisterPlantEvent.ChangeSubstrate ->
-                            current.copy(substrate = event.value)
-
-                        is RegisterPlantEvent.SelectWateringFrequency ->
-                            current.copy(wateringFrequency = event.value)
-
-                        is RegisterPlantEvent.ChangeWaterAmount ->
-                            current.copy(waterAmount = event.value)
-
-                        is RegisterPlantEvent.SelectAttentionLevel ->
-                            current.copy(attentionLevel = event.value)
-
-                        is RegisterPlantEvent.SetEasyCare ->
-                            current.copy(easyCare = event.value)
-
-                        is RegisterPlantEvent.SetAirPurifier ->
-                            current.copy(airPurifier = event.value)
-
-                        is RegisterPlantEvent.SetOwnCutting ->
-                            current.copy(ownCutting = event.value)
-
-                        else -> current
-                    }
-                }
             }
         }
     }
 
-    private fun savePlant() {
-        val current = _state.value
+    private fun changeDraft(draft: RegisterPlantDraft) {
+        if (_state.value.isSaving || _state.value.saved) return
+        _state.update { it.copy(draft = draft, error = null, saved = false) }
+    }
 
-        if (current.plantName.isBlank()) {
-            _state.update {
-                it.copy(error = "Ingresa el nombre de la planta")
-            }
+    private fun savePlant() {
+        if (_state.value.isSaving || _state.value.saved) return
+        val draft = _state.value.draft
+
+        if (!draft.isValid) {
+            _state.update { it.copy(error = "Ingresa el nombre de la planta") }
             return
         }
 
+        _state.update { it.copy(isSaving = true, saved = false, error = null) }
+
         viewModelScope.launch {
             try {
-                val plant = Plant(
-                    id = UUID.randomUUID().toString(),
-                    name = current.plantName.trim(),
-                    imageUrl = "",
-                    location = current.location,
-                    birthDate = LocalDate.now(),
-                    ownerId = "user-1",
-                    referenceId = ""
+                val result = plantRepository.addPlant(
+                    plantId = registrationId,
+                    newPlant = NewPlant(
+                        name = draft.plantName,
+                        imageUrl = draft.imageUrl.orEmpty(),
+                        location = draft.location,
+                        birthDate = draft.arrivalDate
+                    ),
+                    characteristics = PlantCharacteristics(
+                        plantId = "",
+                        lightExposure = draft.lightExposure,
+                        wateringFrequencyDays = draft.wateringFrequency,
+                        waterVolume = draft.waterVolume,
+                        humidityLevel = draft.humidity,
+                        currentClimate = draft.currentClimate,
+                        potSize = draft.potSize,
+                        potType = draft.potType,
+                        substrate = draft.substrate,
+                        attentionLevel = draft.attentionLevel
+                    )
                 )
 
-                plantRepository.addPlant(plant)
-
-                _state.update {
-                    it.copy(saved = true, error = null)
-                }
-
+                _state.update { it.copy(isSaving = false, saved = true, error = null,
+                    warning = if (result.careUnavailable) "Planta guardada. Las pautas de cuidado con IA no están disponibles por ahora." else null) }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
+                        isSaving = false,
                         saved = false,
-                        error = e.message ?: "Error al guardar la planta"
+                        error = "No se pudo confirmar el guardado. Revisa la conexión y vuelve a intentarlo; no se duplicará la planta."
                     )
                 }
             }

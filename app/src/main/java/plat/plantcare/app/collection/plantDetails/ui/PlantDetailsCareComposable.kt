@@ -17,14 +17,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import plat.plantcare.app.R
-import plat.plantcare.app.core.data.models.PlantReferenceConsiderations
+import plat.plantcare.app.core.data.plant.considerations.domain.PlantConsiderations
 import plat.plantcare.app.core.ui.AccordionSection
 import plat.plantcare.app.core.ui.darkenColor
 
 @Composable
 fun CareGuidelinesSection(
     description: String,
-    considerations: PlantReferenceConsiderations?,
+    considerations: PlantConsiderations?,
     modifier: Modifier = Modifier
 ) {
     AccordionSection(
@@ -42,7 +42,7 @@ fun CareGuidelinesSection(
 
 @Composable
 private fun CareGuidelinesContent(
-    guidelines: PlantReferenceConsiderations?,
+    guidelines: PlantConsiderations?,
     modifier: Modifier = Modifier
 ) {
     if (guidelines != null) {

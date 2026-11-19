@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    match /usuarios/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /usuarios/{uid}/plantas/{plantId} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+      && request.resource.data.name is string
+      && request.resource.data.name.size() > 0
+      && request.resource.data.name.size() <= 60
+      && request.resource.data.favorite is bool;
+
+      match /caracteristicas/{docId} {
+        allow read, create, update, delete: if isOwner(uid);
+      }
+
+      match /consideraciones/{docId} {
+        allow read, create, update, delete: if isOwner(uid);
+      }
+    }
+
+    match /usuarios/{uid}/tareas/{taskId} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.plantId is string
+        && request.resource.data.plantId.size() > 0
+        && request.resource.data.dueDate is string
+        && request.resource.data.action is string
+        && request.resource.data.description is string
+        && request.resource.data.completed is bool;
+    }
+
+    match /usuarios/{uid}/{collection}/{docId} {
+      allow read, write: if isOwner(uid)
+      && collection in ['deseadas', 'caracteristicas'];
+    }
+
+    match /usuarios/{uid}/plantas/{plantId}/diagnosticos/{diagnosticId} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && exists(/databases/$(database)/documents/usuarios/$(uid)/plantas/$(plantId))
+        && request.resource.data.plantId == plantId
+        && request.resource.data.date is timestamp
+        && request.resource.data.assessment in ['SALUDABLE', 'NECESITA_CUIDADO', 'EN_PELIGRO', 'NO_EVALUABLE']
+        && request.resource.data.summary is string && request.resource.data.summary.size() <= 2000
+        && request.resource.data.foliageState is string && request.resource.data.foliageState.size() <= 2000
+        && request.resource.data.growthVigor is string && request.resource.data.growthVigor.size() <= 2000
+        && request.resource.data.pestControl is string && request.resource.data.pestControl.size() <= 2000
+        && request.resource.data.diseaseSigns is string && request.resource.data.diseaseSigns.size() <= 2000
+        && request.resource.data.model is string && request.resource.data.model.size() <= 200
+        && request.resource.data.recommendations is list && request.resource.data.recommendations.size() in [1,2,3,4,5,6,7,8]
+        && request.resource.data.possibleCauses is list && request.resource.data.possibleCauses.size() <= 8
+        && request.resource.data.limitations is list && request.resource.data.limitations.size() in [1,2,3,4,5,6,7,8];
+      // A repeated save of the identical draft is safe after a connection timeout.
+      allow update: if isOwner(uid) && request.resource.data == resource.data;
+    }
+
+    match /referencias/{id}    { allow read: if signedIn(); allow write: if false; }
+    match /pautasCuidado/{id}  { allow read: if signedIn(); allow write: if false; }
+  }
+}

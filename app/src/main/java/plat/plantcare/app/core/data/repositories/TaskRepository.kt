@@ -13,6 +13,8 @@ import javax.inject.Singleton
 interface TaskRepository {
     fun observeAllTasks(): Flow<List<Task>>
     fun observeTodayTasks(): Flow<List<Task>>
+    suspend fun createTask(task: Task)
+    suspend fun completeTask(id: String, completedOn: LocalDate = LocalDate.now())
     suspend fun setTaskCompleted(id: String, completed: Boolean)
 }
 
@@ -27,15 +29,17 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
                 dueDate = LocalDate.now().plusDays(2),
                 action = TaskAction.WATER, // Replace with your enum value
                 description = "Water the monstera",
-                completed = false
-                ),
-                Task(
+                completed = false,
+                completedAt = LocalDate.now()
+            ),
+            Task(
                 id = "task-2",
                 plantId = "plant-2",
                 dueDate = LocalDate.now(),
                 action = TaskAction.CHECK_SOIL_MOISTURE,
                 description = "Check whether the soil is dry",
-                completed = false
+                completed = false,
+                completedAt = LocalDate.now()
             ),
             Task(
                 id = "task-3",
@@ -43,7 +47,8 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
                 dueDate = LocalDate.now().plusDays(1),
                 action = TaskAction.FERTILIZE,
                 description = "Add a small amount of fertilizer",
-                completed = false
+                completed = false,
+                completedAt = LocalDate.now()
             ),
             Task(
                 id = "task-2",
@@ -51,7 +56,8 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
                 dueDate = LocalDate.now().plusDays(5),
                 action = TaskAction.PRUNE,
                 description = "Trim dry leaves",
-                completed = false
+                completed = false,
+                completedAt = LocalDate.now()
             ),
             Task(
                 id = "task-5",
@@ -59,13 +65,18 @@ class FakeTaskRepository @Inject constructor(): TaskRepository {
                 dueDate = LocalDate.now().plusDays(1),
                 action = TaskAction.WATER,
                 description = "Water the monstera",
-                completed = false
+                completed = false,
+                completedAt = LocalDate.now()
             )
         )
     )
 
     override fun observeAllTasks(): Flow<List<Task>> = fakeTasks
     override fun observeTodayTasks(): Flow<List<Task>> = flowOf(emptyList())
+    override suspend fun createTask(task: Task) { fakeTasks.update { it + task } }
+    override suspend fun completeTask(id: String, completedOn: LocalDate) {
+        fakeTasks.update { tasks -> tasks.map { if (it.id == id) it.copy(completed = true, completedAt = completedOn) else it } }
+    }
     override suspend fun setTaskCompleted(id: String, completed: Boolean) {
         fakeTasks.update { currentTasks ->
             currentTasks.map { task ->
