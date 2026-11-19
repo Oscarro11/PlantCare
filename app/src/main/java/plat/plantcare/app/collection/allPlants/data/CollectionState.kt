@@ -18,7 +18,7 @@ enum class CollectionLayout(
 data class CollectionCardInfo(
     val id: String,
     val name: String,
-    val image: String,
+    val image: String?,
     val location: String,
     val tasks: List<Task> = emptyList()
 )
@@ -26,9 +26,13 @@ data class CollectionCardInfo(
 data class CollectionState(
     //TODO: this could be changed to tasks of the day (number)
     val pendingWatering: Int = 0,
+    val totalPlants: Int = 0,
+    val pendingOnly: Boolean = false,
+    val loading: Boolean = true,
     val todayClimate: String = "",
     val healthPercentage: Float = 0f,
     val searchQuery: String = "",
+    val preferencesError: String? = null,
     val selectedLayout: CollectionLayout = CollectionLayout.GRID,
     val plantList: List<CollectionCardInfo> = emptyList(),
 )

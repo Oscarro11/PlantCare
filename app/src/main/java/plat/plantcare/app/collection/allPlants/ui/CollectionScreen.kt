@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,13 +27,14 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
+import androidx.compose.material3.*
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -46,6 +48,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -95,7 +98,7 @@ fun CollectionRoute(
     CollectionScreen(
         onAddPlant = onAddPlant,
         onExaminePlant = onExaminePlant,
-        onFilterClick = {},
+        onFilterClick = { viewModel.onEvent(CollectionEvent.TogglePending) },
         onSearchQueryChange = { query -> viewModel.onEvent(CollectionEvent.ChangeSearchbar(query)) },
         onLayoutChange = { viewModel.onEvent(CollectionEvent.ToggleDisplay) },
         state = state,
@@ -104,7 +107,7 @@ fun CollectionRoute(
 }
 
 @Composable
-private fun CollectionScreen(
+internal fun CollectionScreen(
     onAddPlant: () -> Unit,
     onExaminePlant: (String) -> Unit,
     onFilterClick: () -> Unit,
@@ -114,7 +117,7 @@ private fun CollectionScreen(
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Adaptive(minSize = 150.dp),
         modifier = modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background),
@@ -124,7 +127,7 @@ private fun CollectionScreen(
     ) {
         fullWidthItem {
             CollectionHeader(
-                plantCount = state.plantList.size,
+                plantCount = state.totalPlants,
                 pendingOfWatering = state.pendingWatering,
                 climate = state.todayClimate,
                 healthPercentage = state.healthPercentage
@@ -150,7 +153,7 @@ private fun CollectionScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "MOSTRANDO ${state.plantList.size} REGISTRADAS",
+                    text = "MOSTRANDO ${state.plantList.size} DE ${state.totalPlants}",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -162,6 +165,25 @@ private fun CollectionScreen(
             }
         }
 
+        state.preferencesError?.let { message ->
+            fullWidthItem {
+                Text(text = message, color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
+        if (state.loading) fullWidthItem { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+        if (state.pendingOnly) fullWidthItem {
+            InputChip(selected = true, onClick = onFilterClick, label = { Text("Cuidados pendientes · Quitar filtro") })
+        }
+        if (!state.loading && state.plantList.isEmpty()) fullWidthItem {
+            Column(Modifier.fillMaxWidth().padding(vertical = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(painterResource(R.drawable.potted_plant), null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
+                Text(if (state.totalPlants == 0) "Tu colección empieza con una planta" else "No hay plantas con estos filtros",
+                    Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.onBackground)
+                if (state.totalPlants == 0) TextButton(onClick = onAddPlant) { Text("Agregar planta") }
+            }
+        }
         when (state.selectedLayout) {
             CollectionLayout.GRID -> {
                 items(
@@ -185,7 +207,7 @@ private fun CollectionScreen(
                         data = plant,
                         onClick = { onExaminePlant(plant.id) },
                         //TODO: check if more options are needed
-                        onOptionsClick = {}
+                        onOptionsClick = { onExaminePlant(plant.id) }
                     )
                 }
             }
@@ -211,7 +233,7 @@ private fun CollectionHeader(
             .fillMaxWidth()
             .clip(shape = RoundedCornerShape(12.dp))
             .background(
-                color = darkenColor(originalColor = MaterialTheme.colorScheme.background)
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
             )
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -242,7 +264,8 @@ private fun CollectionHeader(
                 Text(
                     "Mi Selva\nUrbana",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -256,9 +279,10 @@ private fun CollectionHeader(
                 Text(
                     plantCount.toString(),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Text("plantas", style = MaterialTheme.typography.labelSmall)
+                Text("plantas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
             }
         }
 
@@ -268,15 +292,15 @@ private fun CollectionHeader(
         ) {
             StatisticCard(
                 icon = R.drawable.water_drop,
-                label = "Hoy", "$pendingOfWatering por\nregar", Modifier.weight(1f)
+                label = "Pendientes", "$pendingOfWatering por\nregar", Modifier.weight(1f)
             )
             StatisticCard(
                 icon = R.drawable.sunny,
-                label = "Clima", "$climate\nÓptimo", Modifier.weight(1f)
+                label = "Clima", "Sin datos", Modifier.weight(1f)
             )
             StatisticCard(
                 icon = R.drawable.lotus,
-                label = "Salud", "${round(healthPercentage*100)}%\nFeliz", Modifier.weight(1f)
+                label = "Al día", "${(healthPercentage*100).toInt()}%\nSin atrasos", Modifier.weight(1f)
             )
         }
     }
@@ -289,35 +313,21 @@ private fun StatisticCard(
     value: String,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
-            .height(66.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = .8f),
-                shape = RoundedCornerShape(8.dp)
-            )
+            .heightIn(min = 66.dp)
+            .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
             .padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Icon(
-            painterResource(id = icon),
-            contentDescription = null,
-            Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Column {
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                value,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(painterResource(icon), contentDescription = null,
+                modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+            Text(label, style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        Text(value, style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -339,12 +349,13 @@ private fun SearchBar(
         TextField(
             value = queryValue,
             onValueChange = onSearchQueryChange,
+            singleLine = true,
             modifier = Modifier
                 .weight(1f)
-                .height(58.dp),
+                .heightIn(min = 56.dp),
             placeholder = {
                 Text(
-                    "Buscar por nombre,\napodo...",
+                    "Nombre o ubicación",
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -396,105 +407,36 @@ private fun SmallActionButton(
     ) {
         Icon(
             painter = painterResource(id = icon),
-            contentDescription = null,
+            contentDescription = if (icon == R.drawable.add) "Agregar planta" else "Filtrar por cuidados pendientes",
             modifier = Modifier.size(18.dp)
         )
     }
 }
 
 @Composable
-fun CollectionCard(
-    data: CollectionCardInfo,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.height(172.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(1.dp)
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(128.dp)
-            ) {
-                AsyncImage(
-                    model = data.image,
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable(onClick = onClick)
-                )
-                LocationChip(
-                    data.location,
-                    Modifier
-                        .align(Alignment.TopStart)
-                        .padding(8.dp)
-                )
-                Icon(
-                    painterResource(id = R.drawable.vertical_dots),
-                    contentDescription = null,
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(28.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = .85f),
-                            shape = CircleShape
-                        )
-                        .padding(8.dp)
-                )
+fun CollectionCard(data: CollectionCardInfo, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Card(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Box(Modifier.fillMaxWidth().height(140.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+            if (data.image.isNullOrBlank()) {
+                Icon(painterResource(R.drawable.potted_plant), null,
+                    Modifier.size(48.dp).align(Alignment.Center), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                AsyncImage(model = data.image, contentDescription = data.name, contentScale = ContentScale.Crop,
+                    error = painterResource(R.drawable.potted_plant), modifier = Modifier.fillMaxSize())
             }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(44.dp)
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    data.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    maxLines = 1
-                )
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    items(
-                        items = data.tasks
-                    ) { task ->
-                        Icon(
-                            painterResource(id = task.action.iconId),
-                            contentDescription = null,
-                            Modifier
-                                .size(28.dp)
-                                .background(
-                                    color = if (!task.completed) {
-                                        MaterialTheme.colorScheme.background
-                                    } else {
-                                        lightenColor(
-                                            originalColor = MaterialTheme.colorScheme.background,
-                                            factor = .2f
-                                        )
-                                    },
-                                    shape = CircleShape
-                                )
-                                .padding(7.dp),
-                            tint = if (!task.completed) {
-                                MaterialTheme.colorScheme.onBackground
-                            } else {
-                                lightenColor(originalColor = MaterialTheme.colorScheme.onBackground, factor = .5f)
-                            }
-                        )
-                    }
+            if (data.location.isNotBlank()) LocationChip(data.location, Modifier.align(Alignment.TopStart).padding(8.dp))
+        }
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(data.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurface)
+            Text(if (data.tasks.isEmpty()) "Cuidados al día" else "${data.tasks.size} cuidados pendientes",
+                style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (data.tasks.isNotEmpty()) LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(data.tasks) { task ->
+                    Icon(painterResource(task.action.iconId), task.action.displayName,
+                        Modifier.size(28.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape).padding(6.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
         }
@@ -508,115 +450,61 @@ fun CollectionRow(
     onOptionsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color.White)
-            .clickable(onClick = onClick)
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(10.dp)
-                ),
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = data.image,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(onClick = onClick),
-            )
-        }
-
-        Spacer(modifier = Modifier.width(10.dp))
-
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier.size(64.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = CircleShape
-                        )
-                )
-
-                Spacer(modifier = Modifier.width(4.dp))
-
-                Text(
-                    text = data.location,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Text(
-                text = data.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                items(
-                    items = data.tasks
-                ) { task ->
-                    Icon(
-                        painterResource(id = task.action.iconId),
-                        contentDescription = null,
-                        Modifier
-                            .size(28.dp)
-                            .background(
-                                color = if (!task.completed) {
-                                    MaterialTheme.colorScheme.background
-                                } else {
-                                    lightenColor(
-                                        originalColor = MaterialTheme.colorScheme.background,
-                                        factor = .2f
-                                    )
-                                },
-                                shape = CircleShape
-                            )
-                            .padding(7.dp),
-                        tint = if (!task.completed) {
-                            MaterialTheme.colorScheme.onBackground
-                        } else {
-                            lightenColor(originalColor = MaterialTheme.colorScheme.onBackground, factor = .5f)
-                        }
-                    )
+                if (data.image.isNullOrBlank()) {
+                    Icon(painterResource(R.drawable.potted_plant), contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    AsyncImage(model = data.image, contentDescription = null,
+                        modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 }
             }
+            Spacer(Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(data.location, style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(data.name, style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                if (data.tasks.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(data.tasks) { task ->
+                            Icon(painterResource(task.action.iconId), contentDescription = null,
+                                modifier = Modifier.size(28.dp).background(
+                                    color = if (task.completed) MaterialTheme.colorScheme.surfaceContainerHighest
+                                        else MaterialTheme.colorScheme.primaryContainer,
+                                    shape = CircleShape
+                                ).padding(7.dp),
+                                tint = if (task.completed) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                                    else MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
+                    }
+                }
+            }
+            IconButton(onClick = onOptionsClick) {
+                Icon(painterResource(R.drawable.vertical_dots),
+                    contentDescription = "Opciones de ${data.name}",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
-
-        Text(
-            text = "⋮",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .clickable(onClick = onOptionsClick)
-                .padding(8.dp)
-        )
-
-        Text(
-            text = "›",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
     }
 }
 
@@ -625,7 +513,7 @@ private fun LocationChip(location: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .background(
-                color = darkenColor(originalColor = MaterialTheme.colorScheme.background).copy(alpha = .9f),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = .95f),
                 shape = CircleShape
             )
             .padding(horizontal = 8.dp, vertical = 2.dp),
@@ -641,8 +529,9 @@ private fun LocationChip(location: String, modifier: Modifier = Modifier) {
         )
         Text(
             location,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -655,9 +544,9 @@ fun CollectionLayoutSelector(
 ) {
     Row(
         modifier = modifier
-            .size(width = 60.dp, height = 32.dp)
+            .size(width = 88.dp, height = 44.dp)
             .background(
-                color = darkenColor(originalColor = MaterialTheme.colorScheme.background),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 shape = RoundedCornerShape(8.dp)
             )
             .padding(2.dp)
@@ -672,20 +561,21 @@ fun CollectionLayoutSelector(
                     .fillMaxHeight()
                     .shadow(if (selected) 1.dp else 0.dp, RoundedCornerShape(6.dp))
                     .background(
-                        color = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
+                        color = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                         shape = RoundedCornerShape(6.dp)
                     )
                     .selectable(
                         selected = selected,
                         role = Role.RadioButton,
-                        onClick = onLayoutSelected
+                        onClick = { if (!selected) onLayoutSelected() }
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(layout.icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp))
+                    contentDescription = if (layout == CollectionLayout.LIST) "Vista de lista" else "Vista de cuadrícula",
+                    tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp))
             }
         }
     }

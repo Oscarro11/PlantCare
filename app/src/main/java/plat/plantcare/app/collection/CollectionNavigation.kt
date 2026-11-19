@@ -20,7 +20,7 @@ fun NavController.navigateToCollectionGraph(navOptions: NavOptions? = null) {
 fun NavGraphBuilder.collectionGraph(
     navController: NavController,
     onAddPlantClick: () -> Unit,
-    onMakeDiagnostic: () -> Unit
+    onMakeDiagnostic: (String) -> Unit
 ) {
     navigation<CollectionGraph>(startDestination = CollectionDestination) {
         collectionScreen(

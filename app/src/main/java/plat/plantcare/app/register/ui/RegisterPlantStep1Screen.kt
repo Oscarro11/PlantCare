@@ -18,10 +18,10 @@ import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,27 +31,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import plat.plantcare.app.R
 import plat.plantcare.app.core.navigation.AppTopBar
+import plat.plantcare.app.core.ui.LocalDatePickerDialog
+import plat.plantcare.app.core.ui.PhotoCameraButton
+import plat.plantcare.app.core.ui.PhotoGalleryButton
+import plat.plantcare.app.register.data.RegisterPlantDraft
 import plat.plantcare.app.register.data.RegisterPlantEvent
 import plat.plantcare.app.register.data.RegisterPlantState
-import plat.plantcare.app.ui.theme.PlantcareTheme
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import plat.plantcare.app.register.data.RegisterPlantViewModel
+import plat.plantcare.app.ui.theme.PlantcareTheme
+import java.time.LocalDate
 
 data class PlantLocation(
     val name: String,
     @DrawableRes val icon: Int
 )
-
 
 private val plantLocations = listOf(
     PlantLocation("Salón", R.drawable.ic_livingroom),
@@ -62,21 +66,174 @@ private val plantLocations = listOf(
     PlantLocation("Estudio", R.drawable.ic_study)
 )
 
+@Composable
+fun RegisterPlantStep1Route(
+    viewModel: RegisterPlantViewModel,
+    onContinue: () -> Unit,
+    onClose: () -> Unit,
+    onDiscard: () -> Unit
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    RegisterPlantStep1Screen(
+        state = state,
+        onEvent = viewModel::handleEvent,
+        onContinueClick = onContinue,
+        onCloseClick = onClose,
+        onDiscardClick = {
+            viewModel.handleEvent(RegisterPlantEvent.Discard)
+            onDiscard()
+        }
+    )
+}
+
+@Composable
+fun RegisterPlantStep1Screen(
+    onCloseClick: () -> Unit,
+    onContinueClick: () -> Unit,
+    onDiscardClick: () -> Unit,
+    state: RegisterPlantState = RegisterPlantState(),
+    onEvent: (RegisterPlantEvent) -> Unit = {}
+) {
+    val draft = state.draft
+
+    Scaffold(
+        topBar = {
+            AppTopBar(
+                title = "Registro Planta Paso 1",
+                onBackClick = onCloseClick,
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding + PaddingValues(horizontal = 20.dp))
+        ) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = "PASO 1 DE 3",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Text(
+                    text = "33% completado",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(5.dp))
+
+            Text(
+                text = "Identidad y Fotografías",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            RegisterProgressBar(
+                progress = 0.33f
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            PhotoSection(
+                draft = state.draft,
+                onTakePhotoClick = { imageUrl ->
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(imageUrl = imageUrl)
+                        )
+                    )
+                },
+                onGalleryClick = { imageUrl ->
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(imageUrl = imageUrl)
+                        )
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            IdentitySection(
+                plantName = draft.plantName,
+                onPlantNameChange = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(plantName = it)
+                        )
+                    )
+                },
+                selectedLocation = draft.location,
+                onLocationSelected = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(location = it)
+                        )
+                    )
+                },
+                onNewLocationClick = {},
+                arrivalDate = draft.arrivalDate,
+                onArrivalDateChange = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(arrivalDate = it)
+                        )
+                    )
+                },
+                onArrivalDateDismiss = {
+                    onEvent(
+                        RegisterPlantEvent.ChangeDraft(
+                            draft.copy(arrivalDate = LocalDate.now())
+                        )
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            ContinueRegisterButton(
+                text = "Continuar a Requerimientos\n(Paso 2)",
+                onClick = onContinueClick
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            DiscardDraftButton(
+                onClick = onDiscardClick
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
 
 @Composable
 fun RegisterProgressBar(
     progress: Float
 ) {
-    val darkGreen = Color(0xFF123D2B)
-    val lightGreen = Color(0xFFD6EBDD)
+    val primary = MaterialTheme.colorScheme.primary
+    val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(5.dp)
             .background(
-                color = lightGreen,
-                shape = RoundedCornerShape(10.dp)
+                color = trackColor,
+                shape = MaterialTheme.shapes.small
             )
     ) {
         Box(
@@ -84,8 +241,8 @@ fun RegisterProgressBar(
                 .fillMaxWidth(progress)
                 .height(5.dp)
                 .background(
-                    color = darkGreen,
-                    shape = RoundedCornerShape(10.dp)
+                    color = primary,
+                    shape = MaterialTheme.shapes.small
                 )
         )
     }
@@ -94,66 +251,25 @@ fun RegisterProgressBar(
 
 @Composable
 private fun MainPlantPhotoPlaceholder(
-    onClick: () -> Unit
+    model: String
 ) {
     Box(
+        contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxWidth()
             .height(190.dp)
             .background(
-                color = Color(0xFFD6EBDD),
-                shape = RoundedCornerShape(14.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.medium
             )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_images),
-            contentDescription = "Fotografía de la planta",
-            modifier = Modifier.size(42.dp),
-            tint = Color(0xFF52755C)
-        )
-    }
-}
-
-
-@Composable
-private fun PhotoActionButton(
-    text: String,
-    @DrawableRes icon: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val darkGreen = Color(0xFF123D2B)
-
-    Row(
-        modifier = modifier
-            .height(46.dp)
-            .background(
-                color = Color.White,
-                shape = RoundedCornerShape(10.dp)
-            )
-            .clickable(onClick = onClick),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painterResource(icon),
+        AsyncImage(
+            model = model,
             contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = darkGreen
-        )
-
-        Spacer(modifier = Modifier.width(7.dp))
-
-        Text(
-            text = text,
-            fontSize = 11.sp,
-            color = darkGreen
+            contentScale = ContentScale.Fit
         )
     }
 }
-
 
 @Composable
 private fun PhotoThumbnail(
@@ -161,10 +277,10 @@ private fun PhotoThumbnail(
 ) {
     Box(
         modifier = Modifier
-            .size(52.dp)
+            .size(64.dp)
             .background(
-                color = Color(0xFFD6EBDD),
-                shape = RoundedCornerShape(8.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.extraSmall
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -173,7 +289,7 @@ private fun PhotoThumbnail(
             painter = painterResource(R.drawable.ic_images),
             contentDescription = "Fotografía",
             modifier = Modifier.size(20.dp),
-            tint = Color(0xFF52755C)
+            tint = MaterialTheme.colorScheme.secondary
         )
     }
 }
@@ -183,14 +299,14 @@ private fun PhotoThumbnail(
 private fun AddPhotoButton(
     onClick: () -> Unit
 ) {
-    val darkGreen = Color(0xFF123D2B)
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
-            .size(52.dp)
+            .size(64.dp)
             .background(
-                color = Color(0xFFDDF2E5),
-                shape = RoundedCornerShape(8.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.extraSmall
             )
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -200,13 +316,13 @@ private fun AddPhotoButton(
             painter = painterResource(R.drawable.ic_cameraplus),
             contentDescription = "Añadir fotografía",
             modifier = Modifier.size(18.dp),
-            tint = darkGreen
+            tint = primary
         )
 
         Text(
             text = "Añadir",
-            fontSize = 7.sp,
-            color = Color.Gray
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.secondary
         )
     }
 }
@@ -214,39 +330,30 @@ private fun AddPhotoButton(
 
 @Composable
 private fun PhotoSection(
-    onTakePhotoClick: () -> Unit,
-    onGalleryClick: () -> Unit,
-    onPhotoClick: () -> Unit,
-    onAddPhotoClick: () -> Unit
+    draft: RegisterPlantDraft,
+    onTakePhotoClick: (String) -> Unit,
+    onGalleryClick: (String) -> Unit
 ) {
-    val darkGreen = Color(0xFF123D2B)
-
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
                 text = "Fotografía del espécimen",
-                fontSize = 15.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
-                color = darkGreen
-            )
-
-            Text(
-                text = "1 de 3 fotos",
-                fontSize = 9.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
         MainPlantPhotoPlaceholder(
-            onClick = onPhotoClick
+            model = draft.imageUrl ?: R.drawable.ic_plant.toString()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -255,36 +362,25 @@ private fun PhotoSection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            PhotoActionButton(
-                text = "Tomar foto",
-                icon = R.drawable.ic_camera,
-                onClick = onTakePhotoClick,
-                modifier = Modifier.weight(1f)
+            PhotoCameraButton(
+                size = 52.dp,
+                photoContent = "plant",
+                textSize = MaterialTheme.typography.labelMedium.fontSize,
+                textColor = MaterialTheme.colorScheme.onSurface,
+                tintColor = MaterialTheme.colorScheme.onSurface,
+                backgroundColor = MaterialTheme.colorScheme.surface,
+                backgroundShape = MaterialTheme.shapes.extraSmall,
+                onModelChange = onTakePhotoClick
             )
 
-            PhotoActionButton(
-                text = "Desde galería",
-                icon = R.drawable.ic_images,
-                onClick = onGalleryClick,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            PhotoThumbnail(
-                onClick = onPhotoClick
-            )
-
-            PhotoThumbnail(
-                onClick = onPhotoClick
-            )
-
-            AddPhotoButton(
-                onClick = onAddPhotoClick
+            PhotoGalleryButton(
+                size = 52.dp,
+                textSize = MaterialTheme.typography.labelMedium.fontSize,
+                textColor = MaterialTheme.colorScheme.onSurface,
+                tintColor = MaterialTheme.colorScheme.onSurface,
+                backgroundColor = MaterialTheme.colorScheme.surface,
+                backgroundShape = MaterialTheme.shapes.extraSmall,
+                onModelChange = onGalleryClick
             )
         }
     }
@@ -296,14 +392,14 @@ private fun PlantNameField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    val darkGreen = Color(0xFF123D2B)
+    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Color(0xFFEAF9F0),
-                shape = RoundedCornerShape(8.dp)
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.extraSmall
             )
             .padding(
                 horizontal = 12.dp,
@@ -315,7 +411,7 @@ private fun PlantNameField(
             painter = painterResource(R.drawable.ic_happy),
             contentDescription = null,
             modifier = Modifier.size(16.dp),
-            tint = Color(0xFF52755C)
+            tint = MaterialTheme.colorScheme.secondary
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -325,9 +421,9 @@ private fun PlantNameField(
             onValueChange = onValueChange,
             modifier = Modifier.weight(1f),
             singleLine = true,
-            textStyle = TextStyle(
-                fontSize = 11.sp,
-                color = darkGreen
+            cursorBrush = SolidColor(primary),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                color = MaterialTheme.colorScheme.onSurface
             )
         )
     }
@@ -340,17 +436,17 @@ private fun LocationChip(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val darkGreen = Color(0xFF123D2B)
+    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
             .background(
                 color = if (selected) {
-                    darkGreen
+                    primary
                 } else {
-                    Color(0xFFDDF2E5)
+                    MaterialTheme.colorScheme.surfaceContainerHigh
                 },
-                shape = RoundedCornerShape(20.dp)
+                shape = MaterialTheme.shapes.large
             )
             .clickable(onClick = onClick)
             .padding(
@@ -365,19 +461,19 @@ private fun LocationChip(
             contentDescription = location.name,
             modifier = Modifier.size(13.dp),
             tint = if (selected) {
-                Color.White
+                MaterialTheme.colorScheme.onPrimary
             } else {
-                Color(0xFF52755C)
+                MaterialTheme.colorScheme.secondary
             }
         )
 
         Text(
             text = location.name,
-            fontSize = 9.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = if (selected) {
-                Color.White
+                MaterialTheme.colorScheme.onPrimary
             } else {
-                darkGreen
+                primary
             }
         )
     }
@@ -390,7 +486,7 @@ private fun LocationSelector(
     onLocationSelected: (String) -> Unit,
     onNewLocationClick: () -> Unit
 ) {
-    val darkGreen = Color(0xFF123D2B)
+    val primary = MaterialTheme.colorScheme.primary
 
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -409,8 +505,8 @@ private fun LocationSelector(
         Box(
             modifier = Modifier
                 .background(
-                    color = Color(0xFFCBEBCF),
-                    shape = RoundedCornerShape(20.dp)
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = MaterialTheme.shapes.large
                 )
                 .clickable(onClick = onNewLocationClick)
                 .padding(
@@ -420,29 +516,27 @@ private fun LocationSelector(
         ) {
             Text(
                 text = "+ Nueva estancia",
-                fontSize = 9.sp,
-                color = darkGreen
+                style = MaterialTheme.typography.labelSmall,
+                color = primary
             )
         }
     }
 }
 
-
 @Composable
 private fun ArrivalDateSelector(
-    onDateClick: () -> Unit
+    date: LocalDate,
+    onDateClick: () -> Unit,
+    onTodayClick: () -> Unit
 ) {
-    val darkGreen = Color(0xFF123D2B)
-
-    var todaySelected by remember {
-        mutableStateOf(false)
-    }
+    val primary = MaterialTheme.colorScheme.primary
+    val todaySelected = date == LocalDate.now()
 
     Column {
         Text(
             text = "Fecha de llegada a casa",
-            fontSize = 9.sp,
-            color = Color.Gray
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.secondary
         )
 
         Spacer(modifier = Modifier.height(5.dp))
@@ -455,8 +549,8 @@ private fun ArrivalDateSelector(
                 modifier = Modifier
                     .weight(1f)
                     .background(
-                        color = Color(0xFFEAF9F0),
-                        shape = RoundedCornerShape(8.dp)
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = MaterialTheme.shapes.extraSmall
                     )
                     .clickable(onClick = onDateClick)
                     .padding(11.dp),
@@ -466,19 +560,15 @@ private fun ArrivalDateSelector(
                     painter = painterResource(R.drawable.ic_calendar),
                     contentDescription = "Seleccionar fecha",
                     modifier = Modifier.size(16.dp),
-                    tint = Color(0xFF52755C)
+                    tint = MaterialTheme.colorScheme.secondary
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = if (todaySelected) {
-                        "Hoy"
-                    } else {
-                        "12 de Octubre, 2024"
-                    },
-                    fontSize = 10.sp,
-                    color = darkGreen
+                    text = date.toString(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = primary
                 )
             }
 
@@ -486,14 +576,14 @@ private fun ArrivalDateSelector(
                 modifier = Modifier
                     .background(
                         color = if (todaySelected) {
-                            darkGreen
+                            primary
                         } else {
-                            Color(0xFFDDF2E5)
+                            MaterialTheme.colorScheme.surfaceContainerHigh
                         },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = MaterialTheme.shapes.extraSmall
                     )
                     .clickable {
-                        todaySelected = !todaySelected
+                        onTodayClick()
                     }
                     .padding(
                         horizontal = 16.dp,
@@ -503,11 +593,11 @@ private fun ArrivalDateSelector(
             ) {
                 Text(
                     text = "Hoy",
-                    fontSize = 10.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = if (todaySelected) {
-                        Color.White
+                        MaterialTheme.colorScheme.onPrimary
                     } else {
-                        darkGreen
+                        primary
                     }
                 )
             }
@@ -515,6 +605,34 @@ private fun ArrivalDateSelector(
     }
 }
 
+@Composable
+private fun ArrivalDateSection(
+    arrivalDate: LocalDate,
+    onArrivalDateChange: (LocalDate) -> Unit,
+    onArrivalDateDismiss: () -> Unit
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    ArrivalDateSelector(
+        date = arrivalDate,
+        onDateClick = { showDatePicker = true },
+        onTodayClick = onArrivalDateDismiss
+    )
+
+    if (showDatePicker) {
+        LocalDatePickerDialog(
+            initialDate = arrivalDate,
+            onDateSelected = {
+                onArrivalDateChange(it)
+                showDatePicker = false
+            },
+            onDismiss = {
+                onArrivalDateDismiss()
+                showDatePicker = false
+            }
+        )
+    }
+}
 
 @Composable
 private fun IdentitySection(
@@ -523,16 +641,18 @@ private fun IdentitySection(
     selectedLocation: String,
     onLocationSelected: (String) -> Unit,
     onNewLocationClick: () -> Unit,
-    onDateClick: () -> Unit
+    arrivalDate: LocalDate,
+    onArrivalDateChange: (LocalDate) -> Unit,
+    onArrivalDateDismiss: () -> Unit,
 ) {
-    val darkGreen = Color(0xFF123D2B)
+    val primary = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Color.White,
-                shape = RoundedCornerShape(14.dp)
+                color = MaterialTheme.colorScheme.surface,
+                shape = MaterialTheme.shapes.medium
             )
             .padding(14.dp)
     ) {
@@ -543,35 +663,36 @@ private fun IdentitySection(
                 painter = painterResource(R.drawable.ic_id),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = darkGreen
+                tint = primary
             )
 
             Spacer(modifier = Modifier.width(6.dp))
 
             Text(
                 text = "Identidad y Origen",
-                fontSize = 15.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = darkGreen
+                color = primary
             )
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = "Apodo o nombre cariñoso",
-                fontSize = 9.sp,
-                color = Color.Gray
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary
             )
 
             Text(
                 text = "Obligatorio",
-                fontSize = 9.sp,
-                color = Color.Gray
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary
             )
         }
 
@@ -584,20 +705,21 @@ private fun IdentitySection(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = "Ubicación en el hogar",
-                fontSize = 9.sp,
-                color = Color.Gray
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary
             )
 
             Text(
                 text = "Espacio asignado",
-                fontSize = 9.sp,
-                color = Color.Gray
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary
             )
         }
 
@@ -611,8 +733,10 @@ private fun IdentitySection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ArrivalDateSelector(
-            onDateClick = onDateClick
+        ArrivalDateSection(
+            arrivalDate = arrivalDate,
+            onArrivalDateChange = onArrivalDateChange,
+            onArrivalDateDismiss = onArrivalDateDismiss
         )
     }
 }
@@ -623,14 +747,14 @@ fun ContinueRegisterButton(
     text: String,
     onClick: () -> Unit
 ) {
-    val darkGreen = Color(0xFF123D2B)
+    val primary = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = darkGreen,
-                shape = RoundedCornerShape(12.dp)
+                color = primary,
+                shape = MaterialTheme.shapes.medium
             )
             .clickable(onClick = onClick)
             .padding(vertical = 14.dp),
@@ -638,11 +762,10 @@ fun ContinueRegisterButton(
     ) {
         Text(
             text = "$text   →",
-            fontSize = 14.sp,
-            lineHeight = 17.sp,
+            style = MaterialTheme.typography.titleSmall,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Medium,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onPrimary
         )
     }
 }
@@ -664,151 +787,17 @@ fun DiscardDraftButton(
             painter = painterResource(R.drawable.ic_trash),
             contentDescription = null,
             modifier = Modifier.size(13.dp),
-            tint = Color.Gray
+            tint = MaterialTheme.colorScheme.secondary
         )
 
         Spacer(modifier = Modifier.width(5.dp))
 
         Text(
             text = "Descartar borrador",
-            fontSize = 9.sp,
-            color = Color.Gray
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.secondary
         )
     }
-}
-
-
-@Composable
-fun RegisterPlantStep1Screen(
-    onCloseClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {},
-    onTakePhotoClick: () -> Unit = {},
-    onGalleryClick: () -> Unit = {},
-    onPhotoClick: () -> Unit = {},
-    onAddPhotoClick: () -> Unit = {},
-    onNewLocationClick: () -> Unit = {},
-    onDateClick: () -> Unit = {},
-    onContinueClick: () -> Unit = {},
-    onDiscardClick: () -> Unit = {}
-,
-    state: RegisterPlantState = RegisterPlantState(),
-    onEvent: (RegisterPlantEvent) -> Unit = {} 
-) {
-    val backgroundColor = Color(0xFFEAF9F0)
-    val darkGreen = Color(0xFF123D2B)
-
-    val plantName = state.plantName
-    val selectedLocation = state.location
-
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                title = "Registro Planta Paso 1",
-                onBackClick = onCloseClick,
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-                .verticalScroll(rememberScrollState())
-                .padding(innerPadding + PaddingValues(horizontal = 20.dp))
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "PASO 1 DE 3",
-                    fontSize = 9.sp,
-                    color = Color.Gray
-                )
-
-                Text(
-                    text = "33% completado",
-                    fontSize = 9.sp,
-                    color = Color.Gray
-                )
-            }
-
-            Spacer(modifier = Modifier.height(5.dp))
-
-            Text(
-                text = "Identidad y Fotografías",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = darkGreen
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            RegisterProgressBar(
-                progress = 0.33f
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            PhotoSection(
-                onTakePhotoClick = onTakePhotoClick,
-                onGalleryClick = onGalleryClick,
-                onPhotoClick = onPhotoClick,
-                onAddPhotoClick = onAddPhotoClick
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            IdentitySection(
-                plantName = plantName,
-                onPlantNameChange = {
-                    onEvent(RegisterPlantEvent.ChangeName(it))
-                },
-                selectedLocation = selectedLocation,
-                onLocationSelected = {
-                    onEvent(RegisterPlantEvent.SelectLocation(it))
-                },
-                onNewLocationClick = onNewLocationClick,
-                onDateClick = onDateClick
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            ContinueRegisterButton(
-                text = "Continuar a Requerimientos\n(Paso 2)",
-                onClick = onContinueClick
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            DiscardDraftButton(
-                onClick = onDiscardClick
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-
-
-}
-@Composable
-fun RegisterPlantStep1Route(
-    viewModel: RegisterPlantViewModel,
-    onContinue: () -> Unit,
-    onClose: () -> Unit,
-    onDiscard: () -> Unit
-) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-
-    RegisterPlantStep1Screen(
-        state = state,
-        onEvent = viewModel::onEvent,
-        onContinueClick = onContinue,
-        onCloseClick = onClose,
-        onDiscardClick = {
-            viewModel.onEvent(RegisterPlantEvent.Discard)
-            onDiscard()
-        }
-    )
 }
 
 @Preview(
@@ -818,7 +807,11 @@ fun RegisterPlantStep1Route(
 @Composable
 private fun RegisterPlantStep1ScreenPreview() {
     PlantcareTheme {
-        RegisterPlantStep1Screen()
+        RegisterPlantStep1Screen(
+            onCloseClick = {},
+            onContinueClick = {},
+            onDiscardClick = {}
+        )
     }
 }
 

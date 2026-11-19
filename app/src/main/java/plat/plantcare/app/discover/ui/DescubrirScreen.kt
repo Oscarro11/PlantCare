@@ -1,13 +1,16 @@
 package plat.plantcare.app
 
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BookmarkAdd
+import androidx.compose.material.icons.outlined.BookmarkRemove
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Button
@@ -32,6 +36,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.TextButton
+import plat.plantcare.app.discover.ui.CatalogPlantImage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -55,14 +63,6 @@ import plat.plantcare.app.discover.data.DescubrirEvent
 import plat.plantcare.app.discover.data.DescubrirState
 import plat.plantcare.app.discover.data.DescubrirViewModel
 import plat.plantcare.app.discover.data.PlantaRecomendada
-
-data class PlantaRecomendada(
-    @DrawableRes val imagen: Int,
-    val nombre: String,
-    val nombreAlternativo: String,
-    val caracteristica: String,
-    val match: Int
-)
 
 @Serializable
 data object DescubrirDestination
@@ -98,7 +98,7 @@ fun DescubrirRoute(
         state = state,
         onEvent = viewModel::onEvent,
         onVerCuidados = onVerCuidados,
-        onFiltrosClick = onFiltrosClick,
+        onFiltrosClick = { viewModel.onEvent(DescubrirEvent.ToggleFiltro) },
         modifier = modifier
     )
 }
@@ -123,7 +123,7 @@ private fun DescubrirScreen(
     ) {
         item {
             HeaderDescubrir(
-                cantidad = state.plantasRecomendadas.size
+                cantidad = state.plantasFiltradas.size
             )
         }
 
@@ -139,12 +139,28 @@ private fun DescubrirScreen(
             }
         }
 
+        item {
+            OutlinedTextField(value = state.busqueda,
+                onValueChange = { onEvent(DescubrirEvent.ChangeBusqueda(it)) },
+                label = { Text("Buscar por nombre o especie") }, singleLine = true,
+                modifier = Modifier.fillMaxWidth())
+            if (state.soloDeseadas) Text("Filtro: solo plantas en tu lista de deseos")
+        }
+        if (state.isLoading) item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
+        state.error?.let { message -> item {
+            Text(message, color = MaterialTheme.colorScheme.error)
+            TextButton(onClick = { onEvent(DescubrirEvent.Retry) }) { Text("Reintentar") }
+        } }
+        if (!state.isLoading && state.error == null && state.plantasFiltradas.isEmpty()) item {
+            Text(if (state.plantasRecomendadas.isEmpty()) "Todavía no hay plantas en el catálogo." else "No hay plantas que coincidan con tu búsqueda o filtro.")
+        }
         items(
-            items = state.plantasRecomendadas,
+            items = state.plantasFiltradas,
             key = { planta -> planta.id }
         ) { planta ->
             PlantaRecomendadaCard(
                 planta = planta,
+                enabled = planta.id !in state.pendingIds,
                 onToggleListaDeseos = {
                     onEvent(
                         DescubrirEvent.ToggleListaDeseos(
@@ -183,7 +199,7 @@ private fun HeaderDescubrir(
 ) {
     Column {
         Text(
-            text = "✦ ALGORITMO BOTÁNICO",
+            text = "✦ CATÁLOGO BOTÁNICO",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.primary
@@ -203,8 +219,7 @@ private fun HeaderDescubrir(
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Recomendaciones personalizadas según la luz y " +
-                    "microclima medido en tu hogar.",
+            text = "Explora especies, consulta sus cuidados y guarda las que te gustaría tener.",
             style = MaterialTheme.typography.titleLarge.copy(
                 lineHeight = 30.sp
             ),
@@ -233,7 +248,7 @@ private fun RecomendacionesHeader(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = "● Perfectas para tu espacio",
+                text = "Plantas para descubrir",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -242,7 +257,7 @@ private fun RecomendacionesHeader(
             Spacer(Modifier.height(4.dp))
 
             Text(
-                text = "Calibrado para: Salón con luz indirecta media",
+                text = "Encuentra tu próxima planta",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -264,6 +279,7 @@ private fun RecomendacionesHeader(
 @Composable
 private fun PlantaRecomendadaCard(
     planta: PlantaRecomendada,
+    enabled: Boolean,
     onToggleListaDeseos: () -> Unit,
     onVerCuidados: () -> Unit
 ) {
@@ -285,7 +301,7 @@ private fun PlantaRecomendadaCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(155.dp),
+                    .heightIn(min = 155.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 PlantaImage(
@@ -304,6 +320,7 @@ private fun PlantaRecomendadaCard(
 
             PlantActions(
                 enListaDeseos = planta.enListaDeseos,
+                enabled = enabled,
                 onToggleListaDeseos = onToggleListaDeseos,
                 onVerCuidados = onVerCuidados
             )
@@ -321,32 +338,33 @@ private fun PlantaImage(
             height = 155.dp
         )
     ) {
-        Image(
-            painter = painterResource(planta.imagen),
-            contentDescription = "Imagen de ${planta.nombre}",
+        CatalogPlantImage(
+            url = planta.imageUrl,
+            description = "Imagen de ${planta.nombre}",
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(16.dp)),
-            contentScale = ContentScale.Crop
         )
 
-        Surface(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(8.dp),
-            shape = RoundedCornerShape(50.dp),
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            Text(
-                text = "✦ ${planta.match}%",
-                modifier = Modifier.padding(
-                    horizontal = 10.dp,
-                    vertical = 5.dp
-                ),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        if (planta.enListaDeseos) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp),
+                shape = RoundedCornerShape(50.dp),
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Text(
+                    text = "♥ En deseos",
+                    modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
@@ -357,7 +375,7 @@ private fun PlantaInformation(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.height(155.dp)
+        modifier = modifier.heightIn(min = 155.dp)
     ) {
         Text(
             text = planta.nombre,
@@ -389,21 +407,26 @@ private fun PlantaInformation(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PlantActions(
     enListaDeseos: Boolean,
+    enabled: Boolean,
     onToggleListaDeseos: () -> Unit,
     onVerCuidados: () -> Unit
 ) {
-    Row(
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        maxItemsInEachRow = if (LocalDensity.current.fontScale > 1.15f) 1 else 2
     ) {
         FilledTonalButton(
             onClick = onToggleListaDeseos,
+            enabled = enabled,
             modifier = Modifier
                 .weight(1f)
-                .height(45.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor =
@@ -413,7 +436,7 @@ private fun PlantActions(
             )
         ) {
             Icon(
-                imageVector = Icons.Outlined.BookmarkAdd,
+                imageVector = if (enListaDeseos) Icons.Outlined.BookmarkRemove else Icons.Outlined.BookmarkAdd,
                 contentDescription = null
             )
 
@@ -421,7 +444,7 @@ private fun PlantActions(
 
             Text(
                 text = if (enListaDeseos) {
-                    "En deseos"
+                    "Quitar de deseos"
                 } else {
                     "+ A deseos"
                 },
@@ -434,7 +457,7 @@ private fun PlantActions(
             onClick = onVerCuidados,
             modifier = Modifier
                 .weight(1f)
-                .height(45.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor =

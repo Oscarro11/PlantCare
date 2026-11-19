@@ -1,5 +1,10 @@
 package plat.plantcare.app.core.navigation
 
+import plat.plantcare.app.diagnosis.ui.DiagnosisDestination
+import plat.plantcare.app.diagnosis.ui.diagnosisScreen
+import plat.plantcare.app.fichaBotanicaScreen
+import androidx.compose.runtime.LaunchedEffect
+import plat.plantcare.app.home.allTasks.ui.navigateToAllTasksDestination
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
@@ -36,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
@@ -64,6 +70,7 @@ import plat.plantcare.app.home.homeGraph
 import plat.plantcare.app.home.navigateToHomeGraph
 import plat.plantcare.app.login.ui.LoginDestination
 import plat.plantcare.app.login.ui.loginScreen
+import plat.plantcare.app.login.ui.navigateToLoginDestination
 import plat.plantcare.app.navigateToFichaBotanicaDestination
 import plat.plantcare.app.register.ui.RegisterPlantGraph
 import plat.plantcare.app.register.ui.registerPlantGraph
@@ -114,8 +121,26 @@ enum class TopLevelDestination(
     )
 }
 
+/** Reselecting a tab returns to its root; switching tabs restores their saved history. */
+internal fun NavController.navigateToTopLevelDestination(destination: TopLevelDestination) {
+    val isCurrentGraph = currentDestination?.hierarchy?.any {
+        it.hasRoute(destination.route::class)
+    } == true
+    if (isCurrentGraph) {
+        // Remove this section's details while keeping its initial screen and state.
+        popBackStack(destination.startRoute, inclusive = false)
+        return
+    }
+    navigate(destination.route) {
+        // Login is removed after authentication; Home remains the main navigation anchor.
+        popUpTo<HomeDestination> { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
 @Composable
-fun AppNavHost(modifier: Modifier = Modifier) {
+fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTasksOpened: () -> Unit = {}) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -128,6 +153,13 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         currentDestination?.hierarchy?.any { it.hasRoute(destination.startRoute::class) } == true
     }
 
+    LaunchedEffect(openTasks, currentDestination) {
+        if (openTasks && currentDestination != null && !currentDestination.hasRoute<LoginDestination>()) {
+            navController.navigateToAllTasksDestination(navOptions { launchSingleTop = true })
+            onTasksOpened()
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0),
@@ -135,6 +167,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             if (usesTopAppBar != null) {
                 AppSectionTopBar(
                     section = stringResource(usesTopAppBar.label),
+                    onNotificationsClick = { navController.navigateToAllTasksDestination(navOptions { launchSingleTop = true }) },
                     onProfileClick = {
                         navController.navigateToAjustesGraph(
                             navOptions {
@@ -150,14 +183,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 AppBottomBar(
                     selectedDestination = selectedDestination,
                     onDestinationClick = { destination ->
-                        navController.navigate(
-                            destination.route,
-                            navOptions {
-                                popUpTo(0) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        )
+                        navController.navigateToTopLevelDestination(destination)
                     }
                 )
             }
@@ -176,15 +202,13 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         navOptions { popUpTo(LoginDestination) {inclusive = true} }
                     )
                 },
-                onRegister = {},
-                onLoginWithGoogle = {}
+                onRegister = {}
             )
 
             homeGraph(
                 navController = navController,
 
-                //TODO: update with diagnosis camera screen and add plant screen
-                onDiagnosisClick = {},
+                onDiagnosisClick = { navController.navigate(DiagnosisDestination()) },
                 onAddPlantClick = { navController.navigate(RegisterPlantGraph) }
             )
 
@@ -192,12 +216,17 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 navController = navController,
                 //TODO: update
                 onAddPlantClick = { navController.navigate(RegisterPlantGraph) },
-                onMakeDiagnostic = {}
+                onMakeDiagnostic = { plantId -> navController.navigate(DiagnosisDestination(plantId)) }
             )
 
             favoritesGraph(
-                onAgregarClick = {},
-                onFiltrosClick = {}
+                onAgregarClick = { navController.navigateToTopLevelDestination(TopLevelDestination.DISCOVER) },
+                onFiltrosClick = {},
+                onVerCuidados = { navController.navigateToFichaBotanicaDestination(it) }
+            )
+            fichaBotanicaScreen(
+                onBackClick = { navController.popBackStack() },
+                onShareClick = {}
             )
 
             discoverGraph(
@@ -212,9 +241,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             ajustesGraph(
                 navController = navController,
-                onCerrarSesion = {}
+                onCerrarSesion = { navController.navigateToLoginDestination(
+                    navOptions { popUpTo(0) {inclusive = true} }
+                ) }
             )
 
+            diagnosisScreen(onBack = { navController.popBackStack() }, onAddPlant = { navController.navigate(RegisterPlantGraph) })
             calendarGraph(navController)
             registerPlantGraph(navController)
         }
@@ -250,6 +282,7 @@ fun AppTopBar(
 @Composable
 fun AppSectionTopBar(
     section: String,
+    onNotificationsClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -301,20 +334,13 @@ fun AppSectionTopBar(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        painterResource(id = R.drawable.notification),
-                        contentDescription = null
-                    )
+                    IconButton(onClick = onNotificationsClick) {
+                        Icon(painterResource(R.drawable.notification), contentDescription = "Ver tareas y recordatorios")
+                    }
 
-                    Image(
-                        painterResource(id = R.drawable.account_placeholder),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .clip(shape = CircleShape)
-                            .clickable(
-                                onClick = onProfileClick
-                            )
-                    )
+                    IconButton(onClick = onProfileClick) {
+                        Icon(painterResource(R.drawable.account_placeholder), contentDescription = "Abrir ajustes de perfil")
+                    }
                 }
             }
         }
@@ -341,11 +367,11 @@ fun AppBottomBar(
                 icon = { Icon(painterResource(destination.icon), contentDescription = null) },
                 label = { Text(stringResource(destination.label)) },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = darkenColor(originalColor = MaterialTheme.colorScheme.primary),
+                    indicatorColor = MaterialTheme.colorScheme.primary,
                     selectedIconColor = MaterialTheme.colorScheme.onPrimary,
                     selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
         }
