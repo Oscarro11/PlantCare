@@ -51,7 +51,6 @@ enum class TaskUrgency {
     HOY
 }
 
-//TODO: update icons for each task action
 enum class TaskAction(
     @DrawableRes val iconId: Int,
     val displayName: String

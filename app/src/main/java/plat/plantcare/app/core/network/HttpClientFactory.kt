@@ -12,12 +12,19 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import javax.inject.Qualifier
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class PlantNetApiKey
 
 enum class Service(
-    val url: String
+    val url: String,
+    val apiKey: String
 ) {
     PLANT_NET(
-        url = "https://my-api.plantnet.org/"
+        url = "https://my-api.plantnet.org/",
+        apiKey = "2b10iU4NXzehNjy293fww1cqe"
     )
 }
 

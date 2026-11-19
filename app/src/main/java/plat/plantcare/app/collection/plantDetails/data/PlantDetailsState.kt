@@ -12,7 +12,7 @@ sealed interface PlantDetailsState {
     data object NotFound : PlantDetailsState
     data class Content(
         val plant: Plant,
-        val reference: PlantReference? = null,
+        val scientificName: String? = null,
         val nextTask: Task? = null,
         val characteristics: PlantCharacteristics? = null,
         val diagnostic: Diagnostic? = null,

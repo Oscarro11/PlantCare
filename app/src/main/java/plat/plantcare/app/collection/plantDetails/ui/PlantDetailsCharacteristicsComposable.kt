@@ -173,8 +173,8 @@ private fun RequirementRow(
     @DrawableRes icon: Int,
     label: String,
     value: String,
-    trailingText: String? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    trailingText: String? = null
 ) {
     Row(
         modifier = modifier

@@ -62,8 +62,8 @@ import plat.plantcare.app.favorites.data.PlantaDeseada
 fun ListaDeseosRoute(
     onAgregarClick: () -> Unit,
     onFiltrosClick: () -> Unit,
-    onVerCuidados: (String) -> Unit = {},
     modifier: Modifier = Modifier,
+    onVerCuidados: (String) -> Unit = {},
     viewModel: ListaDeseosViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -84,8 +84,8 @@ private fun ListaDeseosScreen(
     onEvent: (ListaDeseosEvent) -> Unit,
     onAgregarClick: () -> Unit,
     onFiltrosClick: () -> Unit,
-    onVerCuidados: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onVerCuidados: (String) -> Unit = {}
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),

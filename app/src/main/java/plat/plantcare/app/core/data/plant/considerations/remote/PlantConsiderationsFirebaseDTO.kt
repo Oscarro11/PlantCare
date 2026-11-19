@@ -6,6 +6,7 @@ import com.google.firebase.firestore.ServerTimestamp
 
 data class PlantConsiderationsFirebaseDTO(
     @DocumentId val plantId: String = "",
+    val scientificName: String = "",
     val wateringGuide: String = "",
     val recommendedLocationAndLight: String = "",
     val nutrition: String = "",
@@ -16,6 +17,7 @@ data class PlantConsiderationsFirebaseDTO(
 fun PlantConsiderationsFirebaseDTO.toCommonDTO(): PlantConsiderationsDTO =
     PlantConsiderationsDTO(
         plantId,
+        scientificName,
         wateringGuide,
         recommendedLocationAndLight,
         nutrition,
@@ -25,6 +27,7 @@ fun PlantConsiderationsFirebaseDTO.toCommonDTO(): PlantConsiderationsDTO =
 fun PlantConsiderationsDTO.toFirebaseDTO(): PlantConsiderationsFirebaseDTO =
     PlantConsiderationsFirebaseDTO(
         plantId,
+        scientificName,
         wateringGuide,
         recommendedLocationAndLight,
         nutrition,

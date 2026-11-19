@@ -44,6 +44,7 @@ import plat.plantcare.app.core.data.plant.general.local.toDomain
 import plat.plantcare.app.core.data.plant.general.local.toEntity
 import plat.plantcare.app.core.data.plant.general.remote.PlantDataSourceApi
 import plat.plantcare.app.core.data.plant.general.remote.toCommonDTO
+import plat.plantcare.app.core.data.plant.identification.PlantIdentificationApi
 import plat.plantcare.app.core.network.NetworkMonitor
 import plat.plantcare.app.core.photos.local.LocalImageStorage
 import plat.plantcare.app.core.photos.local.isRemoteImage
@@ -66,7 +67,8 @@ class PlantRepositoryImpl @Inject constructor(
     private val plantDao: PlantDAO,
     private val plantCharacteristicsDao: PlantCharacteristicsDAO,
     private val plantConsiderationsDao: PlantConsiderationsDAO,
-    private val plantConsiderationsAiApi: PlantConsiderationsAiApi
+    private val plantConsiderationsAiApi: PlantConsiderationsAiApi,
+    private val plantIdentificationApi: PlantIdentificationApi
 ) : PlantRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -244,15 +246,24 @@ class PlantRepositoryImpl @Inject constructor(
     }
 
     private suspend fun addConsiderations(ownerId: String, plantId: String, photo: ByteArray) {
+        val species = plantIdentificationApi.identify(photo).maxByOrNull { it.score }
+        if (species == null || species.score < MIN_SPECIES_SCORE) {
+            Log.i(TAG, "Species not recognized with enough confidence, skipping considerations")
+            return
+        }
+
         val considerations = plantConsiderationsAiApi.generateConsiderations(
-            speciesName = null,
+            speciesName = species.scientificName,
             photo = photo
         )
 
         plantConsiderationsDao.updateOrInsertPlantConsiderations(
             considerations
                 .toCommonDTO()
-                .copy(plantId = plantId)
+                .copy(
+                    plantId = plantId,
+                    scientificName = species.scientificName
+                )
                 .toDomain()
                 .toEntity()
         )
@@ -333,5 +344,6 @@ class PlantRepositoryImpl @Inject constructor(
         const val REMOTE_TIMEOUT_MS = 10_000L
         const val PUSH_TIMEOUT_MS = 30_000L
         const val AI_TIMEOUT_MS = 30_000L
+        const val MIN_SPECIES_SCORE = 0.5f
     }
 }

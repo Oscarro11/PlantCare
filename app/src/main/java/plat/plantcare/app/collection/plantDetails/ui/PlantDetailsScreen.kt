@@ -262,7 +262,7 @@ private fun PlantDetailsContent(
                     }
 
                     Text(
-                        text = state.reference?.scientificName ?: "Indefinido",
+                        text = state.scientificName ?: "Indefinido",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontStyle = FontStyle.Italic
@@ -282,7 +282,6 @@ private fun PlantDetailsContent(
 
             item {
                 CharacteristicsSection(
-                    //TODO: ver que significa parámetros óptimos
                     description = if (state.characteristics == null) "Sin características registradas" else "Requisitos registrados",
                     characteristics = state.characteristics
                 )

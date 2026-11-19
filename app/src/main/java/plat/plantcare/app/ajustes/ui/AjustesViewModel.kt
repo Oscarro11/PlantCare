@@ -28,6 +28,7 @@ sealed interface AjustesEvent {
     data class ChangeRecordatorios(val enabled: Boolean) : AjustesEvent
     data class ChangeAlertasClimaticas(val enabled: Boolean) : AjustesEvent
     data class ChangeVistaColeccion(val layout: CollectionLayout) : AjustesEvent
+    data object DeleteData : AjustesEvent
 }
 
 @HiltViewModel
@@ -84,6 +85,7 @@ class AjustesViewModel @Inject constructor(
                     is AjustesEvent.ChangeAlertasClimaticas -> preferences.setWeatherAlerts(uid, event.enabled)
                     is AjustesEvent.ChangeVistaColeccion -> preferences.setCollectionLayout(uid,
                         PreferredCollectionLayout.valueOf(event.layout.name))
+                    is AjustesEvent.DeleteData -> deleteData()
                 }
                 if (authRepository.currentUid == uid) _state.update { it.copy(preferencesError = null) }
             } catch (cancelled: CancellationException) {
@@ -98,5 +100,11 @@ class AjustesViewModel @Inject constructor(
 
     fun logOut(onDone: () -> Unit) {
         viewModelScope.launch { authRepository.signOut(); onDone() }
+    }
+
+    private fun deleteData() {
+        viewModelScope.launch {
+            plants
+        }
     }
 }

@@ -52,7 +52,6 @@ private data class PlantInfo(
 private data class DiagnosisObservation(val details: DiagnosisDetails = DiagnosisDetails(), val error: String? = null)
 
 private data class PlantDetailsLocalState(
-    //TODO: see what to do on edition mode, and more options
     val isEditionModeActive: Boolean = false,
     val saving: Boolean = false,
     val error: String? = null,
@@ -108,7 +107,7 @@ class PlantDetailsViewModel @Inject constructor (
         else {
             PlantDetailsState.Content(
                 plant = plantGroup.plant,
-                reference = null,
+                scientificName = plantGroup.considerations?.scientificName ?: "Indefinido",
                 nextTask = task,
                 characteristics = plantGroup.characteristics,
                 diagnostic = plantGroup.diagnostic,

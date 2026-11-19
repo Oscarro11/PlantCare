@@ -7,6 +7,7 @@ import plat.plantcare.app.core.data.plant.considerations.domain.PlantConsiderati
 @Entity(tableName = "plant_considerations")
 data class PlantConsiderationsEntity (
     @PrimaryKey (autoGenerate = false) val plantId: String,
+    val scientificName: String,
     val wateringGuide: String,
     val recommendedLocationAndLight: String,
     val nutrition: String,
@@ -16,6 +17,7 @@ data class PlantConsiderationsEntity (
 fun PlantConsiderationsEntity.toDomain(): PlantConsiderations =
     PlantConsiderations(
         plantId,
+        scientificName,
         wateringGuide,
         recommendedLocationAndLight,
         nutrition,
@@ -25,6 +27,7 @@ fun PlantConsiderationsEntity.toDomain(): PlantConsiderations =
 fun PlantConsiderations.toEntity(): PlantConsiderationsEntity =
     PlantConsiderationsEntity(
         plantId,
+        scientificName,
         wateringGuide,
         recommendedLocationAndLight,
         nutrition,

@@ -34,7 +34,7 @@ interface TaskDao {
     @Upsert suspend fun put(task: TaskEntity)
     @Query("DELETE FROM tasks WHERE userId = :uid AND id = :id AND pending = 0")
     suspend fun deleteClean(uid: String, id: String)
-    @Query("SELECT COUNT(*) FROM tasks WHERE userId = :uid AND completed = 0 AND action = 'WATER' AND dueDate <= :today")
+    @Query("SELECT COUNT(*) FROM tasks WHERE userId = :uid AND completed = 0 AND `action` = 'WATER' AND dueDate <= :today")
     suspend fun pendingWaterings(uid: String, today: String): Int
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun enqueue(write: TaskWrite)
     @Query("SELECT * FROM task_writes WHERE userId = :uid ORDER BY CASE kind WHEN 'CREATE' THEN 0 ELSE 1 END, operationId")

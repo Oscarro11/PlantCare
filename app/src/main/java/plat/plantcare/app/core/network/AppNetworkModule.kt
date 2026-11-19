@@ -16,6 +16,8 @@ object AppNetworkModule {
     fun providePlantNetHttpClient(): HttpClient =
         HttpClientFactory.create(Service.PLANT_NET)
 
+    @Provides @PlantNetApiKey
+    fun providePlantNetApi(): String = Service.PLANT_NET.apiKey
 }
 
 @Module

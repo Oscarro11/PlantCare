@@ -6,6 +6,7 @@ import plat.plantcare.app.core.data.plant.considerations.domain.PlantConsiderati
 @Serializable
 data class PlantConsiderationsDTO(
     val plantId: String = "",
+    val scientificName: String = "",
     val wateringGuide: String = "",
     val recommendedLocationAndLight: String = "",
     val nutrition: String = "",
@@ -15,6 +16,7 @@ data class PlantConsiderationsDTO(
 fun PlantConsiderationsDTO.toDomain(): PlantConsiderations =
     PlantConsiderations(
         plantId = plantId,
+        scientificName = scientificName,
         wateringGuide = wateringGuide,
         recommendedLocationAndLight = recommendedLocationAndLight,
         nutrition = nutrition,
@@ -24,6 +26,7 @@ fun PlantConsiderationsDTO.toDomain(): PlantConsiderations =
 fun PlantConsiderations.toCommonDTO(): PlantConsiderationsDTO =
     PlantConsiderationsDTO(
         plantId,
+        scientificName,
         wateringGuide,
         recommendedLocationAndLight,
         nutrition,
