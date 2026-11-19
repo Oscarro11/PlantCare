@@ -3,6 +3,8 @@ package plat.plantcare.app.core.network
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.accept
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
@@ -32,8 +34,13 @@ object HttpClientFactory{
     fun create(service: Service): HttpClient {
         return HttpClient(CIO.create()) {
             install(Logging) {
-                level = LogLevel.ALL
+                level = LogLevel.NONE
                 logger = Logger.ANDROID
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 45_000
+                connectTimeoutMillis = 15_000
+                socketTimeoutMillis = 30_000
             }
             install(ContentNegotiation) {
                 json(
@@ -44,7 +51,7 @@ object HttpClientFactory{
             }
             defaultRequest {
                 url(service.url)
-                contentType(ContentType.Application.Json)
+                accept(ContentType.Application.Json)
             }
         }
     }

@@ -81,7 +81,8 @@ fun TextFieldWithTitle(
     onTrailingIconClick: () -> Unit,
     visualTransformation: VisualTransformation?,
     modifier: Modifier = Modifier,
-    placeholder: String = ""
+    placeholder: String = "",
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default
 ){
     Column(
         modifier = modifier
@@ -134,6 +135,7 @@ fun TextFieldWithTitle(
             },
             placeholder = { Text(placeholder) },
             visualTransformation = visualTransformation ?: VisualTransformation.None,
+            keyboardOptions = keyboardOptions,
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()

@@ -75,7 +75,7 @@ class DiscoverRepositoryInstrumentedTest {
                 user.delete().await()
             }
             firestore.terminate().await()
-            app.delete()
+            Unit /* Firebase Auth retains emulator callbacks until process exit. */
         }
     }
 }

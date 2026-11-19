@@ -42,6 +42,10 @@ class LocalTaskStore @Inject constructor(private val database: AppDatabase) {
             dao.enqueue(TaskWrite(uid, "COMPLETE:" + id, id, "COMPLETE", date.toString()))
         }
     }
+    suspend fun purgeForPlant(uid: String, plantId: String) = database.withTransaction {
+        dao.clearWritesForPlant(uid, plantId)
+        dao.deleteForPlant(uid, plantId)
+    }
     suspend fun mergeRemote(uid: String, task: Task) = database.withTransaction {
         if (dao.find(uid, task.id)?.pending != true) dao.put(task.toEntity(uid))
     }

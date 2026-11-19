@@ -127,6 +127,7 @@ private fun LoginScreen(
     modifier: Modifier = Modifier
 ){
     var hidePassword by rememberSaveable { mutableStateOf(true) }
+    if (state.registrationOpen) RegisterAccountDialog(state, onEvent)
 
     BoxWithConstraints(
         modifier = modifier
@@ -244,6 +245,7 @@ private fun LoginScreen(
             }
 
             TextFieldWithTitle(
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Email, autoCorrectEnabled = false),
                 title = "Correo",
                 titleIcon = R.drawable.email,
                 fieldValue = state.email,
@@ -258,6 +260,7 @@ private fun LoginScreen(
             )
 
             TextFieldWithTitle(
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
                 title = "Contraseña",
                 titleIcon = R.drawable.lock_closed,
                 fieldValue = state.password,
@@ -376,7 +379,7 @@ private fun LoginScreen(
                     ),
                     modifier = Modifier.clickable(
                         //TODO: change this to its own screen, instead of using the fields
-                        onClick = { onEvent(LoginEvent.CreateAccount) }
+                        onClick = { onEvent(LoginEvent.OpenRegistration) }
                     )
                 )
             }

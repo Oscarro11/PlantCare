@@ -40,9 +40,20 @@ class FirebasePhotoStorage @Inject constructor(
 
     override suspend fun delete(url: String) {
         try {
-            storage.getReferenceFromUrl(url).delete().await()
+            storage.imageReference(url).delete().await()
         } catch (e: StorageException) {
             if (e.errorCode != StorageException.ERROR_OBJECT_NOT_FOUND) throw e
         }
     }
+}
+fun FirebaseStorage.imageReference(url: String): com.google.firebase.storage.StorageReference {
+    val uri = android.net.Uri.parse(url)
+    if (plat.plantcare.app.BuildConfig.USE_EMULATOR && uri.scheme == "http" &&
+        uri.host in setOf("127.0.0.1", "10.0.2.2", "localhost")) {
+        val segments = uri.pathSegments
+        require(segments.size == 5 && segments[0] == "v0" && segments[1] == "b" &&
+            segments[2] == reference.bucket && segments[3] == "o")
+        return reference.child(segments[4])
+    }
+    return getReferenceFromUrl(url)
 }

@@ -67,7 +67,7 @@ class TaskSyncInstrumentedTest {
                 remote.collection("usuarios").document(user.uid).collection("tareas").document(nextTaskId(id)).delete().await()
                 user.delete().await()
             }
-            remote.terminate().await(); app.delete(); dbA.close(); dbB.close()
+            remote.terminate().await(); Unit /* Firebase Auth retains emulator callbacks until process exit. */; dbA.close(); dbB.close()
         }
     }
 }

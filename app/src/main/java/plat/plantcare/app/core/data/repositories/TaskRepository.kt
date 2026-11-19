@@ -11,6 +11,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface TaskRepository {
+    suspend fun deleteForPlant(plantId: String) { error("Borrado no disponible") }
+
     fun observeAllTasks(): Flow<List<Task>>
     fun observeTodayTasks(): Flow<List<Task>>
     suspend fun createTask(task: Task)

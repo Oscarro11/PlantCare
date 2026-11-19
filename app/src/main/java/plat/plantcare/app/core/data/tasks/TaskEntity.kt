@@ -32,6 +32,10 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE userId = :uid AND id = :id")
     suspend fun find(uid: String, id: String): TaskEntity?
     @Upsert suspend fun put(task: TaskEntity)
+    @Query("DELETE FROM task_writes WHERE userId = :uid AND taskId IN (SELECT id FROM tasks WHERE userId = :uid AND plantId = :plantId)")
+    suspend fun clearWritesForPlant(uid: String, plantId: String)
+    @Query("DELETE FROM tasks WHERE userId = :uid AND plantId = :plantId")
+    suspend fun deleteForPlant(uid: String, plantId: String)
     @Query("DELETE FROM tasks WHERE userId = :uid AND id = :id AND pending = 0")
     suspend fun deleteClean(uid: String, id: String)
     @Query("SELECT COUNT(*) FROM tasks WHERE userId = :uid AND completed = 0 AND `action` = 'WATER' AND dueDate <= :today")

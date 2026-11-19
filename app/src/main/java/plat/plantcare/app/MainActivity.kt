@@ -36,7 +36,7 @@ class PlantCareApp : Application() {
             Firebase.storage.useEmulator(host, 9199)
             Firebase.initialize(context = this)
         }
-        prepareAiDebug(this)
+        if (!BuildConfig.USE_EMULATOR) prepareAiDebug(this)
         taskRuntime.start()
     }
 }

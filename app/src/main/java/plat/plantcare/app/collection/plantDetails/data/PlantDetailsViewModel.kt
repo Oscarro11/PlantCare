@@ -32,6 +32,8 @@ import javax.inject.Inject
 
 sealed interface PlantDetailsEvent{
     data class SavePlant(val name: String, val location: String) : PlantDetailsEvent
+    data object DeletePlant: PlantDetailsEvent
+    data object RegenerateConsiderations: PlantDetailsEvent
     data object ToggleFavorite: PlantDetailsEvent
     data object ToggleEditionMode: PlantDetailsEvent
     data object ClickMoreOptions: PlantDetailsEvent
@@ -52,6 +54,10 @@ private data class PlantInfo(
 private data class DiagnosisObservation(val details: DiagnosisDetails = DiagnosisDetails(), val error: String? = null)
 
 private data class PlantDetailsLocalState(
+    val deleted: Boolean = false,
+    val deleting: Boolean = false,
+    val regenerating: Boolean = false,
+    val message: String? = null,
     val isEditionModeActive: Boolean = false,
     val saving: Boolean = false,
     val error: String? = null,
@@ -103,7 +109,9 @@ class PlantDetailsViewModel @Inject constructor (
         history,
         _localState
     ) { plantGroup, task, history, local ->
-        if (plantGroup.plant == null) PlantDetailsState.NotFound
+        if (local.deleted) PlantDetailsState.Deleted
+        else if (plantGroup.plant == null && local.deleting) PlantDetailsState.Loading
+        else if (plantGroup.plant == null) PlantDetailsState.NotFound
         else {
             PlantDetailsState.Content(
                 plant = plantGroup.plant,
@@ -116,6 +124,7 @@ class PlantDetailsViewModel @Inject constructor (
                 history = history,
                 editionMode = local.isEditionModeActive,
                 saving = local.saving, error = local.error,
+                deleting = local.deleting, regenerating = local.regenerating, message = local.message,
                 isMoreOptionsActive = local.areMoreOptionsOpened
             )
         }
@@ -128,12 +137,40 @@ class PlantDetailsViewModel @Inject constructor (
         )
 
     fun onEvent(event: PlantDetailsEvent) {
+        if (_localState.value.run { deleting || regenerating || saving }) return
         when (event) {
+            PlantDetailsEvent.DeletePlant -> runOperation(delete = true)
+            PlantDetailsEvent.RegenerateConsiderations -> runOperation(delete = false)
             is PlantDetailsEvent.SavePlant -> savePlant(event.name, event.location)
             is PlantDetailsEvent.ToggleFavorite -> changeFavorite()
             is PlantDetailsEvent.CompleteTask -> completeTask(event.id)
             is PlantDetailsEvent.ClickMoreOptions -> clickMoreOptions()
             is PlantDetailsEvent.ToggleEditionMode -> toggleEditionMode()
+        }
+    }
+
+    private fun runOperation(delete: Boolean) {
+        _localState.update { it.copy(deleting = delete, regenerating = !delete, error = null,
+            message = null, areMoreOptionsOpened = false) }
+        viewModelScope.launch {
+            try {
+                if (delete) plantRepository.deletePlant(plantId)
+                else plantRepository.regenerateConsiderations(plantId)
+                _localState.update { it.copy(deleting = false, regenerating = false, deleted = delete,
+                    message = if (delete) null else "Consideraciones actualizadas.") }
+            } catch (timeout: kotlinx.coroutines.TimeoutCancellationException) {
+                _localState.update { it.copy(deleting = false, regenerating = false,
+                    error = "El servicio tardó demasiado. Revisa la conexión e inténtalo de nuevo.") }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (failure: Exception) {
+                val message = when (failure) {
+                    is IllegalStateException, is IllegalArgumentException -> failure.message
+                    is plat.plantcare.app.core.ai.gemini.AiAuthorizationException -> "La IA no está autorizada para esta instalación. Prueba en tu teléfono autorizado."
+                    else -> null
+                } ?: if (delete) "No se pudo completar el borrado. Revisa la conexión y vuelve a intentarlo."
+                else "No se pudieron regenerar las consideraciones. Las anteriores siguen guardadas."
+                _localState.update { it.copy(deleting = false, regenerating = false, error = message) }
+            }
         }
     }
 

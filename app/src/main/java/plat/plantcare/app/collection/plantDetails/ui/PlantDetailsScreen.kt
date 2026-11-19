@@ -94,6 +94,7 @@ fun PlantDetailsRoute(
     viewModel: PlantDetailsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(state) { if (state is PlantDetailsState.Deleted) onBackClick() }
 
     PlantDetailsScreen(
         onBackClick = onBackClick,
@@ -113,6 +114,7 @@ private fun PlantDetailsScreen(
     modifier: Modifier = Modifier
 ) {
     when (state) {
+        PlantDetailsState.Deleted -> Unit
         PlantDetailsState.Loading -> PlantDetailsLoading()
 
         PlantDetailsState.NotFound -> PlantDetailsError(
@@ -185,6 +187,17 @@ private fun PlantDetailsContent(
     state: PlantDetailsState.Content,
     modifier: Modifier = Modifier
 ) {
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    val busy = state.saving || state.deleting || state.regenerating
+    if (confirmDelete) AlertDialog(
+        onDismissRequest = { if (!state.deleting) confirmDelete = false },
+        title = { Text("Eliminar planta") },
+        text = { Text("Se eliminarán ${state.plant.name}, su foto, cuidados y diagnósticos del teléfono y de Firebase. Esta acción no se puede deshacer.") },
+        confirmButton = { TextButton(enabled = !busy, onClick = {
+            confirmDelete = false; onEvent(PlantDetailsEvent.DeletePlant)
+        }) { Text("Eliminar", color = MaterialTheme.colorScheme.error) } },
+        dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancelar") } }
+    )
     if (state.editionMode) EditPlantDialog(state, onEvent)
     Scaffold(
         modifier = modifier,
@@ -242,6 +255,8 @@ private fun PlantDetailsContent(
             )
         ) {
             state.error?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.error) } }
+            state.message?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.primary) } }
+            if (state.deleting) item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()); Text("Eliminando datos locales y de Firebase…") }
             item {
                 Column(
                     modifier = Modifier.padding(bottom = 16.dp),
@@ -301,6 +316,11 @@ private fun PlantDetailsContent(
                     description = "Adaptadas al microclima de ${state.plant.location}",
                     considerations = state.considerations
                 )
+                OutlinedButton(enabled = !busy, onClick = { onEvent(PlantDetailsEvent.RegenerateConsiderations) },
+                    modifier = Modifier.fillMaxWidth()) {
+                    Text(if (state.regenerating) "Regenerando consideraciones…" else "Regenerar consideraciones")
+                }
+                if (state.regenerating) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
             item {

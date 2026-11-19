@@ -8,6 +8,8 @@ interface AuthRepository : SessionProvider {
     val currentUid: String?
     suspend fun signInWithEmail(email: String, password: String): Result<Unit>
     suspend fun registerWithEmail(email: String, password: String): Result<Unit>
+    suspend fun registerWithEmail(email: String, password: String, name: String, location: String): Result<Unit> =
+        registerWithEmail(email, password)
     suspend fun signInWithGoogle(idToken: String): Result<Unit>
     suspend fun signOut()
 }

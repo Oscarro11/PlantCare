@@ -8,6 +8,7 @@ import plat.plantcare.app.core.data.plant.considerations.domain.PlantConsiderati
 import plat.plantcare.app.core.data.plant.general.domain.Plant
 
 sealed interface PlantDetailsState {
+    data object Deleted : PlantDetailsState
     data object Loading : PlantDetailsState
     data object NotFound : PlantDetailsState
     data class Content(
@@ -21,6 +22,9 @@ sealed interface PlantDetailsState {
         val history: List<Task>? = emptyList(),
         val editionMode: Boolean = false,
         val saving: Boolean = false,
+        val deleting: Boolean = false,
+        val regenerating: Boolean = false,
+        val message: String? = null,
         val error: String? = null,
         val isMoreOptionsActive: Boolean = false
     ) : PlantDetailsState
