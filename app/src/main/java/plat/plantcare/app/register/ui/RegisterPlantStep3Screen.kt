@@ -57,9 +57,9 @@ import kotlin.math.roundToInt
 @Composable
 fun RegisterPlantStep3Route(
     viewModel: RegisterPlantViewModel,
-    onBackClick: () -> Unit,
-    onCloseClick: () -> Unit,
-    onDiscardClick: () -> Unit,
+    onBack: () -> Unit,
+    onClose: () -> Unit,
+    onDiscard: () -> Unit,
     onSaved: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -75,14 +75,14 @@ fun RegisterPlantStep3Route(
     RegisterPlantStep3Screen(
         state = state,
         onEvent = viewModel::handleEvent,
-        onBackClick = onBackClick,
-        onCloseClick = onCloseClick,
+        onBackClick = onBack,
+        onCloseClick = onClose,
         onSaveClick = {
             viewModel.handleEvent(RegisterPlantEvent.Save)
         },
         onDiscardClick = {
             viewModel.handleEvent(RegisterPlantEvent.Discard)
-            onDiscardClick()
+            onDiscard()
         }
     )
 }

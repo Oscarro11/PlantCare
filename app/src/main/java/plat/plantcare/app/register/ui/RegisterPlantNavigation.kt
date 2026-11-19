@@ -100,13 +100,13 @@ fun NavGraphBuilder.registerPlantGraph(
 
             RegisterPlantStep3Route(
                 viewModel = vm,
-                onBackClick = {
+                onBack = {
                     navController.popBackStack()
                 },
-                onCloseClick = {
+                onClose = {
                     navController.popBackStack()
                 },
-                onDiscardClick = {
+                onDiscard = {
                     navController.popBackStack(
                         RegisterPlantGraph,
                         inclusive = true
