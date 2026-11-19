@@ -9,7 +9,6 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -140,7 +139,12 @@ internal fun NavController.navigateToTopLevelDestination(destination: TopLevelDe
 }
 
 @Composable
-fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTasksOpened: () -> Unit = {}) {
+fun AppNavHost(
+    modifier: Modifier = Modifier,
+    openTasks: Boolean = false,
+    onTasksOpened: () -> Unit = {},
+    hasSavedSession: Boolean
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -191,7 +195,7 @@ fun AppNavHost(modifier: Modifier = Modifier, openTasks: Boolean = false, onTask
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = LoginDestination,
+            startDestination = if (hasSavedSession) HomeGraph else LoginDestination,
             modifier = Modifier
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
