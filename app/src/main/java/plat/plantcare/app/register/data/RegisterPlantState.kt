@@ -13,11 +13,15 @@ data class RegisterPlantState(
     val isSaving: Boolean = false,
     val error: String? = null,
     val warning: String? = null,
+    val identifying: Boolean = false,
+    val identificationResults: List<plat.plantcare.app.core.data.plant.identification.PlantNetResponseDTO> = emptyList(),
+    val identificationError: String? = null,
     val draft: RegisterPlantDraft = RegisterPlantDraft()
 )
 
 data class RegisterPlantDraft(
     val plantName: String = "",
+    val identifiedSpecies: String? = null,
     val imageUrl: String? = null,
     val location: String = "",
     val arrivalDate: LocalDate = LocalDate.now(),

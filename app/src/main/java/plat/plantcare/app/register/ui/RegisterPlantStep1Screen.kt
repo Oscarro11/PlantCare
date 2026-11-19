@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -165,6 +168,31 @@ fun RegisterPlantStep1Screen(
                 }
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { onEvent(RegisterPlantEvent.IdentifyPhoto) },
+                enabled = draft.imageUrl != null && !state.identifying && !state.isSaving,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (state.identifying) CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                else Text("Identificar especie con PlantNet")
+            }
+            state.identificationError?.let { message ->
+                Text(message, color = MaterialTheme.colorScheme.error)
+            }
+            if (state.identificationResults.isNotEmpty()) {
+                Text("Especies sugeridas (selecciona una)", style = MaterialTheme.typography.titleSmall)
+                state.identificationResults.forEach { candidate ->
+                    OutlinedButton(
+                        onClick = { onEvent(RegisterPlantEvent.SelectSpecies(candidate.scientificName)) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("${candidate.scientificName} · ${(candidate.score * 100).toInt()}%" +
+                            if (draft.identifiedSpecies == candidate.scientificName) "  ✓" else "")
+                    }
+                }
+                draft.identifiedSpecies?.let { Text("Especie seleccionada: $it") }
+            }
             Spacer(modifier = Modifier.height(20.dp))
 
             IdentitySection(

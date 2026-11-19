@@ -236,6 +236,15 @@ private fun PlantDetailsContent(
                             DropdownMenuItem(text = { Text("Crear diagnóstico") }, onClick = {
                                 onEvent(PlantDetailsEvent.ClickMoreOptions); onMakeDiagnostic()
                             })
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text("Eliminar planta", color = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    onEvent(PlantDetailsEvent.ClickMoreOptions)
+                                    confirmDelete = true
+                                },
+                                enabled = !busy
+                            )
                         }
                     }
                 }
