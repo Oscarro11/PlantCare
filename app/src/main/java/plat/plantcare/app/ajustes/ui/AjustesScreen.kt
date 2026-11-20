@@ -30,8 +30,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.LocalFireDepartment
@@ -92,6 +94,7 @@ fun AjustesRoute(
         state = state,
         onBackClick = onBackClick,
         onCerrarSesion = { viewModel.logOut(onCerrarSesion) },
+        onDeleteData = { viewModel.onEvent(AjustesEvent.DeleteData) },
         onRecordatoriosChange = { enabled ->
             if (enabled && Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
                 permission.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -120,11 +123,12 @@ private fun AjustesScreen(
     state: AjustesState,
     onBackClick: () -> Unit,
     onCerrarSesion: () -> Unit,
+    onDeleteData: () -> Unit,
     onRecordatoriosChange: (Boolean) -> Unit,
     onAlertasChange: (Boolean) -> Unit,
     onVistaColeccionChange: (CollectionLayout) -> Unit,
-    onHoraClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onHoraClick: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier,
@@ -178,17 +182,6 @@ private fun AjustesScreen(
             Spacer(Modifier.height(20.dp))
 
             SectionTitle(
-                icon = Icons.Outlined.WifiTethering,
-                title = "MI ENTORNO"
-            )
-
-            EnvironmentCard(
-                ubicacion = state.ubicacion
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            SectionTitle(
                 icon = Icons.Outlined.Tune,
                 title = "PREFERENCIAS DE LA APP"
             )
@@ -203,6 +196,12 @@ private fun AjustesScreen(
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
             }
+
+            Spacer(Modifier.height(28.dp))
+
+            DeleteButton(
+                onDeleteData = onDeleteData
+            )
 
             Spacer(Modifier.height(28.dp))
 
@@ -239,6 +238,7 @@ private fun AjustesScreenPreview() {
             state = AjustesState(),
             onBackClick = {},
             onCerrarSesion = {},
+            onDeleteData = {},
             onRecordatoriosChange = {},
             onAlertasChange = {},
             onVistaColeccionChange = {}
@@ -262,7 +262,7 @@ private fun FotoPerfil(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
-            contentAlignment = Alignment.CenterEnd
+            contentAlignment = Alignment.Center
         ) {
             if (fotoModel != null) {
                 AsyncImage(
@@ -505,49 +505,6 @@ private fun NotificationsCard(
 }
 
 @Composable
-private fun EnvironmentCard(
-    ubicacion: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SmallIcon(Icons.Outlined.LocationOn)
-
-            Spacer(Modifier.width(10.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "Ubicación y Clima",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Text(
-                    text = ubicacion,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Icon(
-                imageVector = Icons.Outlined.KeyboardArrowRight,
-                contentDescription = null
-            )
-        }
-    }
-}
-
-@Composable
 private fun PreferencesCard(
     vistaColeccion: CollectionLayout,
     onVistaColeccionChange: (CollectionLayout) -> Unit
@@ -696,6 +653,35 @@ private fun SmallIcon(
 }
 
 @Composable
+private fun DeleteButton(
+    onDeleteData: () -> Unit
+) {
+    TextButton(
+        onClick = onDeleteData,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = MaterialTheme.shapes.medium
+            )
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Delete,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error
+        )
+
+        Spacer(Modifier.width(8.dp))
+
+        Text(
+            text = "Eliminar datos",
+            color = MaterialTheme.colorScheme.error,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
 private fun LogoutButton(
     onCerrarSesion: () -> Unit
 ) {
@@ -704,7 +690,7 @@ private fun LogoutButton(
         modifier = Modifier.fillMaxWidth()
     ) {
         Icon(
-            imageVector = Icons.Outlined.Logout,
+            imageVector = Icons.AutoMirrored.Outlined.Logout,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.error
         )

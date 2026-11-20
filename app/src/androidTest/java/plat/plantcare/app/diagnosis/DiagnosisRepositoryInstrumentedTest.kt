@@ -22,12 +22,13 @@ import plat.plantcare.app.authentication.AuthRepository
 import plat.plantcare.app.authentication.domain.AuthUser
 import plat.plantcare.app.core.data.plant.general.domain.Plant
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 /** Tests local Firestore, not the external Gemini service. No image leaves the device. */
 @RunWith(AndroidJUnit4::class)
 class DiagnosisRepositoryInstrumentedTest {
     @Test fun savesLatestIdempotentlyAndOtherUsersCannotReadIt() = runBlocking {
-        withTimeout(45_000) {
+        withTimeout(45_000.milliseconds) {
             val context = InstrumentationRegistry.getInstrumentation().targetContext
             val options = FirebaseOptions.Builder().setProjectId("plantcare-3a58c")
                 .setApplicationId("1:123:android:diagnosis-test").setApiKey("fake-api-key").build()
@@ -84,8 +85,8 @@ class DiagnosisRepositoryInstrumentedTest {
                 otherAuth.currentUser?.delete()?.await()
                 firestore.terminate().await()
                 otherStore.terminate().await()
-                app.delete()
-                otherApp.delete()
+                Unit /* Firebase Auth retains emulator callbacks until process exit. */
+                Unit
             }
         }
     }

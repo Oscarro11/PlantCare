@@ -92,6 +92,17 @@ class FirestorePlantApi @Inject constructor(
     }
 
     override suspend fun delete(ownerId: String, plantId: String) {
-        plantReference(ownerId).document(plantId).delete().awaitOrQueued()
+        val root = plantReference(ownerId).document(plantId)
+        for (name in listOf("caracteristicas", "consideraciones", "diagnosticos")) {
+            val children = root.collection(name).get(com.google.firebase.firestore.Source.SERVER).await().documents
+            for (chunk in children.chunked(400)) {
+                val batch = firestore.batch()
+                chunk.forEach { batch.delete(it.reference) }
+                batch.commit().await()
+            }
+        }
+        // Clean up the characteristics path used by older APKs too.
+        firestore.collection("usuarios").document(ownerId).collection("caracteristicas").document(plantId).delete().await()
+        root.delete().await()
     }
 }

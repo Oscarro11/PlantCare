@@ -23,6 +23,7 @@ val considerationsSchema = Schema.obj(
 fun PlantConsiderationsAiDTO.toCommonDTO(): PlantConsiderationsDTO =
     PlantConsiderationsDTO(
         plantId = "",
+        scientificName = "",
         wateringGuide,
         recommendedLocationAndLight,
         nutrition,

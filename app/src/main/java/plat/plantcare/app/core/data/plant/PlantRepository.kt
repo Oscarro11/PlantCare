@@ -17,5 +17,8 @@ interface PlantRepository {
 
     suspend fun updatePlant(plant: Plant)
 
+    suspend fun deletePlant(plantId: String) { error("Borrado no disponible") }
+    suspend fun regenerateConsiderations(plantId: String) { error("Generación no disponible") }
+
     suspend fun setFavorite(plantId: String, favorite: Boolean)
 }

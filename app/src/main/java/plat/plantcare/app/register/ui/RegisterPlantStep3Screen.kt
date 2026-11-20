@@ -408,8 +408,8 @@ private fun WateringFrequencySelector(
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         WateringFrequencyOption(
-            title = "Muy Frecuente",
-            subtitle = "Menos de 1 d",
+            title = "+ Frecuente",
+            subtitle = "-1 d",
             selected = selectedFrequency == PlantWateringFrequency.MUY_FRECUENTE,
             onClick = {
                 onFrequencySelected(PlantWateringFrequency.MUY_FRECUENTE)
@@ -439,7 +439,7 @@ private fun WateringFrequencySelector(
 
         WateringFrequencyOption(
             title = "Espaciado",
-            subtitle = "Más de 14 d",
+            subtitle = "14+ d",
             selected = selectedFrequency == PlantWateringFrequency.ESPACIADO,
             onClick = {
                 onFrequencySelected(PlantWateringFrequency.ESPACIADO)

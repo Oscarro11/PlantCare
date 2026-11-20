@@ -16,6 +16,7 @@ import plat.plantcare.app.authentication.remote.AuthUserDto
 import plat.plantcare.app.authentication.remote.toAuthError
 import plat.plantcare.app.authentication.remote.toDomain
 import plat.plantcare.app.core.data.user.domain.User
+import plat.plantcare.app.core.data.user.domain.toEntity
 import plat.plantcare.app.core.data.user.local.UserDAO
 import plat.plantcare.app.core.data.user.local.toDomain
 import plat.plantcare.app.core.data.user.remote.UserApi
@@ -35,10 +36,10 @@ class AuthRepositoryImpl @Inject constructor(
     private val preferences: DataStorePreferences,
 ) : AuthRepository {
 
-    override val currentUser: Flow<AuthUser?> =
-        authApi.authState
-            .map { it?.toDomain() }
-            .distinctUntilChanged()
+    private val authenticating = kotlinx.coroutines.flow.MutableStateFlow(false)
+    override val currentUser: Flow<AuthUser?> = combine(authApi.authState, authenticating) { user, busy ->
+        if (busy) null else user?.toDomain()
+    }.distinctUntilChanged()
 
     override val currentUid: String?
         get() = authApi.currentUid
@@ -62,6 +63,11 @@ class AuthRepositoryImpl @Inject constructor(
     ): Result<Unit> =
         authenticate { authApi.registerWithEmail(email, password) }
 
+    override suspend fun registerWithEmail(email: String, password: String, name: String, location: String): Result<Unit> {
+        if (!plat.plantcare.app.login.data.validateAccount(name,email,password,password,location).isValid)
+            return Result.failure(IllegalArgumentException("Revisa los campos de la cuenta."))
+        return authenticate(name.trim() to location.trim()) { authApi.registerWithEmail(email.trim(), password) }
+    }
     override suspend fun signInWithGoogle(idToken: String): Result<Unit> =
         authenticate { authApi.signInWithGoogle(idToken) }
 
@@ -71,15 +77,21 @@ class AuthRepositoryImpl @Inject constructor(
         userDao.clear()
     }
 
-    private suspend fun authenticate(call: suspend() -> AuthResultDto): Result<Unit> =
+    private suspend fun authenticate(registration: Pair<String, String>? = null, call: suspend() -> AuthResultDto): Result<Unit> =
 
         try {
             // Needs the network: credentials can't be verified offline, so a failure
             // here surfaces as NoNetwork. There is no local fallback for this step.
+            authenticating.value = true
             val result = call()
 
             try {
-                loadProfile(result.user)          // server first, then the local cache
+                val profile = loadProfile(result.user)
+                if (registration != null) {
+                    userApi.updateProfile(result.user.uid, registration.first, registration.second, profile.imageUrl)
+                    userDao.updateOrInsertUser(profile.copy(name = registration.first,
+                        location = registration.second).toEntity())
+                }
                 preferences.setUid(result.user.uid)
             } catch (e: CancellationException) {
                 throw e
@@ -92,7 +104,7 @@ class AuthRepositoryImpl @Inject constructor(
             throw e
         } catch (e: Exception) {
             Result.failure(e.toAuthError())
-        }
+        } finally { authenticating.value = false }
 
     private suspend fun loadProfile(user: AuthUserDto): User {
         val remote = fetchRemoteProfile(user.uid)

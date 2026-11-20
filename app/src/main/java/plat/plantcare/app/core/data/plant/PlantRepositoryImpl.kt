@@ -1,6 +1,12 @@
 package plat.plantcare.app.core.data.plant
 
 import android.util.Log
+import androidx.room.withTransaction
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import plat.plantcare.app.core.data.AppDatabase
+import plat.plantcare.app.core.data.repositories.TaskRepository
 import plat.plantcare.app.core.data.plant.general.domain.PlantSaveResult
 import plat.plantcare.app.core.data.plant.general.remote.toDomain
 import plat.plantcare.app.core.data.plant.characteristics.remote.toDomain
@@ -44,6 +50,7 @@ import plat.plantcare.app.core.data.plant.general.local.toDomain
 import plat.plantcare.app.core.data.plant.general.local.toEntity
 import plat.plantcare.app.core.data.plant.general.remote.PlantDataSourceApi
 import plat.plantcare.app.core.data.plant.general.remote.toCommonDTO
+import plat.plantcare.app.core.data.plant.identification.PlantIdentificationApi
 import plat.plantcare.app.core.network.NetworkMonitor
 import plat.plantcare.app.core.photos.local.LocalImageStorage
 import plat.plantcare.app.core.photos.local.isRemoteImage
@@ -66,8 +73,15 @@ class PlantRepositoryImpl @Inject constructor(
     private val plantDao: PlantDAO,
     private val plantCharacteristicsDao: PlantCharacteristicsDAO,
     private val plantConsiderationsDao: PlantConsiderationsDAO,
-    private val plantConsiderationsAiApi: PlantConsiderationsAiApi
+    private val plantConsiderationsAiApi: PlantConsiderationsAiApi,
+    private val plantIdentificationApi: PlantIdentificationApi,
+    private val database: AppDatabase,
+    private val tasks: TaskRepository
 ) : PlantRepository {
+    private val mutation = Mutex()
+    private val deleted = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+    private fun isDeleted(uid: String, id: String) = "$uid/$id" in deleted
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observePlants(): Flow<List<Plant>> =
@@ -79,7 +93,7 @@ class PlantRepositoryImpl @Inject constructor(
                     local = plantDao.observeUserPlants(uid).map { list -> list.map { it.toDomain() } },
                     remote = plantApi.observeAll(uid)
                 ) { plants ->
-                    plants.forEach { plant -> plantDao.updateOrInsertPlant(plant.toDomain().copy(ownerId = uid).toEntity()) }
+                    plants.filterNot { isDeleted(uid, it.id) }.forEach { plant -> plantDao.updateOrInsertPlant(plant.toDomain().copy(ownerId = uid).toEntity()) }
                 }
             }
         }
@@ -93,7 +107,7 @@ class PlantRepositoryImpl @Inject constructor(
                 syncedCache(
                     local = plantDao.observePlant(id).map { entity -> entity?.takeIf { it.ownerId == uid }?.toDomain() },
                     remote = plantApi.observe(uid, id)
-                ) { plant -> plant?.let { plantDao.updateOrInsertPlant(it.toDomain().copy(ownerId = uid).toEntity()) } }
+                ) { plant -> plant?.takeUnless { isDeleted(uid, id) }?.let { plantDao.updateOrInsertPlant(it.toDomain().copy(ownerId = uid).toEntity()) } }
             }
         }
 
@@ -108,7 +122,7 @@ class PlantRepositoryImpl @Inject constructor(
                         plant, details -> details?.takeIf { plant?.ownerId == uid }?.toDomain()
                     },
                     remote = plantCharacteristicsApi.observeCharacteristics(uid, plantId)
-                ) { details -> details?.let {
+                ) { details -> details?.takeUnless { isDeleted(uid, plantId) }?.let {
                     plantCharacteristicsDao.updateOrInsertPlantCharacteristics(it.toDomain().copy(plantId = plantId).toEntity())
                 } }
             }
@@ -125,7 +139,7 @@ class PlantRepositoryImpl @Inject constructor(
                         plant, details -> details?.takeIf { plant?.ownerId == uid }?.toDomain()
                     },
                     remote = plantConsiderationsStorageApi.observeConsiderations(uid, plantId)
-                ) { details -> details?.let {
+                ) { details -> details?.takeUnless { isDeleted(uid, plantId) }?.let {
                     plantConsiderationsDao.updateOrInsertPlantConsiderations(it.toDomain().copy(plantId = plantId).toEntity())
                 } }
             }
@@ -244,23 +258,71 @@ class PlantRepositoryImpl @Inject constructor(
     }
 
     private suspend fun addConsiderations(ownerId: String, plantId: String, photo: ByteArray) {
-        val considerations = plantConsiderationsAiApi.generateConsiderations(
-            speciesName = null,
-            photo = photo
-        )
+        val knownName = plantConsiderationsDao.observePlantConsiderations(plantId).first()
+            ?.scientificName?.takeIf { it.isNotBlank() }
+        val speciesName = knownName ?: try {
+            plantIdentificationApi.identify(photo).maxByOrNull { it.score }
+                ?.takeIf { it.score >= MIN_SPECIES_SCORE }?.scientificName
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { null }
+        val result = plantConsiderationsAiApi.generateConsiderations(speciesName, photo).toCommonDTO()
+            .copy(plantId = plantId, scientificName = speciesName.orEmpty())
+        require(listOf(result.wateringGuide, result.recommendedLocationAndLight, result.nutrition,
+            result.sprayingAndCleaning).all { it.isNotBlank() }) { "La IA no devolvió pautas completas. Inténtalo de nuevo." }
+        check(requireOwnerId() == ownerId) { "La sesión cambió. Vuelve a abrir la planta." }
+        // Keep the old result visible unless the new result is acknowledged by Firebase.
+        plantConsiderationsStorageApi.addToPlant(ownerId, plantId, result)
+        plantConsiderationsDao.updateOrInsertPlantConsiderations(result.toDomain().toEntity())
+    }
 
-        plantConsiderationsDao.updateOrInsertPlantConsiderations(
-            considerations
-                .toCommonDTO()
-                .copy(plantId = plantId)
-                .toDomain()
-                .toEntity()
-        )
-        remote("considerations upload", REMOTE_TIMEOUT_MS) {
-            plantConsiderationsStorageApi.addToPlant(ownerId, plantId, considerations.toCommonDTO())
+    override suspend fun regenerateConsiderations(plantId: String) = mutation.withLock {
+        check(network.isOnline()) { "Conéctate a Internet para regenerar las consideraciones." }
+        val uid = requireOwnerId()
+        val plant = requireNotNull(plantDao.observePlant(plantId).first()?.takeIf { it.ownerId == uid })
+        val image = requireNotNull(plant.imageUrl?.takeIf { it.isNotBlank() }) { "Agrega una foto a la planta para generar consideraciones." }
+        withTimeout(90_000) {
+            val photo = if (!image.isRemoteImage()) localImages.readForUpload(image) else downloadPhoto(image)
+            addConsiderations(uid, plantId, photo)
         }
     }
 
+    override suspend fun deletePlant(plantId: String) = mutation.withLock {
+        check(network.isOnline()) { "Conéctate a Internet para confirmar el borrado local y en Firebase." }
+        val uid = requireOwnerId()
+        val plant = requireNotNull(plantDao.observePlant(plantId).first()?.takeIf { it.ownerId == uid })
+        withTimeout(45_000) {
+            tasks.deleteForPlant(plantId)
+            plantApi.delete(uid, plantId)
+            plant.imageUrl?.takeIf { it.isNotBlank() }?.let {
+                if (it.isRemoteImage()) remoteImages.delete(it) else localImages.delete(it)
+            }
+            deleted.add("$uid/$plantId")
+            database.withTransaction {
+                plantConsiderationsDao.deletePlantConsiderations(plantId)
+                plantCharacteristicsDao.deletePlantCharacteristics(plantId)
+                plantDao.deletePlant(plantId)
+            }
+        }
+    }
+
+    private suspend fun downloadPhoto(image: String): ByteArray = withContext(Dispatchers.IO) {
+        val connection = java.net.URL(image).openConnection() as java.net.HttpURLConnection
+        connection.connectTimeout = 15_000; connection.readTimeout = 15_000
+        try {
+            check(connection.responseCode in 200..299) { "No se pudo descargar la foto de la planta." }
+            connection.inputStream.use { input ->
+                val out = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    require(out.size() + count <= 8 * 1024 * 1024) { "La foto es demasiado grande." }
+                    out.write(buffer, 0, count)
+                }
+                out.toByteArray()
+            }
+        } finally { connection.disconnect() }
+    }
 
     //--------Helper functions---------------
     private suspend fun requireOwnerId(): String =
@@ -322,7 +384,7 @@ class PlantRepositoryImpl @Inject constructor(
     private fun <T, R> syncedCache(local: Flow<T>, remote: Flow<R>, persist: suspend (R) -> Unit): Flow<T> = channelFlow {
         launch { local.collect { send(it) } }
         launch {
-            remote.onEach { persist(it) }
+            remote.onEach { mutation.withLock { persist(it) } }
                 .catch { Log.w(TAG, "No se pudo actualizar la colección; se conservan los datos locales.", it) }
                 .collect()
         }
@@ -333,5 +395,6 @@ class PlantRepositoryImpl @Inject constructor(
         const val REMOTE_TIMEOUT_MS = 10_000L
         const val PUSH_TIMEOUT_MS = 30_000L
         const val AI_TIMEOUT_MS = 30_000L
+        const val MIN_SPECIES_SCORE = 0.5f
     }
 }

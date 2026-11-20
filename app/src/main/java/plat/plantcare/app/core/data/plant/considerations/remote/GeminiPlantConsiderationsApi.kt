@@ -23,7 +23,7 @@ class GeminiPlantConsiderationsApi @Inject constructor(
         val prompt = content {
             inlineData(photo, "image/jpeg")
             text("Identifica las características de cuidado que necesita la planta de la foto")
-            takeIf { speciesName != null }.let { text("Especie de la planta: $speciesName") }
+            speciesName?.takeIf { it.isNotBlank() }?.let { text("Especie de la planta: $it") }
         }
 
         val response = model.generateContent(prompt)

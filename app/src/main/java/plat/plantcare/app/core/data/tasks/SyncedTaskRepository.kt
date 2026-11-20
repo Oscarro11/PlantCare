@@ -79,6 +79,17 @@ class SyncedTaskRepository @Inject constructor(
     override fun observeTodayTasks(): Flow<List<Task>> = combine(observeAllTasks(), currentDay()) { tasks, today ->
         tasks.filter { if (it.completed) it.completedAt == today else !it.dueDate.isAfter(today) }
     }
+    override suspend fun deleteForPlant(plantId: String) = syncMutex.withLock {
+        val uid = requireNotNull(auth.currentUid) { "Inicia sesión para eliminar la planta." }
+        val documents = firestore.collection("usuarios").document(uid).collection("tareas")
+            .whereEqualTo("plantId", plantId).get(com.google.firebase.firestore.Source.SERVER).await().documents
+        for (chunk in documents.chunked(400)) {
+            val batch = firestore.batch()
+            chunk.forEach { batch.delete(it.reference) }
+            batch.commit().await()
+        }
+        store.purgeForPlant(uid, plantId)
+    }
     override suspend fun createTask(task: Task) {
         val uid = requireNotNull(auth.sessionUid.first()) { "Inicia sesión para crear tareas." }
         store.create(uid, task)
